@@ -384,7 +384,7 @@ function AssignmentDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label>Intitulé / Chantier</Label>
+            <Label>Intitulé / Affaire</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="Ex: Rénovation cuisine - Mr Dupont" />
           </div>
 
