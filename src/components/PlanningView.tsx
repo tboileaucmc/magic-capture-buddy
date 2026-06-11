@@ -193,7 +193,7 @@ export function PlanningView() {
                         <td
                           key={`${dateISO}-${h}`}
                           className="cursor-pointer border-b border-r p-1 align-top transition hover:bg-accent/40"
-                          style={{ minWidth: 110, height: 70, backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
+                          style={{ minWidth: dayCount > 5 ? 70 : 110, height: 70, backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
                           onClick={() => setEditing({ technicianId: t.id, dateISO, half: h, existing: a })}
                         >
                           {a ? (
