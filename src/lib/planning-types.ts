@@ -34,7 +34,7 @@ export type Assignment = {
 };
 
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: "chantier", label: "Chantier", color: "#3b82f6" },
+  { id: "chantier", label: "Affaires", color: "#3b82f6" },
   { id: "maintenance", label: "Maintenance", color: "#10b981" },
   { id: "depannage", label: "Dépannage", color: "#ef4444" },
   { id: "conge", label: "Congé", color: "#f59e0b" },
