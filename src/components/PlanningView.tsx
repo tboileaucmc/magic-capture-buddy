@@ -45,9 +45,13 @@ function uid(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+type ViewMode = "1w" | "2w" | "1m";
+const VIEW_DAYS: Record<ViewMode, number> = { "1w": 5, "2w": 10, "1m": 20 };
+
 export function PlanningView() {
   const { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician } = usePlanning();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
+  const [viewMode, setViewMode] = useState<ViewMode>("1w");
   const [editing, setEditing] = useState<{
     technicianId: string;
     dateISO: string;
@@ -56,13 +60,20 @@ export function PlanningView() {
   } | null>(null);
   const [techDialog, setTechDialog] = useState(false);
 
+  const dayCount = VIEW_DAYS[viewMode];
+
   const days = useMemo(() => {
-    return Array.from({ length: 5 }, (_, i) => {
-      const d = new Date(weekStart);
-      d.setDate(d.getDate() + i);
-      return d;
-    });
-  }, [weekStart]);
+    const out: Date[] = [];
+    const cursor = new Date(weekStart);
+    while (out.length < dayCount) {
+      const wd = cursor.getDay(); // 0=Sun .. 6=Sat
+      if (wd !== 0 && wd !== 6) out.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return out;
+  }, [weekStart, dayCount]);
+
+  const stepDays = dayCount === 5 ? 7 : dayCount === 10 ? 14 : 28;
 
   const findAssignment = (techId: string, dateISO: string, half: HalfDay) =>
     data.assignments.find(
