@@ -160,7 +160,7 @@ export function PlanningView() {
             <tbody>
               {data.technicians.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="p-6 text-center text-muted-foreground">
+                  <td colSpan={1 + dayCount * 2} className="p-6 text-center text-muted-foreground">
                     Aucun technicien. Cliquez sur "Technicien" pour en ajouter.
                   </td>
                 </tr>
