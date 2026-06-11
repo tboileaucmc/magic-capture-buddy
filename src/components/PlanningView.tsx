@@ -93,9 +93,19 @@ export function PlanningView() {
               {weekStart.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1w">1 semaine</SelectItem>
+                <SelectItem value="2w">2 semaines</SelectItem>
+                <SelectItem value="1m">1 mois</SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" size="icon" onClick={() => {
-              const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d);
+              const d = new Date(weekStart); d.setDate(d.getDate() - stepDays); setWeekStart(d);
             }}>
               <ChevronLeft />
             </Button>
@@ -103,7 +113,7 @@ export function PlanningView() {
               Aujourd'hui
             </Button>
             <Button variant="outline" size="icon" onClick={() => {
-              const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d);
+              const d = new Date(weekStart); d.setDate(d.getDate() + stepDays); setWeekStart(d);
             }}>
               <ChevronRight />
             </Button>
