@@ -129,12 +129,10 @@ export function PlanningView() {
               </tr>
               <tr className="bg-muted/30">
                 <th className="sticky left-0 z-10 border-b border-r bg-muted/30 p-1" />
-                {days.map((_, i) => (
-                  <>
-                    <th key={`${i}-am`} className="border-b border-r p-1 text-xs font-normal text-muted-foreground">Matin</th>
-                    <th key={`${i}-pm`} className="border-b border-r p-1 text-xs font-normal text-muted-foreground">Après-midi</th>
-                  </>
-                ))}
+                {days.flatMap((_, i) => [
+                  <th key={`${i}-am`} className="border-b border-r p-1 text-xs font-normal text-muted-foreground">Matin</th>,
+                  <th key={`${i}-pm`} className="border-b border-r p-1 text-xs font-normal text-muted-foreground">Après-midi</th>,
+                ])}
               </tr>
             </thead>
             <tbody>
