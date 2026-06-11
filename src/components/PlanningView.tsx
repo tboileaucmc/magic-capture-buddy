@@ -89,8 +89,9 @@ export function PlanningView() {
           <div>
             <h1 className="text-2xl font-bold">Planning Techniciens</h1>
             <p className="text-sm text-muted-foreground">
-              Semaine du{" "}
-              {weekStart.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}
+              Du {days[0]?.toLocaleDateString("fr-FR", { day: "2-digit", month: "long" })}
+              {" au "}
+              {days[days.length - 1]?.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
