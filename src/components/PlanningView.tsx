@@ -45,9 +45,13 @@ function uid(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+type ViewMode = "1w" | "2w" | "1m";
+const VIEW_DAYS: Record<ViewMode, number> = { "1w": 5, "2w": 10, "1m": 20 };
+
 export function PlanningView() {
   const { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician } = usePlanning();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
+  const [viewMode, setViewMode] = useState<ViewMode>("1w");
   const [editing, setEditing] = useState<{
     technicianId: string;
     dateISO: string;
@@ -56,13 +60,20 @@ export function PlanningView() {
   } | null>(null);
   const [techDialog, setTechDialog] = useState(false);
 
+  const dayCount = VIEW_DAYS[viewMode];
+
   const days = useMemo(() => {
-    return Array.from({ length: 5 }, (_, i) => {
-      const d = new Date(weekStart);
-      d.setDate(d.getDate() + i);
-      return d;
-    });
-  }, [weekStart]);
+    const out: Date[] = [];
+    const cursor = new Date(weekStart);
+    while (out.length < dayCount) {
+      const wd = cursor.getDay(); // 0=Sun .. 6=Sat
+      if (wd !== 0 && wd !== 6) out.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return out;
+  }, [weekStart, dayCount]);
+
+  const stepDays = dayCount === 5 ? 7 : dayCount === 10 ? 14 : 28;
 
   const findAssignment = (techId: string, dateISO: string, half: HalfDay) =>
     data.assignments.find(
@@ -78,13 +89,24 @@ export function PlanningView() {
           <div>
             <h1 className="text-2xl font-bold">Planning Techniciens</h1>
             <p className="text-sm text-muted-foreground">
-              Semaine du{" "}
-              {weekStart.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}
+              Du {days[0]?.toLocaleDateString("fr-FR", { day: "2-digit", month: "long" })}
+              {" au "}
+              {days[days.length - 1]?.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1w">1 semaine</SelectItem>
+                <SelectItem value="2w">2 semaines</SelectItem>
+                <SelectItem value="1m">1 mois</SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" size="icon" onClick={() => {
-              const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d);
+              const d = new Date(weekStart); d.setDate(d.getDate() - stepDays); setWeekStart(d);
             }}>
               <ChevronLeft />
             </Button>
@@ -92,7 +114,7 @@ export function PlanningView() {
               Aujourd'hui
             </Button>
             <Button variant="outline" size="icon" onClick={() => {
-              const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d);
+              const d = new Date(weekStart); d.setDate(d.getDate() + stepDays); setWeekStart(d);
             }}>
               <ChevronRight />
             </Button>
@@ -138,7 +160,7 @@ export function PlanningView() {
             <tbody>
               {data.technicians.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="p-6 text-center text-muted-foreground">
+                  <td colSpan={1 + dayCount * 2} className="p-6 text-center text-muted-foreground">
                     Aucun technicien. Cliquez sur "Technicien" pour en ajouter.
                   </td>
                 </tr>
@@ -171,7 +193,7 @@ export function PlanningView() {
                         <td
                           key={`${dateISO}-${h}`}
                           className="cursor-pointer border-b border-r p-1 align-top transition hover:bg-accent/40"
-                          style={{ minWidth: 110, height: 70, backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
+                          style={{ minWidth: dayCount > 5 ? 70 : 110, height: 70, backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
                           onClick={() => setEditing({ technicianId: t.id, dateISO, half: h, existing: a })}
                         >
                           {a ? (
@@ -362,7 +384,7 @@ function AssignmentDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label>Intitulé / Chantier</Label>
+            <Label>Intitulé / Affaire</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="Ex: Rénovation cuisine - Mr Dupont" />
           </div>
 

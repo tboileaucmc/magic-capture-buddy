@@ -22,7 +22,12 @@ function load(): Data {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return { technicians: DEFAULT_TECHNICIANS, categories: DEFAULT_CATEGORIES, assignments: [] };
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw) as Data;
+    // Migration: rename old "Chantier" label to "Affaires"
+    parsed.categories = parsed.categories.map((c) =>
+      c.id === "chantier" ? { ...c, label: "Affaires" } : c,
+    );
+    return parsed;
   } catch {
     return { technicians: DEFAULT_TECHNICIANS, categories: DEFAULT_CATEGORIES, assignments: [] };
   }
