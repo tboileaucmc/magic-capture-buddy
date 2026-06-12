@@ -137,14 +137,27 @@ export function PlanningView() {
             <Button onClick={() => setTechDialog(true)} variant="secondary">
               <Plus /> Technicien
             </Button>
+            <Button onClick={() => setCatDialog(true)} variant="secondary">
+              <Plus /> Catégorie
+            </Button>
           </div>
         </header>
 
         <div className="mb-4 flex flex-wrap gap-2">
           {data.categories.map((c) => (
-            <span key={c.id} className="inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
+            <span key={c.id} className="group inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
               <span className="size-3 rounded-full" style={{ backgroundColor: c.color }} />
               {c.label}
+              <button
+                type="button"
+                className="ml-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+                onClick={() => {
+                  if (confirm(`Supprimer la catégorie "${c.label}" ? Les missions associées seront supprimées.`)) removeCategory(c.id);
+                }}
+                aria-label="Supprimer la catégorie"
+              >
+                ✕
+              </button>
             </span>
           ))}
         </div>
