@@ -28,6 +28,14 @@ function load(): Data {
     parsed.categories = parsed.categories.map((c) =>
       c.id === "chantier" ? { ...c, label: "Affaires" } : c,
     );
+    // Migration: technicianId (string) → technicianIds (string[])
+    parsed.assignments = parsed.assignments.map((a) => {
+      const legacy = a as Assignment & { technicianId?: string };
+      if (!legacy.technicianIds && legacy.technicianId) {
+        return { ...legacy, technicianIds: [legacy.technicianId] };
+      }
+      return { ...legacy, technicianIds: legacy.technicianIds ?? [] };
+    });
     return parsed;
   } catch {
     return { technicians: DEFAULT_TECHNICIANS, categories: DEFAULT_CATEGORIES, assignments: [] };
