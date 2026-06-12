@@ -77,9 +77,10 @@ export function PlanningView() {
   const stepDays = dayCount === 5 ? 7 : dayCount === 10 ? 14 : 28;
 
   const findAssignment = (techId: string, dateISO: string, half: HalfDay) =>
-    data.assignments.find(
-      (a) => a.technicianId === techId && a.dateISO === dateISO && a.half === half,
-    );
+    data.assignments.find((a) => {
+      if (a.technicianId !== techId) return false;
+      return assignmentSlots(a).some((s) => s.dateISO === dateISO && s.half === half);
+    });
 
   const categoryById = (id: string) => data.categories.find((c) => c.id === id);
 
