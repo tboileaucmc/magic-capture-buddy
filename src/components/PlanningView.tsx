@@ -423,6 +423,44 @@ function AssignmentDialog({
             </div>
           </div>
 
+          <div className="grid gap-2 rounded-md border bg-muted/20 p-3">
+            <Label className="text-xs uppercase text-muted-foreground">Période de la mission</Label>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr,auto,1fr,auto]">
+              <div className="grid gap-1">
+                <Label className="text-xs">Du</Label>
+                <Input type="date" value={startISO} disabled />
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">&nbsp;</Label>
+                <div className="rounded border bg-muted px-2 py-1.5 text-xs">
+                  {startHalfVal === "AM" ? "Matin" : "Après-midi"}
+                </div>
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">Au</Label>
+                <Input
+                  type="date"
+                  value={endDateISO}
+                  min={startISO}
+                  onChange={(e) => setEndDateISO(e.target.value || startISO)}
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">&nbsp;</Label>
+                <Select value={endHalf} onValueChange={(v) => setEndHalf(v as HalfDay)}>
+                  <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AM">Matin</SelectItem>
+                    <SelectItem value="PM">Après-midi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Laissez identique au début pour une mission d'une demi-journée. Les week-ends sont automatiquement ignorés.
+            </p>
+          </div>
+
           <div className="grid gap-2">
             <Label className="flex items-center gap-1"><LinkIcon className="size-3.5" /> Lien (optionnel)</Label>
             <Input value={link} onChange={(e) => setLink(e.target.value)} maxLength={500} placeholder="https://…" />
