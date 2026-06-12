@@ -50,7 +50,7 @@ type ViewMode = "1w" | "2w" | "1m";
 const VIEW_DAYS: Record<ViewMode, number> = { "1w": 5, "2w": 10, "1m": 20 };
 
 export function PlanningView() {
-  const { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician } = usePlanning();
+  const { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician, addCategory, removeCategory } = usePlanning();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const [viewMode, setViewMode] = useState<ViewMode>("1w");
   const [editing, setEditing] = useState<{
@@ -60,6 +60,7 @@ export function PlanningView() {
     existing?: Assignment;
   } | null>(null);
   const [techDialog, setTechDialog] = useState(false);
+  const [catDialog, setCatDialog] = useState(false);
 
   const dayCount = VIEW_DAYS[viewMode];
 
