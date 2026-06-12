@@ -349,9 +349,13 @@ function AssignmentDialog({
       toast.error("Le titre est obligatoire");
       return;
     }
+    if (technicianIds.length === 0) {
+      toast.error("Sélectionnez au moins un technicien");
+      return;
+    }
     const a: Assignment = {
       id: existing?.id ?? uid(),
-      technicianId: technician.id,
+      technicianIds,
       dateISO: startISO,
       half: startHalfVal,
       endDateISO: endDateISO !== startISO || endHalf !== startHalfVal ? endDateISO : undefined,
@@ -371,7 +375,7 @@ function AssignmentDialog({
 
   const currentAssignment: Assignment = {
     id: existing?.id ?? "preview",
-    technicianId: technician.id,
+    technicianIds,
     dateISO: startISO,
     half: startHalfVal,
     endDateISO,
@@ -391,7 +395,7 @@ function AssignmentDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {existing ? "Modifier" : "Nouvelle mission"} — {technician.name}
+            {existing ? "Modifier la mission" : "Nouvelle mission"}
           </DialogTitle>
           <DialogDescription>
             {new Date(dateISO).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long" })}
