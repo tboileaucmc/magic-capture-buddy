@@ -200,25 +200,19 @@ export function PlanningView() {
                           onClick={() => setEditing({ technicianId: t.id, dateISO, half: h, existing: a })}
                         >
                           {a ? (
-                            isFirst ? (
-                              <div className="flex h-full flex-col">
-                                <div
-                                  className="mb-1 inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
-                                  style={{ backgroundColor: cat?.color }}
-                                >
-                                  {cat?.label}
-                                </div>
-                                <div className="line-clamp-2 text-xs font-medium">{a.title}</div>
-                                <div className="text-[10px] text-muted-foreground">
-                                  {a.startTime}–{a.endTime}
-                                  {a.endDateISO && a.endDateISO !== a.dateISO && " →"}
-                                </div>
+                            <div className="flex h-full flex-col">
+                              <div
+                                className="mb-1 inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
+                                style={{ backgroundColor: cat?.color }}
+                              >
+                                {cat?.label}
                               </div>
-                            ) : (
-                              <div className="flex h-full items-center text-[10px] italic text-muted-foreground">
-                                … {a.title}
+                              <div className="line-clamp-2 text-xs font-medium">{a.title}</div>
+                              <div className="text-[10px] text-muted-foreground">
+                                {isFirst ? `${a.startTime}–${a.endTime}` : "…"}
+                                {isFirst && a.endDateISO && a.endDateISO !== a.dateISO && " →"}
                               </div>
-                            )
+                            </div>
                           ) : (
                             <div className="flex h-full items-center justify-center text-muted-foreground/40">
                               <Plus className="size-4" />
