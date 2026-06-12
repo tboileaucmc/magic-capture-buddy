@@ -46,8 +46,8 @@ export function buildDescription(a: Assignment): string {
 }
 
 export function buildICS(a: Assignment, tech: Technician): string {
-  const start = toDate(a.dateISO, a.startTime);
-  const end = toDate(a.dateISO, a.endTime);
+  const start = startDate(a);
+  const end = endDate(a);
   const uid = `${a.id}@planning.local`;
   const desc = buildDescription(a).replace(/\n/g, "\\n");
   return [
@@ -83,8 +83,8 @@ export function downloadICS(a: Assignment, tech: Technician) {
 }
 
 export function googleCalendarUrl(a: Assignment, tech: Technician): string {
-  const start = toDate(a.dateISO, a.startTime);
-  const end = toDate(a.dateISO, a.endTime);
+  const start = startDate(a);
+  const end = endDate(a);
   const fmt = (d: Date) => fmtICS(d);
   const params = new URLSearchParams({
     action: "TEMPLATE",
