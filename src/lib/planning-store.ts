@@ -28,6 +28,14 @@ function load(): Data {
     parsed.categories = parsed.categories.map((c) =>
       c.id === "chantier" ? { ...c, label: "Affaires" } : c,
     );
+    // Migration: technicianId (string) → technicianIds (string[])
+    parsed.assignments = parsed.assignments.map((a) => {
+      const legacy = a as Assignment & { technicianId?: string };
+      if (!legacy.technicianIds && legacy.technicianId) {
+        return { ...legacy, technicianIds: [legacy.technicianId] };
+      }
+      return { ...legacy, technicianIds: legacy.technicianIds ?? [] };
+    });
     return parsed;
   } catch {
     return { technicians: DEFAULT_TECHNICIANS, categories: DEFAULT_CATEGORIES, assignments: [] };
@@ -60,7 +68,8 @@ export function usePlanning() {
       const slots = assignmentSlots(a);
       const others = d.assignments.filter((x) => {
         if (x.id === a.id) return false;
-        if (x.technicianId !== a.technicianId) return true;
+        const shareTech = x.technicianIds.some((t) => a.technicianIds.includes(t));
+        if (!shareTech) return true;
         const xSlots = assignmentSlots(x);
         return !xSlots.some((xs) =>
           slots.some((s) => s.dateISO === xs.dateISO && s.half === xs.half),
@@ -82,7 +91,17 @@ export function usePlanning() {
     setData((d) => ({
       ...d,
       technicians: d.technicians.filter((t) => t.id !== id),
-      assignments: d.assignments.filter((a) => a.technicianId !== id),
+      assignments: d.assignments
+        .map((a) => ({ ...a, technicianIds: a.technicianIds.filter((t) => t !== id) }))
+        .filter((a) => a.technicianIds.length > 0),
+    }));
+  }, []);
+
+  const removeCategory = useCallback((id: string) => {
+    setData((d) => ({
+      ...d,
+      categories: d.categories.filter((c) => c.id !== id),
+      assignments: d.assignments.filter((a) => a.categoryId !== id),
     }));
   }, []);
 
@@ -90,5 +109,5 @@ export function usePlanning() {
     setData((d) => ({ ...d, categories: [...d.categories, c] }));
   }, []);
 
-  return { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician, addCategory };
+  return { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician, addCategory, removeCategory };
 }

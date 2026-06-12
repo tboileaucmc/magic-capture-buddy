@@ -50,7 +50,7 @@ type ViewMode = "1w" | "2w" | "1m";
 const VIEW_DAYS: Record<ViewMode, number> = { "1w": 5, "2w": 10, "1m": 20 };
 
 export function PlanningView() {
-  const { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician } = usePlanning();
+  const { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician, addCategory, removeCategory } = usePlanning();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const [viewMode, setViewMode] = useState<ViewMode>("1w");
   const [editing, setEditing] = useState<{
@@ -60,6 +60,7 @@ export function PlanningView() {
     existing?: Assignment;
   } | null>(null);
   const [techDialog, setTechDialog] = useState(false);
+  const [catDialog, setCatDialog] = useState(false);
 
   const dayCount = VIEW_DAYS[viewMode];
 
@@ -78,7 +79,7 @@ export function PlanningView() {
 
   const findAssignment = (techId: string, dateISO: string, half: HalfDay) =>
     data.assignments.find((a) => {
-      if (a.technicianId !== techId) return false;
+      if (!a.technicianIds.includes(techId)) return false;
       return assignmentSlots(a).some((s) => s.dateISO === dateISO && s.half === half);
     });
 
@@ -136,14 +137,27 @@ export function PlanningView() {
             <Button onClick={() => setTechDialog(true)} variant="secondary">
               <Plus /> Technicien
             </Button>
+            <Button onClick={() => setCatDialog(true)} variant="secondary">
+              <Plus /> Catégorie
+            </Button>
           </div>
         </header>
 
         <div className="mb-4 flex flex-wrap gap-2">
           {data.categories.map((c) => (
-            <span key={c.id} className="inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
+            <span key={c.id} className="group inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
               <span className="size-3 rounded-full" style={{ backgroundColor: c.color }} />
               {c.label}
+              <button
+                type="button"
+                className="ml-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+                onClick={() => {
+                  if (confirm(`Supprimer la catégorie "${c.label}" ? Les missions associées seront supprimées.`)) removeCategory(c.id);
+                }}
+                aria-label="Supprimer la catégorie"
+              >
+                ✕
+              </button>
             </span>
           ))}
         </div>
@@ -250,7 +264,8 @@ export function PlanningView() {
         <AssignmentDialog
           open
           onOpenChange={(o) => !o && setEditing(null)}
-          technician={data.technicians.find((t) => t.id === editing.technicianId)!}
+          allTechnicians={data.technicians}
+          initialTechnicianId={editing.technicianId}
           categories={data.categories}
           dateISO={editing.dateISO}
           half={editing.half}
@@ -275,6 +290,16 @@ export function PlanningView() {
           toast.success("Technicien ajouté");
         }}
       />
+
+      <AddCategoryDialog
+        open={catDialog}
+        onOpenChange={setCatDialog}
+        onAdd={(label, color) => {
+          addCategory({ id: uid(), label, color });
+          setCatDialog(false);
+          toast.success("Catégorie ajoutée");
+        }}
+      />
     </div>
   );
 }
@@ -282,7 +307,8 @@ export function PlanningView() {
 function AssignmentDialog({
   open,
   onOpenChange,
-  technician,
+  allTechnicians,
+  initialTechnicianId,
   categories,
   dateISO,
   half,
@@ -292,7 +318,8 @@ function AssignmentDialog({
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  technician: ReturnType<typeof usePlanning>["data"]["technicians"][number];
+  allTechnicians: ReturnType<typeof usePlanning>["data"]["technicians"];
+  initialTechnicianId: string;
   categories: ReturnType<typeof usePlanning>["data"]["categories"];
   dateISO: string;
   half: HalfDay;
@@ -303,6 +330,9 @@ function AssignmentDialog({
   const defaultStart = half === "AM" ? "08:00" : "13:30";
   const defaultEnd = half === "AM" ? "12:00" : "17:30";
 
+  const [technicianIds, setTechnicianIds] = useState<string[]>(
+    existing?.technicianIds ?? [initialTechnicianId],
+  );
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? "");
   const [title, setTitle] = useState(existing?.title ?? "");
   const [address, setAddress] = useState(existing?.address ?? "");
@@ -316,6 +346,9 @@ function AssignmentDialog({
 
   const startISO = existing?.dateISO ?? dateISO;
   const startHalfVal = existing?.half ?? half;
+  const selectedTechs = allTechnicians.filter((t) => technicianIds.includes(t.id));
+  const toggleTech = (id: string) =>
+    setTechnicianIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
 
   const handleFiles = async (files: FileList | null) => {
     if (!files) return;
@@ -340,9 +373,13 @@ function AssignmentDialog({
       toast.error("Le titre est obligatoire");
       return;
     }
+    if (technicianIds.length === 0) {
+      toast.error("Sélectionnez au moins un technicien");
+      return;
+    }
     const a: Assignment = {
       id: existing?.id ?? uid(),
-      technicianId: technician.id,
+      technicianIds,
       dateISO: startISO,
       half: startHalfVal,
       endDateISO: endDateISO !== startISO || endHalf !== startHalfVal ? endDateISO : undefined,
@@ -362,7 +399,7 @@ function AssignmentDialog({
 
   const currentAssignment: Assignment = {
     id: existing?.id ?? "preview",
-    technicianId: technician.id,
+    technicianIds,
     dateISO: startISO,
     half: startHalfVal,
     endDateISO,
@@ -382,7 +419,7 @@ function AssignmentDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {existing ? "Modifier" : "Nouvelle mission"} — {technician.name}
+            {existing ? "Modifier la mission" : "Nouvelle mission"}
           </DialogTitle>
           <DialogDescription>
             {new Date(dateISO).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long" })}
@@ -407,6 +444,28 @@ function AssignmentDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Techniciens assignés</Label>
+            <div className="flex flex-wrap gap-2 rounded-md border p-2">
+              {allTechnicians.length === 0 && (
+                <span className="text-xs text-muted-foreground">Aucun technicien disponible.</span>
+              )}
+              {allTechnicians.map((t) => {
+                const checked = technicianIds.includes(t.id);
+                return (
+                  <button
+                    type="button"
+                    key={t.id}
+                    onClick={() => toggleTech(t.id)}
+                    className={`rounded-full border px-3 py-1 text-xs transition ${checked ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:bg-accent"}`}
+                  >
+                    {checked ? "✓ " : ""}{t.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="grid gap-2">
@@ -514,15 +573,15 @@ function AssignmentDialog({
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" asChild>
-              <a href={googleCalendarUrl(currentAssignment, technician)} target="_blank" rel="noreferrer">
+              <a href={googleCalendarUrl(currentAssignment, selectedTechs)} target="_blank" rel="noreferrer">
                 <CalIcon /> Google Agenda
               </a>
             </Button>
-            <Button variant="outline" onClick={() => downloadICS(currentAssignment, technician)}>
+            <Button variant="outline" onClick={() => downloadICS(currentAssignment, selectedTechs)}>
               <Download /> .ics
             </Button>
             <Button variant="outline" asChild>
-              <a href={mailtoUrl(currentAssignment, technician)}>
+              <a href={mailtoUrl(currentAssignment, selectedTechs)}>
                 <Mail /> Email
               </a>
             </Button>
@@ -567,6 +626,79 @@ function AddTechnicianDialog({
             onAdd(name.trim(), email.trim());
             setName(""); setEmail("");
           }}>Ajouter</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const PRESET_COLORS = [
+  "#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6",
+  "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#6366f1",
+  "#14b8a6", "#a855f7",
+];
+
+function AddCategoryDialog({
+  open,
+  onOpenChange,
+  onAdd,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onAdd: (label: string, color: string) => void;
+}) {
+  const [label, setLabel] = useState("");
+  const [color, setColor] = useState(PRESET_COLORS[0]);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Ajouter une catégorie</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-3">
+          <div className="grid gap-2">
+            <Label>Intitulé</Label>
+            <Input value={label} onChange={(e) => setLabel(e.target.value)} maxLength={40} placeholder="Ex: Réunion" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Couleur</Label>
+            <div className="flex flex-wrap items-center gap-2">
+              {PRESET_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  className={`size-7 rounded-full border-2 transition ${color === c ? "border-foreground scale-110" : "border-transparent"}`}
+                  style={{ backgroundColor: c }}
+                  aria-label={`Choisir ${c}`}
+                />
+              ))}
+              <Input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="h-9 w-14 cursor-pointer p-1"
+              />
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              Aperçu :
+              <span className="inline-flex items-center gap-2 rounded-full border px-2.5 py-1">
+                <span className="size-3 rounded-full" style={{ backgroundColor: color }} />
+                {label || "Nouvelle catégorie"}
+              </span>
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            onClick={() => {
+              if (!label.trim()) { toast.error("Intitulé requis"); return; }
+              onAdd(label.trim(), color);
+              setLabel(""); setColor(PRESET_COLORS[0]);
+            }}
+          >
+            Ajouter
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
