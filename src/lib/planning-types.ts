@@ -20,16 +20,16 @@ export type Attachment = {
 
 export type Assignment = {
   id: string;
-  technicianId: string;
+  technicianIds: string[]; // un ou plusieurs techniciens
   dateISO: string; // yyyy-mm-dd (début)
   half: HalfDay; // demi-journée de début
   endDateISO?: string; // yyyy-mm-dd (fin, défaut = dateISO)
   endHalf?: HalfDay; // demi-journée de fin (défaut = half)
   categoryId: string;
-  title: string; // affaire / mission
+  title: string;
   address: string;
-  startTime: string; // "08:00"
-  endTime: string; // "12:00"
+  startTime: string;
+  endTime: string;
   notes?: string;
   link?: string;
   attachments?: Attachment[];
