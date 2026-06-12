@@ -21,6 +21,13 @@ function toDate(dateISO: string, time: string): Date {
   return d;
 }
 
+function startDate(a: Assignment): Date {
+  return toDate(a.dateISO, a.startTime);
+}
+function endDate(a: Assignment): Date {
+  return toDate(a.endDateISO ?? a.dateISO, a.endTime);
+}
+
 export function buildDescription(a: Assignment): string {
   const lines: string[] = [];
   if (a.address) {
