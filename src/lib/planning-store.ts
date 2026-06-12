@@ -91,7 +91,17 @@ export function usePlanning() {
     setData((d) => ({
       ...d,
       technicians: d.technicians.filter((t) => t.id !== id),
-      assignments: d.assignments.filter((a) => a.technicianId !== id),
+      assignments: d.assignments
+        .map((a) => ({ ...a, technicianIds: a.technicianIds.filter((t) => t !== id) }))
+        .filter((a) => a.technicianIds.length > 0),
+    }));
+  }, []);
+
+  const removeCategory = useCallback((id: string) => {
+    setData((d) => ({
+      ...d,
+      categories: d.categories.filter((c) => c.id !== id),
+      assignments: d.assignments.filter((a) => a.categoryId !== id),
     }));
   }, []);
 
