@@ -115,6 +115,19 @@ export function PlanningView() {
             <Button variant="outline" onClick={() => setWeekStart(startOfWeek(new Date()))}>
               Aujourd'hui
             </Button>
+            <Input
+              type="date"
+              className="w-[160px]"
+              value={(() => {
+                const p = (n: number) => String(n).padStart(2, "0");
+                return `${weekStart.getFullYear()}-${p(weekStart.getMonth() + 1)}-${p(weekStart.getDate())}`;
+              })()}
+              onChange={(e) => {
+                if (!e.target.value) return;
+                const [y, m, d] = e.target.value.split("-").map(Number);
+                setWeekStart(startOfWeek(new Date(y, m - 1, d)));
+              }}
+            />
             <Button variant="outline" size="icon" onClick={() => {
               const d = new Date(weekStart); d.setDate(d.getDate() + stepDays); setWeekStart(d);
             }}>
