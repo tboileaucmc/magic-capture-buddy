@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   DEFAULT_CATEGORIES,
   DEFAULT_TECHNICIANS,
+  assignmentSlots,
   type Assignment,
   type Category,
   type Technician,
