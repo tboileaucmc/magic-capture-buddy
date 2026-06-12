@@ -301,9 +301,14 @@ function AssignmentDialog({
   const [address, setAddress] = useState(existing?.address ?? "");
   const [startTime, setStartTime] = useState(existing?.startTime ?? defaultStart);
   const [endTime, setEndTime] = useState(existing?.endTime ?? defaultEnd);
+  const [endDateISO, setEndDateISO] = useState(existing?.endDateISO ?? existing?.dateISO ?? dateISO);
+  const [endHalf, setEndHalf] = useState<HalfDay>(existing?.endHalf ?? existing?.half ?? half);
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [link, setLink] = useState(existing?.link ?? "");
   const [attachments, setAttachments] = useState(existing?.attachments ?? []);
+
+  const startISO = existing?.dateISO ?? dateISO;
+  const startHalfVal = existing?.half ?? half;
 
   const handleFiles = async (files: FileList | null) => {
     if (!files) return;
