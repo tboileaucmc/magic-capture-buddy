@@ -290,6 +290,16 @@ export function PlanningView() {
           toast.success("Technicien ajouté");
         }}
       />
+
+      <AddCategoryDialog
+        open={catDialog}
+        onOpenChange={setCatDialog}
+        onAdd={(label, color) => {
+          addCategory({ id: uid(), label, color });
+          setCatDialog(false);
+          toast.success("Catégorie ajoutée");
+        }}
+      />
     </div>
   );
 }
