@@ -283,7 +283,8 @@ export function PlanningView() {
 function AssignmentDialog({
   open,
   onOpenChange,
-  technician,
+  allTechnicians,
+  initialTechnicianId,
   categories,
   dateISO,
   half,
@@ -293,7 +294,8 @@ function AssignmentDialog({
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  technician: ReturnType<typeof usePlanning>["data"]["technicians"][number];
+  allTechnicians: ReturnType<typeof usePlanning>["data"]["technicians"];
+  initialTechnicianId: string;
   categories: ReturnType<typeof usePlanning>["data"]["categories"];
   dateISO: string;
   half: HalfDay;
@@ -304,6 +306,9 @@ function AssignmentDialog({
   const defaultStart = half === "AM" ? "08:00" : "13:30";
   const defaultEnd = half === "AM" ? "12:00" : "17:30";
 
+  const [technicianIds, setTechnicianIds] = useState<string[]>(
+    existing?.technicianIds ?? [initialTechnicianId],
+  );
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? "");
   const [title, setTitle] = useState(existing?.title ?? "");
   const [address, setAddress] = useState(existing?.address ?? "");
@@ -317,6 +322,9 @@ function AssignmentDialog({
 
   const startISO = existing?.dateISO ?? dateISO;
   const startHalfVal = existing?.half ?? half;
+  const selectedTechs = allTechnicians.filter((t) => technicianIds.includes(t.id));
+  const toggleTech = (id: string) =>
+    setTechnicianIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
 
   const handleFiles = async (files: FileList | null) => {
     if (!files) return;
