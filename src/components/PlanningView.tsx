@@ -423,6 +423,28 @@ function AssignmentDialog({
           </div>
 
           <div className="grid gap-2">
+            <Label>Techniciens assignés</Label>
+            <div className="flex flex-wrap gap-2 rounded-md border p-2">
+              {allTechnicians.length === 0 && (
+                <span className="text-xs text-muted-foreground">Aucun technicien disponible.</span>
+              )}
+              {allTechnicians.map((t) => {
+                const checked = technicianIds.includes(t.id);
+                return (
+                  <button
+                    type="button"
+                    key={t.id}
+                    onClick={() => toggleTech(t.id)}
+                    className={`rounded-full border px-3 py-1 text-xs transition ${checked ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:bg-accent"}`}
+                  >
+                    {checked ? "✓ " : ""}{t.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
             <Label>Intitulé / Affaire</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="Ex: Rénovation cuisine - Mr Dupont" />
           </div>
