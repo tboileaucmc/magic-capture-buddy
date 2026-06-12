@@ -47,11 +47,15 @@ export function usePlanning() {
 
   const upsertAssignment = useCallback((a: Assignment) => {
     setData((d) => {
-      const others = d.assignments.filter(
-        (x) =>
-          !(x.technicianId === a.technicianId && x.dateISO === a.dateISO && x.half === a.half) &&
-          x.id !== a.id,
-      );
+      const slots = assignmentSlots(a);
+      const others = d.assignments.filter((x) => {
+        if (x.id === a.id) return false;
+        if (x.technicianId !== a.technicianId) return true;
+        const xSlots = assignmentSlots(x);
+        return !xSlots.some((xs) =>
+          slots.some((s) => s.dateISO === xs.dateISO && s.half === xs.half),
+        );
+      });
       return { ...d, assignments: [...others, a] };
     });
   }, []);
