@@ -45,11 +45,14 @@ export function buildDescription(a: Assignment): string {
   return lines.join("\n");
 }
 
-export function buildICS(a: Assignment, tech: Technician): string {
+export function buildICS(a: Assignment, techs: Technician[]): string {
   const start = startDate(a);
   const end = endDate(a);
   const uid = `${a.id}@planning.local`;
   const desc = buildDescription(a).replace(/\n/g, "\\n");
+  const attendees = techs.map(
+    (t) => `ATTENDEE;CN=${t.name};RSVP=TRUE:mailto:${t.email}`,
+  );
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -65,14 +68,14 @@ export function buildICS(a: Assignment, tech: Technician): string {
     `LOCATION:${a.address}`,
     `DESCRIPTION:${desc}`,
     `ORGANIZER;CN=Planning:mailto:planning@local`,
-    `ATTENDEE;CN=${tech.name};RSVP=TRUE:mailto:${tech.email}`,
+    ...attendees,
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");
 }
 
-export function downloadICS(a: Assignment, tech: Technician) {
-  const ics = buildICS(a, tech);
+export function downloadICS(a: Assignment, techs: Technician[]) {
+  const ics = buildICS(a, techs);
   const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -82,7 +85,7 @@ export function downloadICS(a: Assignment, tech: Technician) {
   URL.revokeObjectURL(url);
 }
 
-export function googleCalendarUrl(a: Assignment, tech: Technician): string {
+export function googleCalendarUrl(a: Assignment, techs: Technician[]): string {
   const start = startDate(a);
   const end = endDate(a);
   const fmt = (d: Date) => fmtICS(d);
@@ -92,13 +95,14 @@ export function googleCalendarUrl(a: Assignment, tech: Technician): string {
     dates: `${fmt(start)}/${fmt(end)}`,
     details: buildDescription(a),
     location: a.address,
-    add: tech.email,
   });
+  for (const t of techs) params.append("add", t.email);
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-export function mailtoUrl(a: Assignment, tech: Technician): string {
+export function mailtoUrl(a: Assignment, techs: Technician[]): string {
   const subject = `Mission: ${a.title} — ${a.dateISO} ${a.half}`;
   const body = buildDescription(a);
-  return `mailto:${tech.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const to = techs.map((t) => t.email).join(",");
+  return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
