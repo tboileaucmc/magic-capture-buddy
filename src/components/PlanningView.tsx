@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
+import { assignmentSlots } from "@/lib/planning-types";
 import { downloadICS, googleCalendarUrl, mailtoUrl } from "@/lib/calendar-export";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,9 +77,10 @@ export function PlanningView() {
   const stepDays = dayCount === 5 ? 7 : dayCount === 10 ? 14 : 28;
 
   const findAssignment = (techId: string, dateISO: string, half: HalfDay) =>
-    data.assignments.find(
-      (a) => a.technicianId === techId && a.dateISO === dateISO && a.half === half,
-    );
+    data.assignments.find((a) => {
+      if (a.technicianId !== techId) return false;
+      return assignmentSlots(a).some((s) => s.dateISO === dateISO && s.half === half);
+    });
 
   const categoryById = (id: string) => data.categories.find((c) => c.id === id);
 
@@ -189,6 +191,7 @@ export function PlanningView() {
                     return HALVES.map((h) => {
                       const a = findAssignment(t.id, dateISO, h);
                       const cat = a ? categoryById(a.categoryId) : null;
+                      const isFirst = a ? a.dateISO === dateISO && a.half === h : false;
                       return (
                         <td
                           key={`${dateISO}-${h}`}
@@ -197,18 +200,25 @@ export function PlanningView() {
                           onClick={() => setEditing({ technicianId: t.id, dateISO, half: h, existing: a })}
                         >
                           {a ? (
-                            <div className="flex h-full flex-col">
-                              <div
-                                className="mb-1 inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
-                                style={{ backgroundColor: cat?.color }}
-                              >
-                                {cat?.label}
+                            isFirst ? (
+                              <div className="flex h-full flex-col">
+                                <div
+                                  className="mb-1 inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
+                                  style={{ backgroundColor: cat?.color }}
+                                >
+                                  {cat?.label}
+                                </div>
+                                <div className="line-clamp-2 text-xs font-medium">{a.title}</div>
+                                <div className="text-[10px] text-muted-foreground">
+                                  {a.startTime}–{a.endTime}
+                                  {a.endDateISO && a.endDateISO !== a.dateISO && " →"}
+                                </div>
                               </div>
-                              <div className="line-clamp-2 text-xs font-medium">{a.title}</div>
-                              <div className="text-[10px] text-muted-foreground">
-                                {a.startTime}–{a.endTime}
+                            ) : (
+                              <div className="flex h-full items-center text-[10px] italic text-muted-foreground">
+                                … {a.title}
                               </div>
-                            </div>
+                            )
                           ) : (
                             <div className="flex h-full items-center justify-center text-muted-foreground/40">
                               <Plus className="size-4" />
@@ -291,9 +301,14 @@ function AssignmentDialog({
   const [address, setAddress] = useState(existing?.address ?? "");
   const [startTime, setStartTime] = useState(existing?.startTime ?? defaultStart);
   const [endTime, setEndTime] = useState(existing?.endTime ?? defaultEnd);
+  const [endDateISO, setEndDateISO] = useState(existing?.endDateISO ?? existing?.dateISO ?? dateISO);
+  const [endHalf, setEndHalf] = useState<HalfDay>(existing?.endHalf ?? existing?.half ?? half);
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [link, setLink] = useState(existing?.link ?? "");
   const [attachments, setAttachments] = useState(existing?.attachments ?? []);
+
+  const startISO = existing?.dateISO ?? dateISO;
+  const startHalfVal = existing?.half ?? half;
 
   const handleFiles = async (files: FileList | null) => {
     if (!files) return;
@@ -321,8 +336,10 @@ function AssignmentDialog({
     const a: Assignment = {
       id: existing?.id ?? uid(),
       technicianId: technician.id,
-      dateISO,
-      half,
+      dateISO: startISO,
+      half: startHalfVal,
+      endDateISO: endDateISO !== startISO || endHalf !== startHalfVal ? endDateISO : undefined,
+      endHalf: endDateISO !== startISO || endHalf !== startHalfVal ? endHalf : undefined,
       categoryId,
       title: title.trim(),
       address: address.trim(),
@@ -339,8 +356,10 @@ function AssignmentDialog({
   const currentAssignment: Assignment = {
     id: existing?.id ?? "preview",
     technicianId: technician.id,
-    dateISO,
-    half,
+    dateISO: startISO,
+    half: startHalfVal,
+    endDateISO,
+    endHalf,
     categoryId,
     title: title || "Mission",
     address,
@@ -402,6 +421,44 @@ function AssignmentDialog({
               <Label>Fin</Label>
               <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
             </div>
+          </div>
+
+          <div className="grid gap-2 rounded-md border bg-muted/20 p-3">
+            <Label className="text-xs uppercase text-muted-foreground">Période de la mission</Label>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr,auto,1fr,auto]">
+              <div className="grid gap-1">
+                <Label className="text-xs">Du</Label>
+                <Input type="date" value={startISO} disabled />
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">&nbsp;</Label>
+                <div className="rounded border bg-muted px-2 py-1.5 text-xs">
+                  {startHalfVal === "AM" ? "Matin" : "Après-midi"}
+                </div>
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">Au</Label>
+                <Input
+                  type="date"
+                  value={endDateISO}
+                  min={startISO}
+                  onChange={(e) => setEndDateISO(e.target.value || startISO)}
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">&nbsp;</Label>
+                <Select value={endHalf} onValueChange={(v) => setEndHalf(v as HalfDay)}>
+                  <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AM">Matin</SelectItem>
+                    <SelectItem value="PM">Après-midi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Laissez identique au début pour une mission d'une demi-journée. Les week-ends sont automatiquement ignorés.
+            </p>
           </div>
 
           <div className="grid gap-2">
