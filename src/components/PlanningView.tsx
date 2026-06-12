@@ -631,3 +631,76 @@ function AddTechnicianDialog({
     </Dialog>
   );
 }
+
+const PRESET_COLORS = [
+  "#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6",
+  "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#6366f1",
+  "#14b8a6", "#a855f7",
+];
+
+function AddCategoryDialog({
+  open,
+  onOpenChange,
+  onAdd,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onAdd: (label: string, color: string) => void;
+}) {
+  const [label, setLabel] = useState("");
+  const [color, setColor] = useState(PRESET_COLORS[0]);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Ajouter une catégorie</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-3">
+          <div className="grid gap-2">
+            <Label>Intitulé</Label>
+            <Input value={label} onChange={(e) => setLabel(e.target.value)} maxLength={40} placeholder="Ex: Réunion" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Couleur</Label>
+            <div className="flex flex-wrap items-center gap-2">
+              {PRESET_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  className={`size-7 rounded-full border-2 transition ${color === c ? "border-foreground scale-110" : "border-transparent"}`}
+                  style={{ backgroundColor: c }}
+                  aria-label={`Choisir ${c}`}
+                />
+              ))}
+              <Input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="h-9 w-14 cursor-pointer p-1"
+              />
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              Aperçu :
+              <span className="inline-flex items-center gap-2 rounded-full border px-2.5 py-1">
+                <span className="size-3 rounded-full" style={{ backgroundColor: color }} />
+                {label || "Nouvelle catégorie"}
+              </span>
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            onClick={() => {
+              if (!label.trim()) { toast.error("Intitulé requis"); return; }
+              onAdd(label.trim(), color);
+              setLabel(""); setColor(PRESET_COLORS[0]);
+            }}
+          >
+            Ajouter
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
