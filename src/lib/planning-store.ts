@@ -68,7 +68,8 @@ export function usePlanning() {
       const slots = assignmentSlots(a);
       const others = d.assignments.filter((x) => {
         if (x.id === a.id) return false;
-        if (x.technicianId !== a.technicianId) return true;
+        const shareTech = x.technicianIds.some((t) => a.technicianIds.includes(t));
+        if (!shareTech) return true;
         const xSlots = assignmentSlots(x);
         return !xSlots.some((xs) =>
           slots.some((s) => s.dateISO === xs.dateISO && s.half === xs.half),
