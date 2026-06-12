@@ -39,11 +39,21 @@ function save(data: Data) {
 }
 
 export function usePlanning() {
-  const [data, setData] = useState<Data>(() => load());
+  const [data, setData] = useState<Data>({
+    technicians: DEFAULT_TECHNICIANS,
+    categories: DEFAULT_CATEGORIES,
+    assignments: [],
+  });
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    save(data);
-  }, [data]);
+    setData(load());
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) save(data);
+  }, [data, hydrated]);
 
   const upsertAssignment = useCallback((a: Assignment) => {
     setData((d) => {
