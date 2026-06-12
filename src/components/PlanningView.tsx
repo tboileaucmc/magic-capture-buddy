@@ -250,7 +250,8 @@ export function PlanningView() {
         <AssignmentDialog
           open
           onOpenChange={(o) => !o && setEditing(null)}
-          technician={data.technicians.find((t) => t.id === editing.technicianId)!}
+          allTechnicians={data.technicians}
+          initialTechnicianId={editing.technicianId}
           categories={data.categories}
           dateISO={editing.dateISO}
           half={editing.half}
