@@ -527,15 +527,15 @@ function AssignmentDialog({
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" asChild>
-              <a href={googleCalendarUrl(currentAssignment, technician)} target="_blank" rel="noreferrer">
+              <a href={googleCalendarUrl(currentAssignment, selectedTechs)} target="_blank" rel="noreferrer">
                 <CalIcon /> Google Agenda
               </a>
             </Button>
-            <Button variant="outline" onClick={() => downloadICS(currentAssignment, technician)}>
+            <Button variant="outline" onClick={() => downloadICS(currentAssignment, selectedTechs)}>
               <Download /> .ics
             </Button>
             <Button variant="outline" asChild>
-              <a href={mailtoUrl(currentAssignment, technician)}>
+              <a href={mailtoUrl(currentAssignment, selectedTechs)}>
                 <Mail /> Email
               </a>
             </Button>
