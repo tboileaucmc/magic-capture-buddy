@@ -78,7 +78,7 @@ export function PlanningView() {
 
   const findAssignment = (techId: string, dateISO: string, half: HalfDay) =>
     data.assignments.find((a) => {
-      if (a.technicianId !== techId) return false;
+      if (!a.technicianIds.includes(techId)) return false;
       return assignmentSlots(a).some((s) => s.dateISO === dateISO && s.half === half);
     });
 
