@@ -54,8 +54,8 @@ export function assignmentSlots(a: Pick<Assignment, "dateISO" | "half" | "endDat
       const halves: HalfDay[] = [];
       if (isFirst && isLast) {
         if (a.half === "AM") halves.push("AM");
-        if (endHalf === "PM" || a.half === "PM") halves.push("PM");
-        if (a.half === "AM" && endHalf === "AM") halves.length = 1;
+        if (endHalf === "PM") halves.push("PM");
+        if (halves.length === 0) halves.push("PM");
       } else if (isFirst) {
         if (a.half === "AM") halves.push("AM", "PM");
         else halves.push("PM");
