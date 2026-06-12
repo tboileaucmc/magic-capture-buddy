@@ -109,5 +109,5 @@ export function usePlanning() {
     setData((d) => ({ ...d, categories: [...d.categories, c] }));
   }, []);
 
-  return { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician, addCategory };
+  return { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician, addCategory, removeCategory };
 }
