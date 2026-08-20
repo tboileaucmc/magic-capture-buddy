@@ -577,6 +577,12 @@ function AssignmentDialog({
                 <CalIcon /> Google Agenda
               </a>
             </Button>
+            <Button variant="outline" asChild>
+              <a href={outlookCalendarUrl(currentAssignment, selectedTechs)} target="_blank" rel="noreferrer">
+                <CalIcon /> Outlook
+              </a>
+            </Button>
+
             <Button variant="outline" onClick={() => downloadICS(currentAssignment, selectedTechs)}>
               <Download /> .ics
             </Button>
