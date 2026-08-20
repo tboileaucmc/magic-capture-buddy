@@ -171,7 +171,7 @@ export function PlanningView() {
                 </th>
                 {days.map((d, i) => (
                   <th key={i} colSpan={2} className="border-b border-r p-2 text-center">
-                    <div className="font-semibold">{DAY_NAMES[i]}</div>
+                    <div className="font-semibold">{DAY_NAMES[(d.getDay() + 6) % 7]}</div>
                     <div className="text-xs text-muted-foreground">
                       {d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
                     </div>
