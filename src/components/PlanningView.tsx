@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
 import { assignmentSlots } from "@/lib/planning-types";
-import { downloadICS, googleCalendarUrl, mailtoUrl } from "@/lib/calendar-export";
+import { downloadICS, googleCalendarUrl, mailtoUrl, outlookCalendarUrl } from "@/lib/calendar-export";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
