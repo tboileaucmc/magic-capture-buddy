@@ -6,6 +6,7 @@ import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
 import { assignmentSlots } from "@/lib/planning-types";
 import { downloadICS, googleCalendarUrl, mailtoUrl, outlookCalendarUrl } from "@/lib/calendar-export";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -577,19 +578,46 @@ function AssignmentDialog({
                 <CalIcon /> Google Agenda
               </a>
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const url = outlookCalendarUrl(currentAssignment, selectedTechs);
-                const w = window.open(url, "_blank", "noopener,noreferrer");
-                if (!w) {
-                  downloadICS(currentAssignment, selectedTechs);
-                  toast.info("Outlook web bloqué : fichier .ics téléchargé, ouvrez-le avec Outlook.");
-                }
-              }}
-            >
-              <CalIcon /> Outlook
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <CalIcon /> Outlook
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-popover z-50">
+                <DropdownMenuItem
+                  onClick={() => {
+                    downloadICS(currentAssignment, selectedTechs);
+                    toast.success("Fichier .ics téléchargé : ouvrez-le pour l'ajouter à Outlook");
+                  }}
+                >
+                  Outlook (application) — .ics
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    window.open(
+                      outlookCalendarUrl(currentAssignment, selectedTechs, "work"),
+                      "_blank",
+                      "noopener,noreferrer",
+                    )
+                  }
+                >
+                  Outlook Web (professionnel)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    window.open(
+                      outlookCalendarUrl(currentAssignment, selectedTechs, "personal"),
+                      "_blank",
+                      "noopener,noreferrer",
+                    )
+                  }
+                >
+                  Outlook Web (personnel)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
 
 
             <Button variant="outline" onClick={() => downloadICS(currentAssignment, selectedTechs)}>

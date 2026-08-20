@@ -112,7 +112,11 @@ function fmtISOUtcLike(d: Date): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:00`;
 }
 
-export function outlookCalendarUrl(a: Assignment, techs: Technician[]): string {
+export function outlookCalendarUrl(
+  a: Assignment,
+  techs: Technician[],
+  account: "work" | "personal" = "work",
+): string {
   const params = new URLSearchParams({
     path: "/calendar/action/compose",
     rru: "addevent",
@@ -124,5 +128,6 @@ export function outlookCalendarUrl(a: Assignment, techs: Technician[]): string {
   });
   const to = techs.map((t) => t.email).filter(Boolean).join(",");
   if (to) params.set("to", to);
-  return `https://outlook.office.com/calendar/0/deeplink/compose?${params.toString()}`;
+  const host = account === "personal" ? "outlook.live.com" : "outlook.office.com";
+  return `https://${host}/calendar/0/deeplink/compose?${params.toString()}`;
 }
