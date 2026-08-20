@@ -106,3 +106,23 @@ export function mailtoUrl(a: Assignment, techs: Technician[]): string {
   const to = techs.map((t) => t.email).join(",");
   return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
+
+function fmtISOUtcLike(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:00`;
+}
+
+export function outlookCalendarUrl(a: Assignment, techs: Technician[]): string {
+  const params = new URLSearchParams({
+    path: "/calendar/action/compose",
+    rru: "addevent",
+    subject: a.title,
+    startdt: fmtISOUtcLike(startDate(a)),
+    enddt: fmtISOUtcLike(endDate(a)),
+    body: buildDescription(a),
+    location: a.address,
+  });
+  const to = techs.map((t) => t.email).filter(Boolean).join(",");
+  if (to) params.set("to", to);
+  return `https://outlook.office.com/calendar/0/deeplink/compose?${params.toString()}`;
+}
