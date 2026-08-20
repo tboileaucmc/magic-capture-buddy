@@ -577,11 +577,20 @@ function AssignmentDialog({
                 <CalIcon /> Google Agenda
               </a>
             </Button>
-            <Button variant="outline" asChild>
-              <a href={outlookCalendarUrl(currentAssignment, selectedTechs)} target="_blank" rel="noreferrer">
-                <CalIcon /> Outlook
-              </a>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const url = outlookCalendarUrl(currentAssignment, selectedTechs);
+                const w = window.open(url, "_blank", "noopener,noreferrer");
+                if (!w) {
+                  downloadICS(currentAssignment, selectedTechs);
+                  toast.info("Outlook web bloqué : fichier .ics téléchargé, ouvrez-le avec Outlook.");
+                }
+              }}
+            >
+              <CalIcon /> Outlook
             </Button>
+
 
             <Button variant="outline" onClick={() => downloadICS(currentAssignment, selectedTechs)}>
               <Download /> .ics
