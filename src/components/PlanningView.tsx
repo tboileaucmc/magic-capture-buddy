@@ -593,27 +593,14 @@ function AssignmentDialog({
                 >
                   Outlook (application) — .ics
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    window.open(
-                      outlookCalendarUrl(currentAssignment, selectedTechs, "work"),
-                      "_blank",
-                      "noopener,noreferrer",
-                    )
-                  }
-                >
-                  Outlook Web (professionnel)
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    window.open(
-                      outlookCalendarUrl(currentAssignment, selectedTechs, "personal"),
-                      "_blank",
-                      "noopener,noreferrer",
-                    )
-                  }
-                >
-                  Outlook Web (personnel)
+                <DropdownMenuItem asChild>
+                  <a
+                    href="https://outlook.cloud.microsoft/calendar/directiontechnique@cinemeccanica.fr"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Calendrier central Cinemeccanica
+                  </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
