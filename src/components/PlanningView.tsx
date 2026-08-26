@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
 import { assignmentSlots } from "@/lib/planning-types";
-import { downloadICS, googleCalendarUrl, mailtoUrl } from "@/lib/calendar-export";
+import { downloadICS, googleCalendarUrl, mailtoUrl, outlookCalendarUrl } from "@/lib/calendar-export";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -595,11 +595,11 @@ function AssignmentDialog({
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <a
-                    href="https://outlook.cloud.microsoft/calendar/directiontechnique@cinemeccanica.fr"
+                    href={outlookCalendarUrl(currentAssignment, selectedTechs, "work")}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Calendrier central Cinemeccanica
+                    Outlook Web — créer l'ordre de mission
                   </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
