@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
 import { assignmentSlots } from "@/lib/planning-types";
-import { downloadICS, googleCalendarUrl, mailtoUrl, outlookCalendarUrl } from "@/lib/calendar-export";
+import { downloadICS, googleCalendarUrl, mailtoUrl } from "@/lib/calendar-export";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -593,27 +593,14 @@ function AssignmentDialog({
                 >
                   Outlook (application) — .ics
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    window.open(
-                      outlookCalendarUrl(currentAssignment, selectedTechs, "work"),
-                      "_blank",
-                      "noopener,noreferrer",
-                    )
-                  }
-                >
-                  Outlook Web (professionnel)
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    window.open(
-                      outlookCalendarUrl(currentAssignment, selectedTechs, "personal"),
-                      "_blank",
-                      "noopener,noreferrer",
-                    )
-                  }
-                >
-                  Outlook Web (personnel)
+                <DropdownMenuItem asChild>
+                  <a
+                    href="https://outlook.cloud.microsoft/calendar/directiontechnique@cinemeccanica.fr"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Calendrier central Cinemeccanica
+                  </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
