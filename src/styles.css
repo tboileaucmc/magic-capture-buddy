@@ -142,3 +142,17 @@
     color: var(--color-foreground);
   }
 }
+
+/* Téléphone tenu en portrait : on affiche le planning en paysage */
+@media (orientation: portrait) and (max-width: 767px) {
+  .force-landscape {
+    position: fixed;
+    top: 0;
+    left: 100vw;
+    width: 100vh;
+    height: 100vw;
+    transform: rotate(90deg);
+    transform-origin: top left;
+    overflow: auto;
+  }
+}
