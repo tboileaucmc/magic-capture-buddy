@@ -15,7 +15,9 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <>
-      <PlanningView />
+      <div className="force-landscape">
+        <PlanningView />
+      </div>
       <Toaster />
     </>
   );
