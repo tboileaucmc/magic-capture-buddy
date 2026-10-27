@@ -394,6 +394,10 @@ function AssignmentDialog({
       notes: notes.trim() || undefined,
       link: link.trim() || undefined,
       toConfirm: toConfirm || undefined,
+      sequence:
+        existing && !!existing.toConfirm !== toConfirm
+          ? (existing.sequence ?? 0) + 1
+          : existing?.sequence,
       attachments,
     };
     onSave(a);
@@ -579,6 +583,31 @@ function AssignmentDialog({
             {existing && (
               <Button variant="destructive" onClick={() => onDelete(existing.id)}>
                 <Trash2 /> Supprimer
+              </Button>
+            )}
+            {existing?.toConfirm && (
+              <Button
+                onClick={() => {
+                  if (!title.trim()) {
+                    toast.error("Le titre est obligatoire");
+                    return;
+                  }
+                  const confirmed: Assignment = {
+                    ...currentAssignment,
+                    id: existing.id,
+                    title: title.trim(),
+                    toConfirm: undefined,
+                    sequence: (existing.sequence ?? 0) + 1,
+                  };
+                  onSave(confirmed);
+                  setToConfirm(false);
+                  downloadICS(confirmed, selectedTechs);
+                  toast.success(
+                    "RDV confirmé : ouvrez le fichier .ics dans Outlook pour remplacer « RDV à confirmer » par les détails chez le technicien",
+                  );
+                }}
+              >
+                Confirmer le RDV
               </Button>
             )}
           </div>
