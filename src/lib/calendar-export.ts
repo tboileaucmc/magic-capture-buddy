@@ -76,6 +76,7 @@ export function buildICS(input: Assignment, techs: Technician[]): string {
     "METHOD:REQUEST",
     "BEGIN:VEVENT",
     `UID:${uid}`,
+    `SEQUENCE:${a.sequence ?? 0}`,
     `DTSTAMP:${fmtICS(new Date())}`,
     `DTSTART:${fmtICS(start)}`,
     `DTEND:${fmtICS(end)}`,
