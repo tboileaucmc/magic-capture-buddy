@@ -585,7 +585,7 @@ function AssignmentDialog({
                 <Trash2 /> Supprimer
               </Button>
             )}
-            {existing?.toConfirm && (
+            {(existing?.toConfirm || toConfirm) && (
               <Button
                 onClick={() => {
                   if (!title.trim()) {
@@ -594,10 +594,10 @@ function AssignmentDialog({
                   }
                   const confirmed: Assignment = {
                     ...currentAssignment,
-                    id: existing.id,
+                    id: existing?.id ?? uid(),
                     title: title.trim(),
                     toConfirm: undefined,
-                    sequence: (existing.sequence ?? 0) + 1,
+                    sequence: (existing?.sequence ?? 0) + 1,
                   };
                   onSave(confirmed);
                   setToConfirm(false);
