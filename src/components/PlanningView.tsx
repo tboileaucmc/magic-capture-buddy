@@ -536,10 +536,6 @@ function AssignmentDialog({
             <Input value={link} onChange={(e) => setLink(e.target.value)} maxLength={500} placeholder="https://…" />
           </div>
 
-          <label className="flex items-center gap-2 rounded-md border p-2 text-sm">
-            <input type="checkbox" checked={toConfirm} onChange={(e) => setToConfirm(e.target.checked)} className="size-4" />
-            <span><strong>A confirmer</strong> — le technicien reçoit seulement « RDV à confirmer », sans adresse ni détails</span>
-          </label>
 
           <div className="grid gap-2">
             <Label>Notes</Label>
