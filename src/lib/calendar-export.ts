@@ -28,7 +28,21 @@ function endDate(a: Assignment): Date {
   return toDate(a.endDateISO ?? a.dateISO, a.endTime);
 }
 
-export function buildDescription(a: Assignment): string {
+/** Si « A confirmer », masque toutes les informations précises. */
+export function maskIfToConfirm(a: Assignment): Assignment {
+  if (!a.toConfirm) return a;
+  return {
+    ...a,
+    title: "RDV à confirmer",
+    address: "",
+    notes: "Un rendez-vous est prévu sur ce créneau. Les détails vous seront communiqués après confirmation.",
+    link: undefined,
+    attachments: [],
+  };
+}
+
+export function buildDescription(input: Assignment): string {
+  const a = maskIfToConfirm(input);
   const lines: string[] = [];
   if (a.address) {
     const enc = encodeURIComponent(a.address);
@@ -45,7 +59,8 @@ export function buildDescription(a: Assignment): string {
   return lines.join("\n");
 }
 
-export function buildICS(a: Assignment, techs: Technician[]): string {
+export function buildICS(input: Assignment, techs: Technician[]): string {
+  const a = maskIfToConfirm(input);
   const start = startDate(a);
   const end = endDate(a);
   const uid = `${a.id}@planning.local`;
@@ -74,8 +89,9 @@ export function buildICS(a: Assignment, techs: Technician[]): string {
   ].join("\r\n");
 }
 
-export function downloadICS(a: Assignment, techs: Technician[]) {
-  const ics = buildICS(a, techs);
+export function downloadICS(input: Assignment, techs: Technician[]) {
+  const ics = buildICS(input, techs);
+  const a = maskIfToConfirm(input);
   const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -85,7 +101,8 @@ export function downloadICS(a: Assignment, techs: Technician[]) {
   URL.revokeObjectURL(url);
 }
 
-export function googleCalendarUrl(a: Assignment, techs: Technician[]): string {
+export function googleCalendarUrl(input: Assignment, techs: Technician[]): string {
+  const a = maskIfToConfirm(input);
   const start = startDate(a);
   const end = endDate(a);
   const fmt = (d: Date) => fmtICS(d);
@@ -100,7 +117,8 @@ export function googleCalendarUrl(a: Assignment, techs: Technician[]): string {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-export function mailtoUrl(a: Assignment, techs: Technician[]): string {
+export function mailtoUrl(input: Assignment, techs: Technician[]): string {
+  const a = maskIfToConfirm(input);
   const subject = `Mission: ${a.title} — ${a.dateISO} ${a.half}`;
   const body = buildDescription(a);
   const to = techs.map((t) => t.email).join(",");
@@ -113,10 +131,11 @@ function fmtISOUtcLike(d: Date): string {
 }
 
 export function outlookCalendarUrl(
-  a: Assignment,
+  input: Assignment,
   techs: Technician[],
   account: "work" | "personal" = "work",
 ): string {
+  const a = maskIfToConfirm(input);
   const params = new URLSearchParams({
     path: "/calendar/action/compose",
     rru: "addevent",

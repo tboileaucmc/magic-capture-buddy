@@ -343,6 +343,7 @@ function AssignmentDialog({
   const [endHalf, setEndHalf] = useState<HalfDay>(existing?.endHalf ?? existing?.half ?? half);
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [link, setLink] = useState(existing?.link ?? "");
+  const [toConfirm, setToConfirm] = useState(existing?.toConfirm ?? false);
   const [attachments, setAttachments] = useState(existing?.attachments ?? []);
 
   const startISO = existing?.dateISO ?? dateISO;
@@ -392,6 +393,7 @@ function AssignmentDialog({
       endTime,
       notes: notes.trim() || undefined,
       link: link.trim() || undefined,
+      toConfirm: toConfirm || undefined,
       attachments,
     };
     onSave(a);
@@ -412,6 +414,7 @@ function AssignmentDialog({
     endTime,
     notes,
     link,
+    toConfirm,
     attachments,
   };
 
@@ -532,6 +535,11 @@ function AssignmentDialog({
             <Label className="flex items-center gap-1"><LinkIcon className="size-3.5" /> Lien (optionnel)</Label>
             <Input value={link} onChange={(e) => setLink(e.target.value)} maxLength={500} placeholder="https://…" />
           </div>
+
+          <label className="flex items-center gap-2 rounded-md border p-2 text-sm">
+            <input type="checkbox" checked={toConfirm} onChange={(e) => setToConfirm(e.target.checked)} className="size-4" />
+            <span><strong>A confirmer</strong> — le technicien reçoit seulement « RDV à confirmer », sans adresse ni détails</span>
+          </label>
 
           <div className="grid gap-2">
             <Label>Notes</Label>
