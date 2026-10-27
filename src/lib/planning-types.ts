@@ -32,6 +32,8 @@ export type Assignment = {
   endTime: string;
   notes?: string;
   link?: string;
+  /** RDV à confirmer : on envoie seulement un créneau réservé, sans détails. */
+  toConfirm?: boolean;
   attachments?: Attachment[];
 };
 

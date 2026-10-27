@@ -28,7 +28,21 @@ function endDate(a: Assignment): Date {
   return toDate(a.endDateISO ?? a.dateISO, a.endTime);
 }
 
-export function buildDescription(a: Assignment): string {
+/** Si « A confirmer », masque toutes les informations précises. */
+export function maskIfToConfirm(a: Assignment): Assignment {
+  if (!a.toConfirm) return a;
+  return {
+    ...a,
+    title: "RDV à confirmer",
+    address: "",
+    notes: "Un rendez-vous est prévu sur ce créneau. Les détails vous seront communiqués après confirmation.",
+    link: undefined,
+    attachments: [],
+  };
+}
+
+export function buildDescription(input: Assignment): string {
+  const a = maskIfToConfirm(input);
   const lines: string[] = [];
   if (a.address) {
     const enc = encodeURIComponent(a.address);
