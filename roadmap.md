@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Suggestions d’adresses de cinémas depuis l’intitulé de la mission.
 - [x] Suppression d’une fiche de mission : annuler aussi son invitation dans les calendriers des techniciens.
 - [x] Envoi des ordres de mission via Google Agenda (planning.cinemeccanica@gmail.com)
 - [x] Planning en ligne + connexion + envoi PDF jeudi 14h
