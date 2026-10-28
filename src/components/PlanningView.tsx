@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, BadgeCheck } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { usePlanning } from "@/lib/planning-store";
@@ -242,8 +242,9 @@ export function PlanningView() {
                                     aria-label="A confirmer"
                                   />
                                 ) : a.confirmed ? (
-                                  <BadgeCheck
-                                    className="size-3 shrink-0 fill-emerald-500 text-emerald-600"
+                                  <CheckCircle2
+                                    className="size-3.5 shrink-0 text-emerald-600"
+                                    strokeWidth={2.5}
                                     aria-label="Confirmé"
                                   />
                                 ) : null}
@@ -276,7 +277,7 @@ export function PlanningView() {
             mission à confirmer
           </span>
           <span className="inline-flex items-center gap-1">
-            <BadgeCheck className="size-3 fill-emerald-500 text-emerald-600" />
+            <CheckCircle2 className="size-3.5 text-emerald-600" strokeWidth={2.5} />
             RDV confirmé
           </span>
         </p>
