@@ -41,7 +41,7 @@ export type Assignment = {
   attachments?: Attachment[];
 };
 
-/** Énumère les créneaux (jour ouvré + demi-journée) couverts par une mission. */
+/** Énumère les créneaux (jour + demi-journée) couverts par une mission, week-ends inclus. */
 export function assignmentSlots(a: Pick<Assignment, "dateISO" | "half" | "endDateISO" | "endHalf">): Array<{ dateISO: string; half: HalfDay }> {
   const endISO = a.endDateISO ?? a.dateISO;
   const endHalf: HalfDay = a.endHalf ?? a.half;
@@ -51,28 +51,25 @@ export function assignmentSlots(a: Pick<Assignment, "dateISO" | "half" | "endDat
   if (end < start) return [{ dateISO: a.dateISO, half: a.half }];
   const cursor = new Date(start);
   while (cursor <= end) {
-    const wd = cursor.getDay();
-    if (wd !== 0 && wd !== 6) {
-      const p = (n: number) => String(n).padStart(2, "0");
-      const iso = `${cursor.getFullYear()}-${p(cursor.getMonth() + 1)}-${p(cursor.getDate())}`;
-      const isFirst = iso === a.dateISO;
-      const isLast = iso === endISO;
-      const halves: HalfDay[] = [];
-      if (isFirst && isLast) {
-        if (a.half === "AM") halves.push("AM");
-        if (endHalf === "PM") halves.push("PM");
-        if (halves.length === 0) halves.push("PM");
-      } else if (isFirst) {
-        if (a.half === "AM") halves.push("AM", "PM");
-        else halves.push("PM");
-      } else if (isLast) {
-        halves.push("AM");
-        if (endHalf === "PM") halves.push("PM");
-      } else {
-        halves.push("AM", "PM");
-      }
-      for (const h of halves) out.push({ dateISO: iso, half: h });
+    const p = (n: number) => String(n).padStart(2, "0");
+    const iso = `${cursor.getFullYear()}-${p(cursor.getMonth() + 1)}-${p(cursor.getDate())}`;
+    const isFirst = iso === a.dateISO;
+    const isLast = iso === endISO;
+    const halves: HalfDay[] = [];
+    if (isFirst && isLast) {
+      if (a.half === "AM") halves.push("AM");
+      if (endHalf === "PM") halves.push("PM");
+      if (halves.length === 0) halves.push("PM");
+    } else if (isFirst) {
+      if (a.half === "AM") halves.push("AM", "PM");
+      else halves.push("PM");
+    } else if (isLast) {
+      halves.push("AM");
+      if (endHalf === "PM") halves.push("PM");
+    } else {
+      halves.push("AM", "PM");
     }
+    for (const h of halves) out.push({ dateISO: iso, half: h });
     cursor.setDate(cursor.getDate() + 1);
   }
   return out;
