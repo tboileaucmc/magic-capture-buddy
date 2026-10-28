@@ -178,8 +178,14 @@ export function PlanningView() {
                   Technicien
                 </th>
                 {days.map((d, i) => (
-                  <th key={i} colSpan={2} className="border-b border-r p-2 text-center">
-                    <div className="font-semibold">{DAY_NAMES[(d.getDay() + 6) % 7]}</div>
+                  <th
+                    key={i}
+                    colSpan={2}
+                    className={cn("border-b border-r p-2 text-center", isWeekend(d) && "bg-muted/90")}
+                  >
+                    <div className={cn("font-semibold", isWeekend(d) && "text-muted-foreground")}>
+                      {DAY_NAMES[(d.getDay() + 6) % 7]}
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       {d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
                     </div>
@@ -188,9 +194,9 @@ export function PlanningView() {
               </tr>
               <tr className="bg-muted/30">
                 <th className="sticky left-0 z-10 border-b border-r bg-muted/30 p-1" />
-                {days.flatMap((_, i) => [
-                  <th key={`${i}-am`} className="border-b border-r p-1 text-xs font-normal text-muted-foreground">Matin</th>,
-                  <th key={`${i}-pm`} className="border-b border-r p-1 text-xs font-normal text-muted-foreground">Après-midi</th>,
+                {days.flatMap((d, i) => [
+                  <th key={`${i}-am`} className={cn("border-b border-r p-1 text-xs font-normal text-muted-foreground", isWeekend(d) && "bg-muted/60")}>Matin</th>,
+                  <th key={`${i}-pm`} className={cn("border-b border-r p-1 text-xs font-normal text-muted-foreground", isWeekend(d) && "bg-muted/60")}>Après-midi</th>,
                 ])}
               </tr>
             </thead>
@@ -230,8 +236,11 @@ export function PlanningView() {
                       return (
                         <td
                           key={`${dateISO}-${h}`}
-                          className="cursor-pointer border-b border-r p-1 align-top transition hover:bg-accent/40"
-                          style={{ minWidth: dayCount > 5 ? 70 : 110, height: 70, backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
+                          className={cn(
+                            "cursor-pointer border-b border-r p-1 align-top transition hover:bg-accent/40",
+                            isWeekend(d) && "bg-muted/40",
+                          )}
+                          style={{ minWidth: dayCount > 7 ? 70 : 96, height: 70, backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
                           onClick={() => setEditing({ technicianId: t.id, dateISO, half: h, existing: a })}
                         >
                           {a ? (
