@@ -5,3 +5,4 @@
 - [x] Bouton « Confirmer le RDV » (remplacement via .ics)
 - [x] Étoile amber sur les missions à confirmer + coche verte quand confirmé
 - [x] Samedi et dimanche affichés et planifiables dans toutes les vues
+- [x] Coche verte sur toute mission validée sans « à confirmer » (étoile réservée aux missions à confirmer)

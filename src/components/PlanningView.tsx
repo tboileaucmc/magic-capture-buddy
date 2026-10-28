@@ -257,13 +257,13 @@ export function PlanningView() {
                                     className="size-3 shrink-0 fill-amber-400 text-amber-500"
                                     aria-label="A confirmer"
                                   />
-                                ) : a.confirmed ? (
+                                ) : (
                                   <CheckCircle2
                                     className="size-3.5 shrink-0 text-emerald-600"
                                     strokeWidth={2.5}
                                     aria-label="Confirmé"
                                   />
-                                ) : null}
+                                )}
                               </div>
                               <div className="line-clamp-2 text-xs font-medium">{a.title}</div>
                               <div className="text-[10px] text-muted-foreground">
@@ -432,7 +432,7 @@ function AssignmentDialog({
       notes: notes.trim() || undefined,
       link: link.trim() || undefined,
       toConfirm: toConfirm || undefined,
-      confirmed: toConfirm ? undefined : existing?.confirmed,
+      confirmed: toConfirm ? undefined : true,
       sequence:
         existing && !!existing.toConfirm !== toConfirm
           ? (existing.sequence ?? 0) + 1
