@@ -83,7 +83,7 @@ export function buildICS(input: Assignment, techs: Technician[]): string {
     `SUMMARY:${a.title}`,
     `LOCATION:${a.address}`,
     `DESCRIPTION:${desc}`,
-    `ORGANIZER;CN=Direction technique Cinemeccanica:mailto:directiontechnique@cinemeccanica.fr`,
+    `ORGANIZER;CN=Planning Cinemeccanica:mailto:planning.cinemeccanica@gmail.com`,
     ...attendees,
     "END:VEVENT",
     "END:VCALENDAR",
