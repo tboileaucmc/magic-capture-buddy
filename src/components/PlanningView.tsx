@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { toast } from "sonner";
 
 import { usePlanning } from "@/lib/planning-store";
@@ -229,11 +229,19 @@ export function PlanningView() {
                         >
                           {a ? (
                             <div className="flex h-full flex-col">
-                              <div
-                                className="mb-1 inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
-                                style={{ backgroundColor: cat?.color }}
-                              >
-                                {cat?.label}
+                              <div className="mb-1 flex items-center gap-1">
+                                <span
+                                  className="inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
+                                  style={{ backgroundColor: cat?.color }}
+                                >
+                                  {cat?.label}
+                                </span>
+                                {a.toConfirm && (
+                                  <Star
+                                    className="size-3 shrink-0 fill-amber-400 text-amber-500"
+                                    aria-label="A confirmer"
+                                  />
+                                )}
                               </div>
                               <div className="line-clamp-2 text-xs font-medium">{a.title}</div>
                               <div className="text-[10px] text-muted-foreground">
