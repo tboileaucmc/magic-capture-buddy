@@ -20,7 +20,7 @@ const schema = z.object({
 const DRIVE = "https://connector-gateway.lovable.dev/google_drive";
 
 /** Dépose le fichier dans le Drive du compte planning, le rend lisible par lien, renvoie l'URL. */
-async function uploadToDrive(f: { name: string; type: string; dataUrl: string }, lovableKey: string, driveKey: string) {
+export async function uploadToDrive(f: { name: string; type: string; dataUrl: string }, lovableKey: string, driveKey: string) {
   const b64 = f.dataUrl.split(",")[1] ?? "";
   const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
   const boundary = "mission" + Date.now();
