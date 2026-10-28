@@ -7,6 +7,7 @@ import { UsersDialog } from "@/components/UsersDialog";
 import { useRole } from "@/lib/use-role";
 import { CinemaAddressSuggestions } from "@/components/CinemaAddressSuggestions";
 import { supabase } from "@/integrations/supabase/client";
+import logoAsset from "@/assets/logo-cmc.png.asset.json";
 
 import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
@@ -115,14 +116,16 @@ export function PlanningView() {
     <div className="planning-surface min-h-screen bg-background p-4 md:p-6">
       <div className="mx-auto max-w-[1400px]">
         <header className="planning-header mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="mb-1 text-sm font-semibold text-primary">CINEMECCANICA FRANCE</p>
+          <div className="flex max-w-full flex-wrap items-center gap-5">
+            <img src={logoAsset.url} alt="Cinemeccanica France" width={1010} height={320} className="h-auto w-[220px] max-w-full shrink-0 object-contain" />
+            <div>
             <h1 className="text-2xl font-bold">Planning Techniciens</h1>
             <p className="text-sm text-muted-foreground">
               Du {days[0]?.toLocaleDateString("fr-FR", { day: "2-digit", month: "long" })}
               {" au "}
               {days[days.length - 1]?.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}
             </p>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
