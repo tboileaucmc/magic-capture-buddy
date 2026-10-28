@@ -2,3 +2,4 @@
 - Google Calendar/Drive/Gmail calls run server-side through connector gateway; mission invites and the weekly PDF are sent from the connected Google account.
 - Mission-sheet deletion awaits authenticated Calendar cancellation with the creation event ID and sendUpdates=all before removing the planning entry; provider failure preserves the mission for retry.
 - The weekly PDF is drawn with jsPDF from data (no DOM capture) so the same code runs in the button and the Thursday cron route.
+- Cinema address suggestions use authenticated Google Places text search through the connector gateway, debounced and briefly cached in memory; selecting a suggestion fills only the address to preserve the mission title and avoid overwriting manual input.
