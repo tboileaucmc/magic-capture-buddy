@@ -9,6 +9,7 @@ import { downloadICS, googleCalendarUrl, mailtoUrl, outlookCalendarUrl } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -43,12 +44,19 @@ function fmtISO(d: Date): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
+/** Samedi et dimanche sont affichés et planifiables comme les autres jours. */
+function isWeekend(d: Date): boolean {
+  const wd = d.getDay(); // 0=Dim .. 6=Sam
+  return wd === 0 || wd === 6;
+}
+
 function uid(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
 type ViewMode = "1w" | "2w" | "1m";
-const VIEW_DAYS: Record<ViewMode, number> = { "1w": 5, "2w": 10, "1m": 20 };
+const VIEW_DAYS: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
+const VIEW_STEP: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 
 export function PlanningView() {
   const { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician, addCategory, removeCategory } = usePlanning();
@@ -69,14 +77,13 @@ export function PlanningView() {
     const out: Date[] = [];
     const cursor = new Date(weekStart);
     while (out.length < dayCount) {
-      const wd = cursor.getDay(); // 0=Sun .. 6=Sat
-      if (wd !== 0 && wd !== 6) out.push(new Date(cursor));
+      out.push(new Date(cursor));
       cursor.setDate(cursor.getDate() + 1);
     }
     return out;
   }, [weekStart, dayCount]);
 
-  const stepDays = dayCount === 5 ? 7 : dayCount === 10 ? 14 : 28;
+  const stepDays = VIEW_STEP[viewMode];
 
   const findAssignment = (techId: string, dateISO: string, half: HalfDay) =>
     data.assignments.find((a) => {
