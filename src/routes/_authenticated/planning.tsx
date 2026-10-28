@@ -16,13 +16,13 @@ export const Route = createFileRoute("/_authenticated/planning")({
   }),
   component: () => (
     <>
-      <div className="force-landscape">
+      <div className="force-landscape cmc-theme">
         <PlanningView />
         <img
           src={logoAsset.url}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none fixed left-1/2 top-1/2 z-50 w-[60%] max-w-[900px] -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.07]"
+          className="pointer-events-none fixed left-1/2 top-1/2 z-50 w-[60%] max-w-[900px] -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.045]"
         />
       </div>
       <Toaster />

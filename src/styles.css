@@ -143,6 +143,51 @@
   }
 }
 
+/* The planning theme is local: login and portal dialogs keep their own theme. */
+.cmc-theme {
+  color-scheme: dark;
+  --background: oklch(0.155 0 0);
+  --foreground: oklch(0.94 0.004 85);
+  --card: oklch(0.245 0 0);
+  --card-foreground: var(--foreground);
+  --primary: oklch(0.8 0.13 85);
+  --primary-foreground: oklch(0.17 0 0);
+  --secondary: oklch(0.3 0.005 85);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.32 0 0);
+  --muted-foreground: oklch(0.75 0.008 85);
+  --accent: oklch(0.39 0.025 85);
+  --accent-foreground: var(--foreground);
+  --border: oklch(0.39 0.008 85);
+  --input: oklch(0.44 0.015 85);
+  --ring: var(--primary);
+  --cmc-header: oklch(0.21 0 0);
+  --cmc-weekend: oklch(0.285 0.013 85);
+  --cmc-sheen: linear-gradient(135deg, var(--background), var(--cmc-header));
+  --cmc-shadow: 0 12px 36px color-mix(in oklab, var(--background) 70%, transparent);
+  color: var(--foreground);
+  background: var(--background);
+}
+
+.cmc-theme .planning-surface { background: var(--cmc-sheen); }
+.cmc-theme .planning-header {
+  border-bottom: 1px solid color-mix(in oklab, var(--primary) 50%, var(--border));
+  padding-bottom: 1.25rem;
+}
+.cmc-theme .planning-grid {
+  border-top: 2px solid var(--primary);
+  box-shadow: var(--cmc-shadow);
+}
+.cmc-theme .planning-grid thead tr:first-child,
+.cmc-theme .planning-grid thead tr:first-child th { background: var(--cmc-header); }
+.cmc-theme .planning-grid thead tr:first-child th { color: var(--primary); }
+.cmc-theme .planning-grid thead tr:nth-child(2),
+.cmc-theme .planning-grid thead tr:nth-child(2) th { background: var(--secondary); }
+.cmc-theme .planning-grid .planning-weekend { background: var(--cmc-weekend); }
+.cmc-theme .planning-grid tbody tr:nth-child(even) { background: color-mix(in oklab, var(--foreground) 3%, var(--card)); }
+.cmc-theme .planning-grid tbody td:first-child { background: var(--cmc-header); }
+.cmc-theme .planning-grid tbody td:hover { outline: 1px solid var(--primary); outline-offset: -1px; }
+
 /* Téléphone tenu en portrait : on affiche le planning en paysage */
 @media (orientation: portrait) and (max-width: 767px) {
   .force-landscape {
