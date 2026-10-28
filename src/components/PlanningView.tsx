@@ -576,7 +576,8 @@ function AssignmentDialog({
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Laissez identique au début pour une mission d'une demi-journée. Les week-ends sont automatiquement ignorés.
+              Laissez identique au début pour une mission d'une demi-journée. Les samedis et dimanches sont planifiables et
+              inclus dans les périodes multi-jours.
             </p>
           </div>
 
