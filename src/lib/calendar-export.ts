@@ -181,7 +181,6 @@ export function buildHtmlDescription(input: Assignment): string {
   const parts: string[] = [];
   parts.push(`👋 <b>Bonjour !</b><br>Une nouvelle mission vous attend. Voici tout ce qu'il faut savoir :`);
   parts.push(`<br><br>🎬 <b>Mission :</b> ${esc(a.title)}`);
-  parts.push(`<br>📅 <b>Quand :</b> ${when}`);
   if (input.toConfirm) {
     parts.push(`<br><br>⏳ <i>Ce rendez-vous est encore à confirmer. Gardez le créneau libre, les détails arrivent très vite !</i>`);
   }
