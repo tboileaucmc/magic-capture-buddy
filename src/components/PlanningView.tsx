@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
+import { CinemaAddressSuggestions } from "@/components/CinemaAddressSuggestions";
 import { supabase } from "@/integrations/supabase/client";
 
 import { usePlanning } from "@/lib/planning-store";
@@ -394,6 +395,7 @@ function AssignmentDialog({
   );
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? "");
   const [title, setTitle] = useState(existing?.title ?? "");
+  const [addressSuggestionsActive, setAddressSuggestionsActive] = useState(false);
   const [address, setAddress] = useState(existing?.address ?? "");
   const [startTime, setStartTime] = useState(existing?.startTime ?? defaultStart);
   const [endTime, setEndTime] = useState(existing?.endTime ?? defaultEnd);
@@ -544,13 +546,14 @@ function AssignmentDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label>Intitulé / Affaire</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="Ex: Rénovation cuisine - Mr Dupont" />
+            <Label htmlFor="mission-title">Intitulé / Affaire</Label>
+            <Input id="mission-title" value={title} onChange={(e) => { setTitle(e.target.value); setAddressSuggestionsActive(true); }} maxLength={120} placeholder="Ex : Cinéma Pathé Beaugrenelle Paris" />
           </div>
 
           <div className="grid gap-2">
-            <Label className="flex items-center gap-1"><MapPin className="size-3.5" /> Adresse / Lieu</Label>
-            <Input value={address} onChange={(e) => setAddress(e.target.value)} maxLength={250} placeholder="12 rue de la Paix, 75002 Paris" />
+            <Label htmlFor="mission-address" className="flex items-center gap-1"><MapPin className="size-3.5" /> Adresse / Lieu</Label>
+            <Input id="mission-address" value={address} onChange={(e) => { setAddress(e.target.value); setAddressSuggestionsActive(false); }} maxLength={250} placeholder="12 rue de la Paix, 75002 Paris" />
+            <CinemaAddressSuggestions title={title} active={addressSuggestionsActive} onSelect={(value) => { setAddress(value); setAddressSuggestionsActive(false); }} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
