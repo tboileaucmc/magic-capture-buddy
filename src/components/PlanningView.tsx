@@ -6,6 +6,7 @@ import { BroadcastDialog } from "@/components/BroadcastDialog";
 import { UsersDialog } from "@/components/UsersDialog";
 import { useRole } from "@/lib/use-role";
 import { CinemaAddressSuggestions } from "@/components/CinemaAddressSuggestions";
+import { PlanningDateInput } from "@/components/PlanningDateInput";
 import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo-cmc.png.asset.json";
 
@@ -146,18 +147,9 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             <Button variant="outline" onClick={() => setWeekStart(startOfWeek(new Date()))}>
               Aujourd'hui
             </Button>
-            <Input
-              type="date"
-              className="w-[160px]"
-              value={(() => {
-                const p = (n: number) => String(n).padStart(2, "0");
-                return `${weekStart.getFullYear()}-${p(weekStart.getMonth() + 1)}-${p(weekStart.getDate())}`;
-              })()}
-              onChange={(e) => {
-                if (!e.target.value) return;
-                const [y, m, d] = e.target.value.split("-").map(Number);
-                setWeekStart(startOfWeek(new Date(y, m - 1, d)));
-              }}
+            <PlanningDateInput
+              value={fmtISO(weekStart)}
+              onSelect={(date) => setWeekStart(startOfWeek(date))}
             />
             <Button variant="outline" size="icon" onClick={() => {
               const d = new Date(weekStart); d.setDate(d.getDate() + stepDays); setWeekStart(d);
