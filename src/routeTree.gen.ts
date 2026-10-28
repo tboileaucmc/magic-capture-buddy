@@ -10,12 +10,29 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedPlanningRouteImport } from './routes/_authenticated/planning'
 import { Route as ApiPublicJobsWeeklyPlanningRouteImport } from './routes/api/public/jobs/weekly-planning'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPlanningRoute = AuthenticatedPlanningRouteImport.update({
+  id: '/planning',
+  path: '/planning',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiPublicJobsWeeklyPlanningRoute =
   ApiPublicJobsWeeklyPlanningRouteImport.update({
@@ -26,27 +43,42 @@ const ApiPublicJobsWeeklyPlanningRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/planning': typeof AuthenticatedPlanningRoute
   '/api/public/jobs/weekly-planning': typeof ApiPublicJobsWeeklyPlanningRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/planning': typeof AuthenticatedPlanningRoute
   '/api/public/jobs/weekly-planning': typeof ApiPublicJobsWeeklyPlanningRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/planning': typeof AuthenticatedPlanningRoute
   '/api/public/jobs/weekly-planning': typeof ApiPublicJobsWeeklyPlanningRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/jobs/weekly-planning'
+  fullPaths: '/' | '/auth' | '/planning' | '/api/public/jobs/weekly-planning'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/jobs/weekly-planning'
-  id: '__root__' | '/' | '/api/public/jobs/weekly-planning'
+  to: '/' | '/auth' | '/planning' | '/api/public/jobs/weekly-planning'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/planning'
+    | '/api/public/jobs/weekly-planning'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   ApiPublicJobsWeeklyPlanningRoute: typeof ApiPublicJobsWeeklyPlanningRoute
 }
 
@@ -59,6 +91,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/planning': {
+      id: '/_authenticated/planning'
+      path: '/planning'
+      fullPath: '/planning'
+      preLoaderRoute: typeof AuthenticatedPlanningRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/jobs/weekly-planning': {
       id: '/api/public/jobs/weekly-planning'
       path: '/api/public/jobs/weekly-planning'
@@ -69,8 +122,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedPlanningRoute: typeof AuthenticatedPlanningRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedPlanningRoute: AuthenticatedPlanningRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   ApiPublicJobsWeeklyPlanningRoute: ApiPublicJobsWeeklyPlanningRoute,
 }
 export const routeTree = rootRouteImport

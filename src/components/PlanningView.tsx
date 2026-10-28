@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
@@ -160,6 +161,9 @@ export function PlanningView() {
               <Plus /> Catégorie
             </Button>
             <BroadcastDialog />
+            <Button variant="ghost" onClick={async () => { await supabase.auth.signOut(); window.location.replace("/auth"); }}>
+              Déconnexion
+            </Button>
           </div>
         </header>
 
