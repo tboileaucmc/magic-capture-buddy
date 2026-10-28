@@ -112,10 +112,11 @@ export function PlanningView() {
 
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
+    <div className="planning-surface min-h-screen bg-background p-4 md:p-6">
       <div className="mx-auto max-w-[1400px]">
-        <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <header className="planning-header mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
+            <p className="mb-1 text-sm font-semibold text-primary">CINEMECCANICA FRANCE</p>
             <h1 className="text-2xl font-bold">Planning Techniciens</h1>
             <p className="text-sm text-muted-foreground">
               Du {days[0]?.toLocaleDateString("fr-FR", { day: "2-digit", month: "long" })}
@@ -200,7 +201,7 @@ export function PlanningView() {
           ))}
         </div>
 
-        <div className="overflow-x-auto rounded-lg border bg-card">
+        <div className="planning-grid overflow-x-auto rounded-lg border bg-card">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="bg-muted/50">
@@ -211,7 +212,7 @@ export function PlanningView() {
                   <th
                     key={i}
                     colSpan={2}
-                    className={cn("border-b border-r p-2 text-center", isWeekend(d) && "bg-muted/90")}
+                    className={cn("border-b border-r p-2 text-center", isWeekend(d) && "planning-weekend bg-muted/90")}
                   >
                     <div className={cn("font-semibold", isWeekend(d) && "text-muted-foreground")}>
                       {DAY_NAMES[(d.getDay() + 6) % 7]}
@@ -270,7 +271,7 @@ export function PlanningView() {
                           key={`${dateISO}-${h}`}
                           className={cn(
                             "cursor-pointer border-b border-r p-1 align-top transition hover:bg-accent/40",
-                            isWeekend(d) && "bg-muted/40",
+                            isWeekend(d) && "planning-weekend bg-muted/40",
                           )}
                           style={{ minWidth: dayCount > 7 ? 64 : 72, height: 70, backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
                           onClick={() => canEdit && setEditing({ technicianId: t.id, dateISO, half: h, existing: a })}
