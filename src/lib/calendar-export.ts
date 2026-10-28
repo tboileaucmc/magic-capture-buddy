@@ -157,11 +157,41 @@ export function googlePayload(input: Assignment, techs: Technician[]) {
   const a = maskIfToConfirm(input);
   return {
     id: a.id,
-    title: a.title,
+    title: `${input.toConfirm ? "⏳" : "🎬"} ${a.title}`,
     location: a.address,
-    description: buildDescription(input),
+    description: buildHtmlDescription(input),
     start: `${a.dateISO}T${a.startTime || "08:00"}`,
     end: `${a.endDateISO ?? a.dateISO}T${a.endTime || "17:00"}`,
     attendees: techs.map((t) => t.email).filter((e) => /.+@.+\..+/.test(e)),
   };
+}
+
+const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/** Description HTML chaleureuse pour l'invitation Google Agenda. */
+export function buildHtmlDescription(input: Assignment): string {
+  const a = maskIfToConfirm(input);
+  const end = a.endDateISO ?? a.dateISO;
+  const fmt = (iso: string) =>
+    new Date(iso).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  const when = end === a.dateISO
+    ? `${fmt(a.dateISO)}, de ${a.startTime} à ${a.endTime}`
+    : `du ${fmt(a.dateISO)} (${a.startTime}) au ${fmt(end)} (${a.endTime})`;
+  const parts: string[] = [];
+  parts.push(`👋 <b>Bonjour !</b><br>Une nouvelle mission vous attend. Voici tout ce qu'il faut savoir :`);
+  parts.push(`<br><br>🎬 <b>Mission :</b> ${esc(a.title)}`);
+  parts.push(`<br>📅 <b>Quand :</b> ${when}`);
+  if (input.toConfirm) {
+    parts.push(`<br><br>⏳ <i>Ce rendez-vous est encore à confirmer. Gardez le créneau libre, les détails arrivent très vite !</i>`);
+  }
+  if (a.address) {
+    const enc = encodeURIComponent(a.address);
+    parts.push(`<br>📍 <b>Où :</b> ${esc(a.address)}`);
+    parts.push(`<br>🚗 <a href="https://waze.com/ul?q=${enc}&navigate=yes">Y aller avec Waze</a> · 🗺️ <a href="https://www.google.com/maps/search/?api=1&query=${enc}">Ouvrir dans Google Maps</a>`);
+  }
+  if (a.notes && !input.toConfirm) parts.push(`<br><br>📝 <b>Notes :</b><br>${esc(a.notes).replace(/\n/g, "<br>")}`);
+  if (a.link) parts.push(`<br><br>🔗 <a href="${esc(a.link)}">Lien utile</a>`);
+  if (a.attachments?.length) parts.push(`<br><br>📎 Documents joints : ${a.attachments.map((f) => esc(f.name)).join(", ")}`);
+  parts.push(`<br><br>Bonne mission et merci ! 🙌<br><i>— L'équipe Planning Cinemeccanica</i>`);
+  return parts.join("");
 }
