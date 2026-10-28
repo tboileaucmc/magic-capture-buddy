@@ -264,8 +264,12 @@ export function PlanningView() {
           </table>
         </div>
 
-        <p className="mt-3 text-xs text-muted-foreground">
-          Cliquez sur une case pour planifier. Les données sont sauvegardées localement dans votre navigateur.
+        <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <span>Cliquez sur une case pour planifier. Les données sont sauvegardées localement dans votre navigateur.</span>
+          <span className="inline-flex items-center gap-1">
+            <Star className="size-3 fill-amber-400 text-amber-500" />
+            mission à confirmer
+          </span>
         </p>
       </div>
 
