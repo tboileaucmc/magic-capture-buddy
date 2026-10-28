@@ -28,12 +28,12 @@ function endDate(a: Assignment): Date {
   return toDate(a.endDateISO ?? a.dateISO, a.endTime);
 }
 
-/** Si « A confirmer », masque toutes les informations précises. */
+/** Si « A confirmer », masque les informations précises mais garde l'intitulé + « à confirmer ». */
 export function maskIfToConfirm(a: Assignment): Assignment {
   if (!a.toConfirm) return a;
   return {
     ...a,
-    title: "RDV à confirmer",
+    title: `${a.title} (à confirmer)`,
     address: "",
     notes: "Un rendez-vous est prévu sur ce créneau. Les détails vous seront communiqués après confirmation.",
     link: undefined,
