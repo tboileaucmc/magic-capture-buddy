@@ -172,16 +172,9 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 /** Description HTML chaleureuse pour l'invitation Google Agenda. */
 export function buildHtmlDescription(input: Assignment): string {
   const a = maskIfToConfirm(input);
-  const end = a.endDateISO ?? a.dateISO;
-  const fmt = (iso: string) =>
-    new Date(iso).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
-  const when = end === a.dateISO
-    ? `${fmt(a.dateISO)}, de ${a.startTime} à ${a.endTime}`
-    : `du ${fmt(a.dateISO)} (${a.startTime}) au ${fmt(end)} (${a.endTime})`;
   const parts: string[] = [];
   parts.push(`👋 <b>Bonjour !</b><br>Une nouvelle mission vous attend. Voici tout ce qu'il faut savoir :`);
   parts.push(`<br><br>🎬 <b>Mission :</b> ${esc(a.title)}`);
-  parts.push(`<br>📅 <b>Quand :</b> ${when}`);
   if (input.toConfirm) {
     parts.push(`<br><br>⏳ <i>Ce rendez-vous est encore à confirmer. Gardez le créneau libre, les détails arrivent très vite !</i>`);
   }
