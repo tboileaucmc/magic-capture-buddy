@@ -179,6 +179,15 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             {role === "viewer" && (
               <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">Lecture seule</span>
             )}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onToggleTheme}
+              title={light ? "Passer en mode foncé" : "Passer en mode clair"}
+              aria-label={light ? "Passer en mode foncé" : "Passer en mode clair"}
+            >
+              {light ? <Moon /> : <Sun />}
+            </Button>
             <Button variant="ghost" onClick={async () => { await supabase.auth.signOut(); window.location.replace("/auth"); }}>
               Déconnexion
             </Button>
