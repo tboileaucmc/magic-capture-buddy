@@ -5,7 +5,16 @@ import { toast } from "sonner";
 import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
 import { assignmentSlots } from "@/lib/planning-types";
-import { downloadICS, googleCalendarUrl, mailtoUrl, outlookCalendarUrl } from "@/lib/calendar-export";
+import { downloadICS, googleCalendarUrl, googlePayload, mailtoUrl, outlookCalendarUrl } from "@/lib/calendar-export";
+import { sendMissionToCalendar } from "@/lib/google-calendar.functions";
+import type { Technician as Tech } from "@/lib/planning-types";
+
+/** Envoie l'ordre de mission depuis planning.cinemeccanica@gmail.com vers l'agenda des techniciens. */
+function pushToCalendar(a: Assignment, techs: Tech[], okMsg: string) {
+  sendMissionToCalendar({ data: googlePayload(a, techs) })
+    .then(() => toast.success(okMsg))
+    .catch((e) => toast.error(`Envoi agenda impossible : ${e instanceof Error ? e.message : e}`));
+}
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -441,6 +450,7 @@ function AssignmentDialog({
     };
     onSave(a);
     toast.success("Mission enregistrée");
+    pushToCalendar(a, selectedTechs, "Ordre de mission envoyé dans l'agenda des techniciens");
   };
 
   const currentAssignment: Assignment = {
@@ -642,10 +652,7 @@ function AssignmentDialog({
                   };
                   onSave(confirmed);
                   setToConfirm(false);
-                  downloadICS(confirmed, selectedTechs);
-                  toast.success(
-                    "RDV confirmé : ouvrez le fichier .ics dans Outlook pour remplacer « RDV à confirmer » par les détails chez le technicien",
-                  );
+                  pushToCalendar(confirmed, selectedTechs, "RDV confirmé : détails envoyés dans l'agenda des techniciens");
                 }}
               >
                 Confirmer le RDV
