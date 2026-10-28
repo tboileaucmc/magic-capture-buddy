@@ -53,7 +53,9 @@ export async function uploadToDrive(f: { name: string; type: string; dataUrl: st
 export const cancelMissionInCalendar = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().min(1).max(200) }).parse(d))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { assertCanEdit } = await import("./roles.server");
+    await assertCanEdit(context.supabase, context.userId);
     const lovableKey = process.env.LOVABLE_API_KEY;
     const calendarKey = process.env.GOOGLE_CALENDAR_API_KEY;
     if (!lovableKey || !calendarKey) throw new Error("Agenda Google non connecté : la mission est conservée");
@@ -66,7 +68,9 @@ export const cancelMissionInCalendar = createServerFn({ method: "POST" })
 export const sendMissionToCalendar = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => schema.parse(d))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { assertCanEdit } = await import("./roles.server");
+    await assertCanEdit(context.supabase, context.userId);
     const lovableKey = process.env.LOVABLE_API_KEY;
     const calKey = process.env.GOOGLE_CALENDAR_API_KEY;
     if (!lovableKey || !calKey) throw new Error("Agenda Google non connecté");
