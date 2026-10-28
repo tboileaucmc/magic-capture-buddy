@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { usePlanning } from "@/lib/planning-store";
@@ -236,12 +236,17 @@ export function PlanningView() {
                                 >
                                   {cat?.label}
                                 </span>
-                                {a.toConfirm && (
+                                {a.toConfirm ? (
                                   <Star
                                     className="size-3 shrink-0 fill-amber-400 text-amber-500"
                                     aria-label="A confirmer"
                                   />
-                                )}
+                                ) : a.confirmed ? (
+                                  <BadgeCheck
+                                    className="size-3 shrink-0 fill-emerald-500 text-emerald-600"
+                                    aria-label="Confirmé"
+                                  />
+                                ) : null}
                               </div>
                               <div className="line-clamp-2 text-xs font-medium">{a.title}</div>
                               <div className="text-[10px] text-muted-foreground">
@@ -609,6 +614,7 @@ function AssignmentDialog({
                     id: existing?.id ?? uid(),
                     title: title.trim(),
                     toConfirm: undefined,
+                    confirmed: true,
                     sequence: (existing?.sequence ?? 0) + 1,
                   };
                   onSave(confirmed);
