@@ -1,4 +1,6 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import {
   DEFAULT_CATEGORIES,
   DEFAULT_TECHNICIANS,
@@ -16,14 +18,8 @@ type Data = {
   assignments: Assignment[];
 };
 
-function load(): Data {
-  if (typeof window === "undefined") {
-    return { technicians: DEFAULT_TECHNICIANS, categories: DEFAULT_CATEGORIES, assignments: [] };
-  }
+function migrate(parsed: Data): Data {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return { technicians: DEFAULT_TECHNICIANS, categories: DEFAULT_CATEGORIES, assignments: [] };
-    const parsed = JSON.parse(raw) as Data;
     // Migration: rename old "Chantier" label to "Affaires"
     parsed.categories = parsed.categories.map((c) =>
       c.id === "chantier" ? { ...c, label: "Affaires" } : c,
@@ -42,8 +38,33 @@ function load(): Data {
   }
 }
 
-function save(data: Data) {
-  localStorage.setItem(KEY, JSON.stringify(data));
+/** Ancien stockage navigateur : sert uniquement à transférer les données au premier passage en ligne. */
+function loadLocal(): Data | null {
+  try {
+    const raw = localStorage.getItem(KEY);
+    return raw ? migrate(JSON.parse(raw) as Data) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Charge le planning partagé en ligne (ligne unique « main »). */
+async function loadRemote(): Promise<Data> {
+  const { data: row, error } = await supabase.from("planning_state").select("data").eq("id", "main").maybeSingle();
+  if (error) throw error;
+  const remote = row?.data as Data | undefined;
+  if (remote && Array.isArray(remote.assignments)) return migrate(remote);
+  const initial = loadLocal() ?? { technicians: DEFAULT_TECHNICIANS, categories: DEFAULT_CATEGORIES, assignments: [] };
+  await supabase.from("planning_state").upsert({ id: "main", data: initial as unknown as Json });
+  return initial;
+}
+
+async function saveRemote(data: Data) {
+  const { error } = await supabase
+    .from("planning_state")
+    .update({ data: data as unknown as Json, updated_at: new Date().toISOString() })
+    .eq("id", "main");
+  if (error) console.error("Enregistrement en ligne échoué", error);
 }
 
 export function usePlanning() {
@@ -54,13 +75,19 @@ export function usePlanning() {
   });
   const [hydrated, setHydrated] = useState(false);
 
+  const skipNext = useRef(true);
+
   useEffect(() => {
-    setData(load());
-    setHydrated(true);
+    loadRemote()
+      .then((d) => { skipNext.current = true; setData(d); setHydrated(true); })
+      .catch((e) => console.error("Chargement du planning échoué", e));
   }, []);
 
   useEffect(() => {
-    if (hydrated) save(data);
+    if (!hydrated) return;
+    if (skipNext.current) { skipNext.current = false; return; }
+    const t = setTimeout(() => void saveRemote(data), 400);
+    return () => clearTimeout(t);
   }, [data, hydrated]);
 
   const upsertAssignment = useCallback((a: Assignment) => {
@@ -109,5 +136,5 @@ export function usePlanning() {
     setData((d) => ({ ...d, categories: [...d.categories, c] }));
   }, []);
 
-  return { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician, addCategory, removeCategory };
+  return { data, hydrated, upsertAssignment, deleteAssignment, addTechnician, removeTechnician, addCategory, removeCategory };
 }

@@ -1,5 +1,6 @@
 # Roadmap
-- [ ] Envoi automatique des ordres de mission (connexion planning.cinemeccanica@gmail.com) — attend la connexion de l'utilisateur
+- [x] Envoi des ordres de mission via Google Agenda (planning.cinemeccanica@gmail.com)
+- [x] Planning en ligne + connexion + envoi PDF jeudi 14h
 - [x] Planning en mode paysage sur téléphone
 - [x] Case « A confirmer » : RDV envoyé sans détails
 - [x] Bouton « Confirmer le RDV » (remplacement via .ics)
