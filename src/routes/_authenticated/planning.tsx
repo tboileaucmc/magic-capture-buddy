@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { PlanningView } from "@/components/PlanningView";
 import { Toaster } from "@/components/ui/sonner";
@@ -14,10 +15,15 @@ export const Route = createFileRoute("/_authenticated/planning")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => (
+  component: PlanningPage,
+});
+
+function PlanningPage() {
+  const [light, setLight] = useState(false);
+  return (
     <>
-      <div className="force-landscape cmc-theme">
-        <PlanningView />
+      <div className={`force-landscape ${light ? "cmc-theme-light" : "cmc-theme"}`}>
+        <PlanningView light={light} onToggleTheme={() => setLight((v) => !v)} />
         <img
           src={logoAsset.url}
           alt=""
@@ -27,5 +33,5 @@ export const Route = createFileRoute("/_authenticated/planning")({
       </div>
       <Toaster />
     </>
-  ),
-});
+  );
+}
