@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { BroadcastDialog } from "@/components/BroadcastDialog";
+import { sendPlanningPdf } from "@/lib/send-planning.functions";
 
 import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
