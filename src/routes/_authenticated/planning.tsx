@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PlanningView } from "@/components/PlanningView";
 import { Toaster } from "@/components/ui/sonner";
+import logoAsset from "@/assets/logo-cmc.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/planning")({
   head: () => ({
@@ -17,6 +18,12 @@ export const Route = createFileRoute("/_authenticated/planning")({
     <>
       <div className="force-landscape">
         <PlanningView />
+        <img
+          src={logoAsset.url}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none fixed left-1/2 top-1/2 z-50 w-[60%] max-w-[900px] -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.07]"
+        />
       </div>
       <Toaster />
     </>
