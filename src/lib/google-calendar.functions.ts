@@ -11,7 +11,42 @@ const schema = z.object({
   start: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   end: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   attendees: z.array(z.string().email()).max(50),
+  attachments: z
+    .array(z.object({ name: z.string().max(300), type: z.string().max(200), dataUrl: z.string() }))
+    .max(10)
+    .default([]),
 });
+
+const DRIVE = "https://connector-gateway.lovable.dev/google_drive";
+
+/** Dépose le fichier dans le Drive du compte planning, le rend lisible par lien, renvoie l'URL. */
+async function uploadToDrive(f: { name: string; type: string; dataUrl: string }, lovableKey: string, driveKey: string) {
+  const b64 = f.dataUrl.split(",")[1] ?? "";
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  const boundary = "mission" + Date.now();
+  const meta = JSON.stringify({ name: f.name, mimeType: f.type });
+  const enc = new TextEncoder();
+  const body = new Blob([
+    enc.encode(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: ${f.type}\r\n\r\n`),
+    bytes,
+    enc.encode(`\r\n--${boundary}--`),
+  ]);
+  const auth = { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": driveKey };
+  const up = await fetch(`${DRIVE}/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,mimeType`, {
+    method: "POST",
+    headers: { ...auth, "Content-Type": `multipart/related; boundary=${boundary}` },
+    body,
+  });
+  if (!up.ok) throw new Error(`Drive [${up.status}]: ${(await up.text()).slice(0, 300)}`);
+  const file = (await up.json()) as { id: string; webViewLink: string; mimeType: string };
+  const perm = await fetch(`${DRIVE}/drive/v3/files/${file.id}/permissions`, {
+    method: "POST",
+    headers: { ...auth, "Content-Type": "application/json" },
+    body: JSON.stringify({ role: "reader", type: "anyone" }),
+  });
+  if (!perm.ok) console.error(`Drive permission [${perm.status}]: ${await perm.text()}`);
+  return { fileUrl: file.webViewLink, title: f.name, mimeType: file.mimeType };
+}
 
 /** Identifiant Google stable dérivé de l'id de mission (caractères 0-9a-f autorisés). */
 function eventId(id: string) {
@@ -31,6 +66,11 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
       "Content-Type": "application/json",
     };
     const id = eventId(data.id);
+    const driveKey = process.env.GOOGLE_DRIVE_API_KEY;
+    const attachments = [];
+    if (driveKey) {
+      for (const f of data.attachments) attachments.push(await uploadToDrive(f, lovableKey, driveKey));
+    }
     const body = {
       id,
       summary: data.title,
@@ -40,11 +80,14 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
       end: { dateTime: `${data.end}:00`, timeZone: "Europe/Paris" },
       attendees: data.attendees.map((email) => ({ email })),
       status: "confirmed",
+      colorId: "7",
+      reminders: { useDefault: false, overrides: [{ method: "popup", minutes: 24 * 60 }, { method: "popup", minutes: 60 }] },
+      attachments,
     };
     const base = `${GATEWAY_URL}/calendars/primary/events`;
-    let res = await fetch(`${base}/${id}?sendUpdates=all`, { method: "PUT", headers, body: JSON.stringify(body) });
+    let res = await fetch(`${base}/${id}?sendUpdates=all&supportsAttachments=true`, { method: "PUT", headers, body: JSON.stringify(body) });
     if (res.status === 404) {
-      res = await fetch(`${base}?sendUpdates=all`, { method: "POST", headers, body: JSON.stringify(body) });
+      res = await fetch(`${base}?sendUpdates=all&supportsAttachments=true`, { method: "POST", headers, body: JSON.stringify(body) });
     }
     if (!res.ok) {
       const t = await res.text();

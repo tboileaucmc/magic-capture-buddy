@@ -163,6 +163,7 @@ export function googlePayload(input: Assignment, techs: Technician[]) {
     start: `${a.dateISO}T${a.startTime || "08:00"}`,
     end: `${a.endDateISO ?? a.dateISO}T${a.endTime || "17:00"}`,
     attendees: techs.map((t) => t.email).filter((e) => /.+@.+\..+/.test(e)),
+    attachments: (a.attachments ?? []).map((f) => ({ name: f.name, type: f.type, dataUrl: f.dataUrl })),
   };
 }
 
