@@ -14,7 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      planning_state: {
+        Row: {
+          broadcast_list: string[]
+          data: Json
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          broadcast_list?: string[]
+          data?: Json
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          broadcast_list?: string[]
+          data?: Json
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
