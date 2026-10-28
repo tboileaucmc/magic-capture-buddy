@@ -151,3 +151,17 @@ export function outlookCalendarUrl(
   const host = account === "personal" ? "outlook.live.com" : "outlook.office.com";
   return `https://${host}/calendar/0/deeplink/compose?${params.toString()}`;
 }
+
+/** Données à envoyer à Google Agenda (masquées si « à confirmer »). */
+export function googlePayload(input: Assignment, techs: Technician[]) {
+  const a = maskIfToConfirm(input);
+  return {
+    id: a.id,
+    title: a.title,
+    location: a.address,
+    description: buildDescription(input),
+    start: `${a.dateISO}T${a.startTime || "08:00"}`,
+    end: `${a.endDateISO ?? a.dateISO}T${a.endTime || "17:00"}`,
+    attendees: techs.map((t) => t.email).filter((e) => /.+@.+\..+/.test(e)),
+  };
+}
