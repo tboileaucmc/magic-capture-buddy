@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,11 +57,6 @@ function AuthPage() {
     }
   };
 
-  const google = async () => {
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (r.error) toast.error(String(r.error.message ?? r.error));
-  };
-
   return (
     <div className="cmc-theme cmc-auth flex min-h-screen items-center justify-center px-6 py-12 text-foreground">
       <div className="w-full max-w-sm space-y-6">
@@ -71,8 +65,6 @@ function AuthPage() {
           <h1 className="text-2xl font-bold">Planning Techniciens</h1>
           <p className="text-sm text-muted-foreground">{mode === "login" ? "Connectez-vous pour accéder au planning." : "Créez votre compte."}</p>
         </div>
-        <Button variant="outline" className="w-full" onClick={google}>Continuer avec Google</Button>
-        <div className="text-center text-xs text-muted-foreground">ou</div>
         <form onSubmit={submit} className="space-y-3">
           <div className="space-y-1"><Label htmlFor="email">E-mail</Label>
             <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
