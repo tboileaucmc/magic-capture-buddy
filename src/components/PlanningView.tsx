@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { usePlanning } from "@/lib/planning-store";
@@ -236,12 +236,18 @@ export function PlanningView() {
                                 >
                                   {cat?.label}
                                 </span>
-                                {a.toConfirm && (
+                                {a.toConfirm ? (
                                   <Star
                                     className="size-3 shrink-0 fill-amber-400 text-amber-500"
                                     aria-label="A confirmer"
                                   />
-                                )}
+                                ) : a.confirmed ? (
+                                  <CheckCircle2
+                                    className="size-3.5 shrink-0 text-emerald-600"
+                                    strokeWidth={2.5}
+                                    aria-label="Confirmé"
+                                  />
+                                ) : null}
                               </div>
                               <div className="line-clamp-2 text-xs font-medium">{a.title}</div>
                               <div className="text-[10px] text-muted-foreground">
@@ -269,6 +275,10 @@ export function PlanningView() {
           <span className="inline-flex items-center gap-1">
             <Star className="size-3 fill-amber-400 text-amber-500" />
             mission à confirmer
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <CheckCircle2 className="size-3.5 text-emerald-600" strokeWidth={2.5} />
+            RDV confirmé
           </span>
         </p>
       </div>
@@ -406,6 +416,7 @@ function AssignmentDialog({
       notes: notes.trim() || undefined,
       link: link.trim() || undefined,
       toConfirm: toConfirm || undefined,
+      confirmed: toConfirm ? undefined : existing?.confirmed,
       sequence:
         existing && !!existing.toConfirm !== toConfirm
           ? (existing.sequence ?? 0) + 1
@@ -609,6 +620,7 @@ function AssignmentDialog({
                     id: existing?.id ?? uid(),
                     title: title.trim(),
                     toConfirm: undefined,
+                    confirmed: true,
                     sequence: (existing?.sequence ?? 0) + 1,
                   };
                   onSave(confirmed);
