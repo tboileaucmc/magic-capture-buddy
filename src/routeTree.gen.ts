@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedPlanningRouteImport } from './routes/_authenticated/planning'
+import { Route as ApiPublicJobsPurgeAttachmentsRouteImport } from './routes/api/public/jobs/purge-attachments'
 import { Route as ApiPublicJobsWeeklyPlanningRouteImport } from './routes/api/public/jobs/weekly-planning'
 
 const IndexRoute = IndexRouteImport.update({
@@ -34,6 +35,12 @@ const AuthenticatedPlanningRoute = AuthenticatedPlanningRouteImport.update({
   path: '/planning',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicJobsPurgeAttachmentsRoute =
+  ApiPublicJobsPurgeAttachmentsRouteImport.update({
+    id: '/api/public/jobs/purge-attachments',
+    path: '/api/public/jobs/purge-attachments',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicJobsWeeklyPlanningRoute =
   ApiPublicJobsWeeklyPlanningRouteImport.update({
     id: '/api/public/jobs/weekly-planning',
@@ -45,12 +52,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/planning': typeof AuthenticatedPlanningRoute
+  '/api/public/jobs/purge-attachments': typeof ApiPublicJobsPurgeAttachmentsRoute
   '/api/public/jobs/weekly-planning': typeof ApiPublicJobsWeeklyPlanningRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/planning': typeof AuthenticatedPlanningRoute
+  '/api/public/jobs/purge-attachments': typeof ApiPublicJobsPurgeAttachmentsRoute
   '/api/public/jobs/weekly-planning': typeof ApiPublicJobsWeeklyPlanningRoute
 }
 export interface FileRoutesById {
@@ -59,19 +68,31 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/planning': typeof AuthenticatedPlanningRoute
+  '/api/public/jobs/purge-attachments': typeof ApiPublicJobsPurgeAttachmentsRoute
   '/api/public/jobs/weekly-planning': typeof ApiPublicJobsWeeklyPlanningRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/planning' | '/api/public/jobs/weekly-planning'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/planning'
+    | '/api/public/jobs/purge-attachments'
+    | '/api/public/jobs/weekly-planning'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/planning' | '/api/public/jobs/weekly-planning'
+  to:
+    | '/'
+    | '/auth'
+    | '/planning'
+    | '/api/public/jobs/purge-attachments'
+    | '/api/public/jobs/weekly-planning'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/planning'
+    | '/api/public/jobs/purge-attachments'
     | '/api/public/jobs/weekly-planning'
   fileRoutesById: FileRoutesById
 }
@@ -79,6 +100,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicJobsPurgeAttachmentsRoute: typeof ApiPublicJobsPurgeAttachmentsRoute
   ApiPublicJobsWeeklyPlanningRoute: typeof ApiPublicJobsWeeklyPlanningRoute
 }
 
@@ -112,6 +134,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlanningRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/jobs/purge-attachments': {
+      id: '/api/public/jobs/purge-attachments'
+      path: '/api/public/jobs/purge-attachments'
+      fullPath: '/api/public/jobs/purge-attachments'
+      preLoaderRoute: typeof ApiPublicJobsPurgeAttachmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jobs/weekly-planning': {
       id: '/api/public/jobs/weekly-planning'
       path: '/api/public/jobs/weekly-planning'
@@ -137,6 +166,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicJobsPurgeAttachmentsRoute: ApiPublicJobsPurgeAttachmentsRoute,
   ApiPublicJobsWeeklyPlanningRoute: ApiPublicJobsWeeklyPlanningRoute,
 }
 export const routeTree = rootRouteImport

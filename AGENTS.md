@@ -4,3 +4,4 @@
 - The weekly PDF is drawn with jsPDF from data (no DOM capture) so the same code runs in the button and the Thursday cron route.
 - Cinema address suggestions use authenticated Google Places text search through the connector gateway, debounced and briefly cached in memory; selecting a suggestion fills only the address to preserve the mission title and avoid overwriting manual input.
 - Write access is role-based: user_roles (admin/editor) + can_edit() gate planning_state writes in RLS and in Google server functions; accounts without a role are read-only, and only admins manage roles via admin_* RPCs.
+- Drive attachments are tagged with appProperties.planningAttachment so the daily purge cron only trashes app-uploaded files older than its retention window, never other Drive files.
