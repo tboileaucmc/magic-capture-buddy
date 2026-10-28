@@ -3,21 +3,29 @@ import { toast } from "sonner";
 import { Mail, Plus, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { sendPlanningPdf } from "@/lib/send-planning.functions";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
-const KEY = "planning-broadcast-list";
 
 /** Liste de diffusion (mémorisée sur ce poste) + bouton d'envoi du planning PDF. */
-export function BroadcastDialog({ onSend }: { onSend: (emails: string[]) => Promise<void> }) {
+export function BroadcastDialog() {
   const [open, setOpen] = useState(false);
   const [emails, setEmails] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    try { setEmails(JSON.parse(localStorage.getItem(KEY) ?? "[]")); } catch { /* ignore */ }
-  }, []);
-  const persist = (list: string[]) => { setEmails(list); localStorage.setItem(KEY, JSON.stringify(list)); };
+    if (!open) return;
+    supabase.from("planning_state").select("broadcast_list").eq("id", "main").maybeSingle()
+      .then(({ data }) => setEmails(data?.broadcast_list ?? []));
+  }, [open]);
+  /** Liste partagée en ligne : sert aussi à l'envoi automatique du jeudi. */
+  const persist = async (list: string[]) => {
+    setEmails(list);
+    const { error } = await supabase.from("planning_state").update({ broadcast_list: list }).eq("id", "main");
+    if (error) toast.error(`Liste non enregistrée : ${error.message}`);
+  };
 
   const add = () => {
     const e = input.trim().toLowerCase();
@@ -33,7 +41,7 @@ export function BroadcastDialog({ onSend }: { onSend: (emails: string[]) => Prom
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Envoyer le planning</DialogTitle>
-            <DialogDescription>Le planning des 2 semaines à venir part en PDF depuis planning.cinemeccanica@gmail.com.</DialogDescription>
+            <DialogDescription>Le planning des 2 semaines à venir part en PDF depuis planning.cinemeccanica@gmail.com. Cette liste reçoit aussi l'envoi automatique chaque jeudi à 14h.</DialogDescription>
           </DialogHeader>
           <div className="flex gap-2">
             <Input placeholder="adresse@exemple.fr" value={input} onChange={(e) => setInput(e.target.value)}
@@ -53,7 +61,13 @@ export function BroadcastDialog({ onSend }: { onSend: (emails: string[]) => Prom
           <DialogFooter>
             <Button disabled={sending || emails.length === 0} onClick={async () => {
               setSending(true);
-              try { await onSend(emails); setOpen(false); } finally { setSending(false); }
+              try {
+                const r = await sendPlanningPdf();
+                toast.success(`Planning envoyé à ${r.count} destinataire${r.count > 1 ? "s" : ""}`);
+                setOpen(false);
+              } catch (e) {
+                toast.error(`Envoi impossible : ${e instanceof Error ? e.message : e}`);
+              } finally { setSending(false); }
             }}>
               <Send /> {sending ? "Envoi…" : `Envoyer à ${emails.length} destinataire${emails.length > 1 ? "s" : ""}`}
             </Button>

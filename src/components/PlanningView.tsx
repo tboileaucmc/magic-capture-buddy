@@ -1,8 +1,7 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
-import { sendPlanningPdf } from "@/lib/send-planning.functions";
 
 import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
@@ -104,39 +103,6 @@ export function PlanningView() {
 
   const categoryById = (id: string) => data.categories.find((c) => c.id === id);
 
-  const gridRef = useRef<HTMLDivElement>(null);
-  /** Capture les 2 semaines à venir (à partir du lundi prochain) en PDF et l'envoie à la liste. */
-  const sendPlanning = async (emails: string[]) => {
-    const prev = { weekStart, viewMode };
-    const start = startOfWeek(new Date());
-    start.setDate(start.getDate() + 7);
-    const end = new Date(start); end.setDate(end.getDate() + 13);
-    const f = (d: Date) => d.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
-    const periodLabel = `du ${f(start)} au ${f(end)}`;
-    setViewMode("2w"); setWeekStart(start);
-    try {
-      await new Promise((r) => setTimeout(r, 400));
-      const el = gridRef.current;
-      if (!el) throw new Error("Planning introuvable");
-      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas-pro"), import("jspdf")]);
-      const table = el.querySelector("table") as HTMLElement;
-      const canvas = await html2canvas(table, { scale: 2, backgroundColor: "#ffffff", width: table.scrollWidth, windowWidth: table.scrollWidth + 100 });
-      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a3" });
-      const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
-      pdf.setFontSize(14);
-      pdf.text(`Planning techniciens — ${periodLabel}`, 10, 12);
-      const ratio = Math.min((pw - 20) / canvas.width, (ph - 25) / canvas.height);
-      pdf.addImage(canvas.toDataURL("image/jpeg", 0.9), "JPEG", 10, 18, canvas.width * ratio, canvas.height * ratio);
-      const pdfBase64 = pdf.output("datauristring").split(",")[1];
-      await sendPlanningPdf({ data: { recipients: emails, periodLabel, pdfBase64 } });
-      toast.success(`Planning envoyé à ${emails.length} destinataire${emails.length > 1 ? "s" : ""}`);
-    } catch (e) {
-      toast.error(`Envoi impossible : ${e instanceof Error ? e.message : e}`);
-      throw e;
-    } finally {
-      setViewMode(prev.viewMode); setWeekStart(prev.weekStart);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
@@ -193,7 +159,7 @@ export function PlanningView() {
             <Button onClick={() => setCatDialog(true)} variant="secondary">
               <Plus /> Catégorie
             </Button>
-            <BroadcastDialog onSend={sendPlanning} />
+            <BroadcastDialog />
           </div>
         </header>
 
@@ -216,7 +182,7 @@ export function PlanningView() {
           ))}
         </div>
 
-        <div ref={gridRef} className="overflow-x-auto rounded-lg border bg-card">
+        <div className="overflow-x-auto rounded-lg border bg-card">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="bg-muted/50">

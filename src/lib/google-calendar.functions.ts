@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_calendar/calendar/v3";
 
@@ -55,6 +56,7 @@ function eventId(id: string) {
 
 /** Crée ou remplace l'événement dans l'agenda planning.cinemeccanica@gmail.com et invite les techniciens. */
 export const sendMissionToCalendar = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => schema.parse(d))
   .handler(async ({ data }) => {
     const lovableKey = process.env.LOVABLE_API_KEY;
