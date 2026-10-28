@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
+import logoAsset from "@/assets/logo-cmc.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -63,10 +64,11 @@ function AuthPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm space-y-5 rounded-lg border bg-card p-6 shadow-sm">
-        <div>
-          <h1 className="text-xl font-bold">Planning Techniciens</h1>
+    <div className="cmc-theme cmc-auth flex min-h-screen items-center justify-center px-6 py-12 text-foreground">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="space-y-6 border-b border-primary/50 pb-6 text-center">
+          <img src={logoAsset.url} alt="Cinemeccanica France" width={1010} height={320} className="mx-auto h-auto w-[300px] max-w-full object-contain" />
+          <h1 className="text-2xl font-bold">Planning Techniciens</h1>
           <p className="text-sm text-muted-foreground">{mode === "login" ? "Connectez-vous pour accéder au planning." : "Créez votre compte."}</p>
         </div>
         <Button variant="outline" className="w-full" onClick={google}>Continuer avec Google</Button>
@@ -78,10 +80,10 @@ function AuthPage() {
             <Input id="pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
           <Button type="submit" className="w-full" disabled={busy}>{mode === "login" ? "Se connecter" : "Créer le compte"}</Button>
         </form>
-        <button type="button" className="w-full text-center text-sm text-muted-foreground underline"
+        <Button type="button" variant="link" className="h-auto w-full whitespace-normal text-center text-sm text-muted-foreground"
           onClick={() => setMode(mode === "login" ? "signup" : "login")}>
           {mode === "login" ? "Pas encore de compte ? Créer un compte" : "Déjà un compte ? Se connecter"}
-        </button>
+        </Button>
       </div>
       <Toaster />
     </div>

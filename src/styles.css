@@ -143,7 +143,7 @@
   }
 }
 
-/* The planning theme is local: login and portal dialogs keep their own theme. */
+/* Brand themes are local to planning and authentication; portals stay independent. */
 .cmc-theme {
   color-scheme: dark;
   --background: oklch(0.26 0 0);
@@ -167,6 +167,16 @@
   --cmc-shadow: 0 12px 36px color-mix(in oklab, var(--background) 70%, transparent);
   color: var(--foreground);
   background: var(--background);
+}
+
+.cmc-auth {
+  --background: oklch(0.23 0 0);
+  --card: oklch(0.3 0 0);
+  --muted: oklch(0.3 0 0);
+}
+
+.cmc-auth input {
+  background: var(--card);
 }
 
 /* Variante claire du thème Cinemeccanica : mêmes teintes dorées, fond clair. */
