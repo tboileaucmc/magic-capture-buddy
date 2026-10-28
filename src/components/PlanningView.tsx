@@ -3,6 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
+import { UsersDialog } from "@/components/UsersDialog";
+import { useRole } from "@/lib/use-role";
 import { CinemaAddressSuggestions } from "@/components/CinemaAddressSuggestions";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -73,6 +75,7 @@ const VIEW_STEP: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 
 export function PlanningView() {
   const { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician, addCategory, removeCategory } = usePlanning();
+  const { role, canEdit, isAdmin } = useRole();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const [viewMode, setViewMode] = useState<ViewMode>("1w");
   const [editing, setEditing] = useState<{
@@ -157,13 +160,21 @@ export function PlanningView() {
             }}>
               <ChevronRight />
             </Button>
-            <Button onClick={() => setTechDialog(true)} variant="secondary">
-              <Plus /> Technicien
-            </Button>
-            <Button onClick={() => setCatDialog(true)} variant="secondary">
-              <Plus /> Catégorie
-            </Button>
-            <BroadcastDialog />
+            {canEdit && (
+              <>
+                <Button onClick={() => setTechDialog(true)} variant="secondary">
+                  <Plus /> Technicien
+                </Button>
+                <Button onClick={() => setCatDialog(true)} variant="secondary">
+                  <Plus /> Catégorie
+                </Button>
+                <BroadcastDialog />
+              </>
+            )}
+            {isAdmin && <UsersDialog />}
+            {role === "viewer" && (
+              <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">Lecture seule</span>
+            )}
             <Button variant="ghost" onClick={async () => { await supabase.auth.signOut(); window.location.replace("/auth"); }}>
               Déconnexion
             </Button>
@@ -175,7 +186,7 @@ export function PlanningView() {
             <span key={c.id} className="group inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
               <span className="size-3 rounded-full" style={{ backgroundColor: c.color }} />
               {c.label}
-              <button
+              {canEdit && <button
                 type="button"
                 className="ml-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
                 onClick={() => {
@@ -184,7 +195,7 @@ export function PlanningView() {
                 aria-label="Supprimer la catégorie"
               >
                 ✕
-              </button>
+              </button>}
             </span>
           ))}
         </div>
@@ -235,15 +246,17 @@ export function PlanningView() {
                         <div className="font-medium">{t.name}</div>
                         <div className="text-xs text-muted-foreground">{t.email}</div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          if (confirm(`Supprimer ${t.name} ?`)) removeTechnician(t.id);
-                        }}
-                      >
-                        <Trash2 className="text-destructive" />
-                      </Button>
+                      {canEdit && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            if (confirm(`Supprimer ${t.name} ?`)) removeTechnician(t.id);
+                          }}
+                        >
+                          <Trash2 className="text-destructive" />
+                        </Button>
+                      )}
                     </div>
                   </td>
                   {days.map((d) => {
@@ -260,7 +273,7 @@ export function PlanningView() {
                             isWeekend(d) && "bg-muted/40",
                           )}
                           style={{ minWidth: dayCount > 7 ? 64 : 72, height: 70, backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
-                          onClick={() => setEditing({ technicianId: t.id, dateISO, half: h, existing: a })}
+                          onClick={() => canEdit && setEditing({ technicianId: t.id, dateISO, half: h, existing: a })}
                         >
                           {a ? (
                             <div className="flex h-full flex-col">

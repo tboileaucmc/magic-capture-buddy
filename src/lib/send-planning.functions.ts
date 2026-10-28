@@ -5,6 +5,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const sendPlanningPdf = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertCanEdit } = await import("./roles.server");
+    await assertCanEdit(context.supabase, context.userId);
     const { data: row, error } = await context.supabase
       .from("planning_state").select("data, broadcast_list").eq("id", "main").single();
     if (error) throw new Error(error.message);
