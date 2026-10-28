@@ -275,6 +275,10 @@ export function PlanningView() {
             <Star className="size-3 fill-amber-400 text-amber-500" />
             mission à confirmer
           </span>
+          <span className="inline-flex items-center gap-1">
+            <BadgeCheck className="size-3 fill-emerald-500 text-emerald-600" />
+            RDV confirmé
+          </span>
         </p>
       </div>
 
@@ -411,6 +415,7 @@ function AssignmentDialog({
       notes: notes.trim() || undefined,
       link: link.trim() || undefined,
       toConfirm: toConfirm || undefined,
+      confirmed: toConfirm ? undefined : existing?.confirmed,
       sequence:
         existing && !!existing.toConfirm !== toConfirm
           ? (existing.sequence ?? 0) + 1
