@@ -25,7 +25,8 @@ export async function uploadToDrive(f: { name: string; type: string; dataUrl: st
   const b64 = f.dataUrl.split(",")[1] ?? "";
   const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
   const boundary = "mission" + Date.now();
-  const meta = JSON.stringify({ name: f.name, mimeType: f.type });
+  // Marqueur permettant à la purge trimestrielle de ne toucher qu'aux pièces jointes du planning.
+  const meta = JSON.stringify({ name: f.name, mimeType: f.type, appProperties: { planningAttachment: "1" } });
   const enc = new TextEncoder();
   const body = new Blob([
     enc.encode(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: ${f.type}\r\n\r\n`),
