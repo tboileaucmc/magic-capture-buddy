@@ -169,24 +169,50 @@
   background: var(--background);
 }
 
-.cmc-theme .planning-surface { background: var(--cmc-sheen); }
-.cmc-theme .planning-header {
+/* Variante claire du thème Cinemeccanica : mêmes teintes dorées, fond clair. */
+.cmc-theme-light {
+  color-scheme: light;
+  --background: oklch(0.965 0.006 85);
+  --foreground: oklch(0.24 0.01 85);
+  --card: oklch(0.99 0.003 85);
+  --card-foreground: var(--foreground);
+  --primary: oklch(0.55 0.12 85);
+  --primary-foreground: oklch(0.98 0.005 85);
+  --secondary: oklch(0.925 0.012 85);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.93 0.008 85);
+  --muted-foreground: oklch(0.45 0.02 85);
+  --accent: oklch(0.9 0.03 85);
+  --accent-foreground: var(--foreground);
+  --border: oklch(0.85 0.015 85);
+  --input: oklch(0.8 0.02 85);
+  --ring: var(--primary);
+  --cmc-header: oklch(0.935 0.01 85);
+  --cmc-weekend: oklch(0.9 0.02 85);
+  --cmc-sheen: linear-gradient(135deg, var(--background), var(--cmc-header));
+  --cmc-shadow: 0 12px 36px oklch(0.24 0.01 85 / 18%);
+  color: var(--foreground);
+  background: var(--background);
+}
+
+:is(.cmc-theme, .cmc-theme-light) .planning-surface { background: var(--cmc-sheen); }
+:is(.cmc-theme, .cmc-theme-light) .planning-header {
   border-bottom: 1px solid color-mix(in oklab, var(--primary) 50%, var(--border));
   padding-bottom: 1.25rem;
 }
-.cmc-theme .planning-grid {
+:is(.cmc-theme, .cmc-theme-light) .planning-grid {
   border-top: 2px solid var(--primary);
   box-shadow: var(--cmc-shadow);
 }
-.cmc-theme .planning-grid thead tr:first-child,
-.cmc-theme .planning-grid thead tr:first-child th { background: var(--cmc-header); }
-.cmc-theme .planning-grid thead tr:first-child th { color: var(--primary); }
-.cmc-theme .planning-grid thead tr:nth-child(2),
-.cmc-theme .planning-grid thead tr:nth-child(2) th { background: var(--secondary); }
-.cmc-theme .planning-grid .planning-weekend { background: var(--cmc-weekend); }
-.cmc-theme .planning-grid tbody tr:nth-child(even) { background: color-mix(in oklab, var(--foreground) 3%, var(--card)); }
-.cmc-theme .planning-grid tbody td:first-child { background: var(--cmc-header); }
-.cmc-theme .planning-grid tbody td:hover { outline: 1px solid var(--primary); outline-offset: -1px; }
+:is(.cmc-theme, .cmc-theme-light) .planning-grid thead tr:first-child,
+:is(.cmc-theme, .cmc-theme-light) .planning-grid thead tr:first-child th { background: var(--cmc-header); }
+:is(.cmc-theme, .cmc-theme-light) .planning-grid thead tr:first-child th { color: var(--primary); }
+:is(.cmc-theme, .cmc-theme-light) .planning-grid thead tr:nth-child(2),
+:is(.cmc-theme, .cmc-theme-light) .planning-grid thead tr:nth-child(2) th { background: var(--secondary); }
+:is(.cmc-theme, .cmc-theme-light) .planning-grid .planning-weekend { background: var(--cmc-weekend); }
+:is(.cmc-theme, .cmc-theme-light) .planning-grid tbody tr:nth-child(even) { background: color-mix(in oklab, var(--foreground) 3%, var(--card)); }
+:is(.cmc-theme, .cmc-theme-light) .planning-grid tbody td:first-child { background: var(--cmc-header); }
+:is(.cmc-theme, .cmc-theme-light) .planning-grid tbody td:hover { outline: 1px solid var(--primary); outline-offset: -1px; }
 
 /* Téléphone tenu en portrait : on affiche le planning en paysage */
 @media (orientation: portrait) and (max-width: 767px) {
