@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
@@ -8,7 +9,7 @@ import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
 import { assignmentSlots } from "@/lib/planning-types";
 import { downloadICS, googleCalendarUrl, googlePayload, mailtoUrl, outlookCalendarUrl } from "@/lib/calendar-export";
-import { sendMissionToCalendar } from "@/lib/google-calendar.functions";
+import { sendMissionToCalendar, cancelMissionInCalendar } from "@/lib/google-calendar.functions";
 import type { Technician as Tech } from "@/lib/planning-types";
 
 /** Envoie l'ordre de mission depuis planning.cinemeccanica@gmail.com vers l'agenda des techniciens. */
@@ -81,6 +82,7 @@ export function PlanningView() {
   } | null>(null);
   const [techDialog, setTechDialog] = useState(false);
   const [catDialog, setCatDialog] = useState(false);
+  const cancelMission = useServerFn(cancelMissionInCalendar);
 
   const dayCount = VIEW_DAYS[viewMode];
 
@@ -329,9 +331,11 @@ export function PlanningView() {
             upsertAssignment(a);
             setEditing(null);
           }}
-          onDelete={(id) => {
+          onDelete={async (id) => {
+            await cancelMission({ data: { id } });
             deleteAssignment(id);
             setEditing(null);
+            toast.success("Mission supprimée et annulation envoyée aux techniciens");
           }}
         />
       )}
@@ -380,7 +384,7 @@ function AssignmentDialog({
   half: HalfDay;
   existing?: Assignment;
   onSave: (a: Assignment) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
 }) {
   const defaultStart = half === "AM" ? "08:00" : "13:30";
   const defaultEnd = half === "AM" ? "12:00" : "17:30";
@@ -399,6 +403,7 @@ function AssignmentDialog({
   const [link, setLink] = useState(existing?.link ?? "");
   const [toConfirm, setToConfirm] = useState(existing?.toConfirm ?? false);
   const [attachments, setAttachments] = useState(existing?.attachments ?? []);
+  const [deleting, setDeleting] = useState(false);
 
   const startISO = existing?.dateISO ?? dateISO;
   const startHalfVal = existing?.half ?? half;
@@ -479,7 +484,7 @@ function AssignmentDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { if (!deleting) onOpenChange(o); }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
@@ -638,12 +643,23 @@ function AssignmentDialog({
         <DialogFooter className="flex-wrap gap-2 sm:justify-between">
           <div className="flex flex-wrap gap-2">
             {existing && (
-              <Button variant="destructive" onClick={() => onDelete(existing.id)}>
-                <Trash2 /> Supprimer
+              <Button variant="destructive" disabled={deleting} onClick={async () => {
+                if (!confirm("Supprimer cette mission et annuler son invitation pour tous les techniciens assignés ?")) return;
+                setDeleting(true);
+                try {
+                  await onDelete(existing.id);
+                } catch (error) {
+                  toast.error(`Mission conservée : ${error instanceof Error ? error.message : "annulation impossible"}`);
+                } finally {
+                  setDeleting(false);
+                }
+              }}>
+                <Trash2 /> {deleting ? "Annulation…" : "Supprimer"}
               </Button>
             )}
             {(existing?.toConfirm || toConfirm) && (
               <Button
+                disabled={deleting}
                 onClick={() => {
                   if (!title.trim()) {
                     toast.error("Le titre est obligatoire");
@@ -709,7 +725,7 @@ function AssignmentDialog({
                 <Mail /> Email
               </a>
             </Button>
-            <Button onClick={save}>Valider</Button>
+            <Button onClick={save} disabled={deleting}>Valider</Button>
           </div>
         </DialogFooter>
       </DialogContent>

@@ -50,9 +50,17 @@ export async function uploadToDrive(f: { name: string; type: string; dataUrl: st
 }
 
 /** Identifiant Google stable dérivé de l'id de mission (caractères 0-9a-f autorisés). */
-function eventId(id: string) {
-  return "m" + Array.from(new TextEncoder().encode(id)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
+export const cancelMissionInCalendar = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().min(1).max(200) }).parse(d))
+  .handler(async ({ data }) => {
+    const lovableKey = process.env.LOVABLE_API_KEY;
+    const calendarKey = process.env.GOOGLE_CALENDAR_API_KEY;
+    if (!lovableKey || !calendarKey) throw new Error("Agenda Google non connecté : la mission est conservée");
+    const { cancelCalendarMission } = await import("./calendar-cancellation.server");
+    await cancelCalendarMission(data.id, lovableKey, calendarKey);
+    return { ok: true };
+  });
 
 /** Crée ou remplace l'événement dans l'agenda planning.cinemeccanica@gmail.com et invite les techniciens. */
 export const sendMissionToCalendar = createServerFn({ method: "POST" })
@@ -67,7 +75,8 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
       "X-Connection-Api-Key": calKey,
       "Content-Type": "application/json",
     };
-    const id = eventId(data.id);
+    const { missionEventId } = await import("./calendar-cancellation.server");
+    const id = missionEventId(data.id);
     const driveKey = process.env.GOOGLE_DRIVE_API_KEY;
     const attachments = [];
     if (driveKey) {
