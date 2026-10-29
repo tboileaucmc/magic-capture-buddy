@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
 import { UsersDialog } from "@/components/UsersDialog";
 import { useRole } from "@/lib/use-role";
+import { SupportHistoryDialog } from "@/components/SupportHistoryDialog";
 import { supportTechnicianIds, isSupportOnly } from "@/lib/planning-support";
 import { CinemaAddressSuggestions } from "@/components/CinemaAddressSuggestions";
 import { PlanningDateInput } from "@/components/PlanningDateInput";
@@ -183,6 +184,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
               </>
             )}
             {isAdmin && <UsersDialog />}
+            {isAdmin && <SupportHistoryDialog />}
             {isSupportEditor && (
               <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">Écriture : support</span>
             )}
