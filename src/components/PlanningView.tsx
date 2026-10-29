@@ -483,8 +483,10 @@ function AssignmentDialog({
     existing?.technicianIds ?? [initialTechnicianId],
   );
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? "");
+  const titlePrefill = (label?: string) =>
+    label === "Affaires" ? "AFF " : label === "Maintenance" ? "Maintenance " : "";
   const initialCategory = categories.find((c) => c.id === (existing?.categoryId ?? categories[0]?.id));
-  const [title, setTitle] = useState(existing?.title ?? (initialCategory?.label === "Affaires" ? "AFF " : ""));
+  const [title, setTitle] = useState(existing?.title ?? titlePrefill(initialCategory?.label));
   const [addressSuggestionsActive, setAddressSuggestionsActive] = useState(false);
   const [address, setAddress] = useState(existing?.address ?? "");
   const [startTime, setStartTime] = useState(existing?.startTime ?? defaultStart);
