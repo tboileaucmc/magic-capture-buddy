@@ -382,6 +382,20 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
         }}
       />
 
+      {editingTech && (
+        <EditTechnicianDialog
+          key={editingTech.id}
+          open
+          technician={editingTech}
+          onOpenChange={(o) => !o && setEditingTech(null)}
+          onSave={(name, email) => {
+            updateTechnician({ ...editingTech, name, email });
+            setEditingTech(null);
+            toast.success("Technicien mis à jour");
+          }}
+        />
+      )}
+
       <AddCategoryDialog
         open={catDialog}
         onOpenChange={setCatDialog}
