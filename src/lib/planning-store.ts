@@ -4,7 +4,6 @@ import type { Json } from "@/integrations/supabase/types";
 import {
   DEFAULT_CATEGORIES,
   DEFAULT_TECHNICIANS,
-  assignmentSlots,
   type Assignment,
   type Category,
   type Technician,
@@ -111,19 +110,12 @@ export function usePlanning() {
   }, [data, hydrated]);
 
   const upsertAssignment = useCallback((a: Assignment) => {
-    setData((d) => {
-      const slots = assignmentSlots(a);
-      const others = d.assignments.filter((x) => {
-        if (x.id === a.id) return false;
-        const shareTech = x.technicianIds.some((t) => a.technicianIds.includes(t));
-        if (!shareTech) return true;
-        const xSlots = assignmentSlots(x);
-        return !xSlots.some((xs) =>
-          slots.some((s) => s.dateISO === xs.dateISO && s.half === xs.half),
-        );
-      });
-      return { ...d, assignments: [...others, a] };
-    });
+    // Plusieurs missions peuvent partager le même créneau (cas exceptionnel) :
+    // on ne remplace que la mission de même identifiant.
+    setData((d) => ({
+      ...d,
+      assignments: [...d.assignments.filter((x) => x.id !== a.id), a],
+    }));
   }, []);
 
   const deleteAssignment = useCallback((id: string) => {
