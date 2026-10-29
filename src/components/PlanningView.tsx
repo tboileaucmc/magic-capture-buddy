@@ -148,6 +148,14 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             <Button variant="outline" onClick={() => setWeekStart(startOfWeek(new Date()))}>
               Aujourd'hui
             </Button>
+            <span className="rounded-md border border-primary/50 px-2 py-1 text-sm font-semibold text-primary whitespace-nowrap" title="Numéro de semaine">
+              S{(() => {
+                const d = new Date(Date.UTC(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                const y = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                return String(Math.ceil(((d.getTime() - y.getTime()) / 86400000 + 1) / 7)).padStart(2, "0");
+              })()}
+            </span>
             <PlanningDateInput
               value={fmtISO(weekStart)}
               onSelect={(date) => setWeekStart(startOfWeek(date))}
