@@ -32,6 +32,7 @@ export type Assignment = {
   endTime: string;
   notes?: string;
   link?: string;
+  teamsUrl?: string;
   /** RDV à confirmer : on envoie seulement un créneau réservé, sans détails. */
   toConfirm?: boolean;
   /** RDV confirmé après une période « à confirmer » : signalé par une coche verte. */

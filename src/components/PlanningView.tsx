@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil, Video } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
 import { UsersDialog } from "@/components/UsersDialog";
@@ -15,7 +15,7 @@ import logoAsset from "@/assets/logo-cmc.png.asset.json";
 import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
 import { assignmentSlots } from "@/lib/planning-types";
-import { downloadICS, googleCalendarUrl, googlePayload, mailtoUrl, outlookCalendarUrl } from "@/lib/calendar-export";
+import { downloadICS, googleCalendarUrl, googlePayload, mailtoUrl, outlookCalendarUrl, normalizeTeamsUrl } from "@/lib/calendar-export";
 import { sendMissionToCalendar, cancelMissionInCalendar } from "@/lib/google-calendar.functions";
 import type { Technician as Tech } from "@/lib/planning-types";
 
@@ -498,6 +498,7 @@ function AssignmentDialog({
   const [endHalf, setEndHalf] = useState<HalfDay>(existing?.endHalf ?? existing?.half ?? half);
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [link, setLink] = useState(existing?.link ?? "");
+  const [teamsUrl, setTeamsUrl] = useState(existing?.teamsUrl ?? "");
   const [toConfirm, setToConfirm] = useState(existing?.toConfirm ?? false);
   const [attachments, setAttachments] = useState(existing?.attachments ?? []);
   const [deleting, setDeleting] = useState(false);
@@ -533,6 +534,10 @@ function AssignmentDialog({
   };
 
   const save = () => {
+    if (teamsUrl.trim() && !normalizeTeamsUrl(teamsUrl)) {
+      toast.error("Saisissez un lien de réunion Microsoft Teams valide (https://…)");
+      return;
+    }
     if (!title.trim()) {
       toast.error("Le titre est obligatoire");
       return;
@@ -555,6 +560,7 @@ function AssignmentDialog({
       endTime,
       notes: notes.trim() || undefined,
       link: link.trim() || undefined,
+      teamsUrl: normalizeTeamsUrl(teamsUrl),
       toConfirm: toConfirm || undefined,
       confirmed: toConfirm ? undefined : true,
       sequence:
@@ -582,6 +588,7 @@ function AssignmentDialog({
     endTime,
     notes,
     link,
+    teamsUrl: normalizeTeamsUrl(teamsUrl),
     toConfirm,
     attachments,
   };
@@ -723,6 +730,16 @@ function AssignmentDialog({
             <Input value={link} onChange={(e) => setLink(e.target.value)} maxLength={500} placeholder="https://…" />
           </div>
 
+          <div className="grid gap-2">
+            <Label htmlFor="mission-teams" className="flex items-center gap-1"><Video className="size-3.5" /> Réunion Teams (optionnel)</Label>
+            <Input id="mission-teams" type="url" value={teamsUrl} onChange={(e) => setTeamsUrl(e.target.value)} maxLength={4000} placeholder="https://teams.microsoft.com/l/meetup-join/…" />
+            {normalizeTeamsUrl(teamsUrl) && (
+              <Button variant="outline" className="w-fit" asChild>
+                <a href={normalizeTeamsUrl(teamsUrl)} target="_blank" rel="noopener noreferrer"><Video /> Rejoindre la réunion Teams</a>
+              </Button>
+            )}
+          </div>
+
 
           <div className="grid gap-2">
             <Label>Notes</Label>
@@ -776,6 +793,10 @@ function AssignmentDialog({
               <Button
                 disabled={deleting}
                 onClick={() => {
+                  if (teamsUrl.trim() && !normalizeTeamsUrl(teamsUrl)) {
+                    toast.error("Saisissez un lien de réunion Microsoft Teams valide (https://…)");
+                    return;
+                  }
                   if (!title.trim()) {
                     toast.error("Le titre est obligatoire");
                     return;
