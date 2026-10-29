@@ -608,7 +608,10 @@ function AssignmentDialog({
                 setCategoryId(v);
                 const cat = categories.find((c) => c.id === v);
                 const prefill = titlePrefill(cat?.label);
-                if (prefill && !title.trim()) setTitle(prefill);
+                if (prefill && (!title.trim() || title === lastPrefill)) {
+                  setTitle(prefill);
+                  setLastPrefill(prefill);
+                }
               }}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
