@@ -316,14 +316,14 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                           onClick={() => canEdit && setEditing({ technicianId: t.id, dateISO, half: h })}
                         >
                           {list.length > 0 ? (
-                            <div className="flex h-full flex-col gap-1">
+                            <div className="flex min-h-[61px] flex-col gap-1">
                               {list.map((a) => {
                                 const cat = categoryById(a.categoryId);
                                 const isFirst = a.dateISO === dateISO && a.half === h;
                                 return (
                                   <div
                                     key={a.id}
-                                    className={cn("flex flex-col rounded-sm border border-border/40 p-0.5", list.length > 1 && "flex-1")}
+                                    className="flex min-h-[56px] min-w-0 flex-col rounded-sm border border-border/40 p-0.5"
                                     style={{ backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
                                     onClick={(e) => {
                                       if (!canEdit) return;
@@ -366,7 +366,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                               )}
                             </div>
                           ) : (
-                            <div className="flex h-full items-center justify-center text-muted-foreground/40">
+                            <div className="flex min-h-[61px] items-center justify-center text-muted-foreground/40">
                               <Plus className="size-4" />
                             </div>
                           )}
