@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Distinguer les week-ends et jours fériés français par des couleurs adaptées aux deux thèmes.
+- [x] Distinguer les week-ends et jours fériés français par des couleurs adaptées aux deux thèmes.
 - [x] Suggestions d’adresses de cinémas depuis l’intitulé de la mission (Google Maps connecté ; essai réel à effectuer sur le site publié).
 - [x] Suppression d’une fiche de mission : annuler aussi son invitation dans les calendriers des techniciens.
 - [x] Envoi des ordres de mission via Google Agenda (planning.cinemeccanica@gmail.com)
