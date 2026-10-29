@@ -13,6 +13,7 @@ const schema = z.object({
   end: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   attendees: z.array(z.string().email()).max(50),
   recurrence: z.array(z.string().regex(/^RRULE:FREQ=WEEKLY;BYDAY=(SU|MO|TU|WE|TH|FR|SA)$/)).max(1).default([]),
+  meet: z.boolean().default(false),
   attachments: z
     .array(z.object({ name: z.string().max(300), type: z.string().max(200), dataUrl: z.string() }))
     .max(10)
@@ -102,16 +103,20 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
       transparency: "transparent",
       reminders: { useDefault: false, overrides: [] },
       attachments,
+      ...(data.meet
+        ? { conferenceData: { createRequest: { requestId: `meet-${id}`, conferenceSolutionKey: { type: "hangoutsMeet" } } } }
+        : {}),
     };
     const base = `${GATEWAY_URL}/calendars/primary/events`;
-    let res = await fetch(`${base}/${id}?sendUpdates=all&supportsAttachments=true`, { method: "PUT", headers, body: JSON.stringify(body) });
+    let res = await fetch(`${base}/${id}?sendUpdates=all&supportsAttachments=true&conferenceDataVersion=1`, { method: "PUT", headers, body: JSON.stringify(body) });
     if (res.status === 404) {
-      res = await fetch(`${base}?sendUpdates=all&supportsAttachments=true`, { method: "POST", headers, body: JSON.stringify(body) });
+      res = await fetch(`${base}?sendUpdates=all&supportsAttachments=true&conferenceDataVersion=1`, { method: "POST", headers, body: JSON.stringify(body) });
     }
     if (!res.ok) {
       const t = await res.text();
       console.error(`Google Calendar [${res.status}]: ${t}`);
       throw new Error(`Envoi agenda échoué [${res.status}]: ${t.slice(0, 300)}`);
     }
-    return { ok: true };
+    const ev = (await res.json()) as { hangoutLink?: string };
+    return { ok: true, meetUrl: data.meet ? ev.hangoutLink : undefined };
   });

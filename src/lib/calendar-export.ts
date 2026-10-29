@@ -190,6 +190,7 @@ export function googlePayload(input: Assignment, techs: Technician[]) {
     end: `${a.endDateISO ?? a.dateISO}T${a.endTime || "17:00"}`,
     attendees: techs.map((t) => t.email).filter((e) => /.+@.+\..+/.test(e)),
     recurrence: recurrence ? [recurrence] : [],
+    meet: Boolean(input.googleMeet && !input.toConfirm),
     attachments: (a.attachments ?? []).map((f) => ({ name: f.name, type: f.type, dataUrl: f.dataUrl })),
   };
 }
