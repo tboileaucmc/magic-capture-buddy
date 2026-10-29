@@ -1,4 +1,5 @@
-import { test, expect } from "vitest";
+import { test } from "node:test";
+import assert from "node:assert/strict";
 import { supportTechnicianIds, isSupportOnly } from "./planning-support";
 
 const techs = [
@@ -8,11 +9,11 @@ const techs = [
 ];
 
 test("support starts at BRABANT", () => {
-  expect([...supportTechnicianIds(techs)]).toEqual(["f", "h"]);
+  assert.deepEqual([...supportTechnicianIds(techs)], ["f", "h"]);
 });
 
 test("mission mixing support and non-support is refused", () => {
   const s = supportTechnicianIds(techs);
-  expect(isSupportOnly(["f", "h"], s)).toBe(true);
-  expect(isSupportOnly(["f", "a"], s)).toBe(false);
+  assert.equal(isSupportOnly(["f", "h"], s), true);
+  assert.equal(isSupportOnly(["f", "a"], s), false);
 });
