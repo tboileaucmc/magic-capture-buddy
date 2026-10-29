@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
 import { UsersDialog } from "@/components/UsersDialog";
 import { useRole } from "@/lib/use-role";
+import { supportTechnicianIds, isSupportOnly } from "@/lib/planning-support";
 import { CinemaAddressSuggestions } from "@/components/CinemaAddressSuggestions";
 import { PlanningDateInput } from "@/components/PlanningDateInput";
 import { frenchHolidayName, planningDayKind } from "@/lib/planning-day";
@@ -79,7 +80,10 @@ const VIEW_STEP: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 
 export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggleTheme: () => void }) {
   const { data, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory } = usePlanning();
-  const { role, canEdit, isAdmin } = useRole();
+  const { role, canEdit, isSupportEditor, isAdmin } = useRole();
+  const supportIds = useMemo(() => supportTechnicianIds(data.technicians), [data.technicians]);
+  const canEditTech = (id: string) => canEdit || (isSupportEditor && supportIds.has(id));
+  const canEditMission = (a: Assignment) => canEdit || (isSupportEditor && isSupportOnly(a.technicianIds, supportIds));
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const [viewMode, setViewMode] = useState<ViewMode>("1w");
   const [editing, setEditing] = useState<{
@@ -179,6 +183,9 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
               </>
             )}
             {isAdmin && <UsersDialog />}
+            {isSupportEditor && (
+              <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">Écriture : support</span>
+            )}
             {role === "viewer" && (
               <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">Lecture seule</span>
             )}
@@ -314,7 +321,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                             dayClass(d),
                           )}
                           style={{ minWidth: dayCount > 7 ? 64 : 72, height: 70, backgroundColor: singleCat?.color ? `${singleCat.color}22` : undefined }}
-                          onClick={() => canEdit && setEditing({ technicianId: t.id, dateISO, half: h })}
+                          onClick={() => canEditTech(t.id) && setEditing({ technicianId: t.id, dateISO, half: h })}
                         >
                           {list.length > 0 ? (
                             <div className="flex min-h-[61px] flex-col gap-1">
@@ -327,8 +334,8 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                                     className="flex min-h-[56px] min-w-0 flex-col rounded-sm border border-border/40 p-0.5"
                                     style={{ backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
                                     onClick={(e) => {
-                                      if (!canEdit) return;
                                       e.stopPropagation();
+                                      if (!canEditMission(a)) return;
                                       setEditing({ technicianId: t.id, dateISO, half: h, existing: a });
                                     }}
                                   >
@@ -361,7 +368,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                                   </div>
                                 );
                               })}
-                              {canEdit && (
+                              {canEditTech(t.id) && (
                                 <div className="flex items-center justify-center text-muted-foreground/40">
                                   <Plus className="size-3" />
                                 </div>
@@ -400,7 +407,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
         <AssignmentDialog
           open
           onOpenChange={(o) => !o && setEditing(null)}
-          allTechnicians={data.technicians}
+          allTechnicians={canEdit ? data.technicians : data.technicians.filter((t) => supportIds.has(t.id))}
           initialTechnicianId={editing.technicianId}
           categories={data.categories}
           dateISO={editing.dateISO}

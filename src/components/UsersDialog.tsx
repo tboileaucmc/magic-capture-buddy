@@ -20,7 +20,7 @@ export function UsersDialog() {
   };
 
   const change = async (id: string, value: string) => {
-    const { error } = await supabase.rpc("admin_set_editor", { _target: id, _can_edit: value === "editor" });
+    const { error } = await supabase.rpc("admin_set_role", { _target: id, _role: value });
     if (error) return toast.error(error.message);
     toast.success("Droits mis à jour");
     void load();
@@ -36,7 +36,7 @@ export function UsersDialog() {
           <DialogHeader>
             <DialogTitle>Droits des utilisateurs</DialogTitle>
             <DialogDescription>
-              Les nouveaux comptes sont en lecture seule. Passez-les en « Écriture » pour qu'ils puissent modifier le planning.
+              Les nouveaux comptes sont en lecture seule. Passez-les en « Écriture » pour qu'ils puissent modifier le planning, ou en « Écriture support » pour ne gérer que les missions de François, Hugo, Nabil et Amaury.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -47,10 +47,11 @@ export function UsersDialog() {
                   <span className="text-xs font-semibold text-muted-foreground">Super utilisateur</span>
                 ) : (
                   <Select value={r.role} onValueChange={(v) => void change(r.user_id, v)}>
-                    <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="viewer">Lecture</SelectItem>
                       <SelectItem value="editor">Écriture</SelectItem>
+                      <SelectItem value="support_editor">Écriture support</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
