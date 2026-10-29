@@ -175,6 +175,32 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             }}>
               <ChevronRight />
             </Button>
+            {(canEdit || isSupportEditor) && (
+              <Button
+                variant="secondary"
+                title="Copier les missions de la semaine affichée vers une autre semaine"
+                onClick={() => {
+                  const next = new Date(weekStart); next.setDate(next.getDate() + 7);
+                  const answer = prompt(
+                    `Dupliquer les missions de la semaine du ${weekStart.toLocaleDateString("fr-FR")}${isSupportEditor && !canEdit ? " (support uniquement)" : ""} vers la semaine du (jj/mm/aaaa) :`,
+                    next.toLocaleDateString("fr-FR"),
+                  );
+                  if (!answer) return;
+                  const m = answer.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                  const target = m ? new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : null;
+                  if (!target || isNaN(target.getTime())) { toast.error("Date invalide (format jj/mm/aaaa)"); return; }
+                  const targetMonday = startOfWeek(target);
+                  if (fmtISO(targetMonday) === fmtISO(weekStart)) { toast.error("Choisissez une autre semaine"); return; }
+                  const copies = duplicateWeek(data.assignments, fmtISO(weekStart), fmtISO(targetMonday), canEditMission, uid);
+                  if (copies.length === 0) { toast.info("Aucune mission à dupliquer cette semaine"); return; }
+                  addAssignments(copies);
+                  setWeekStart(targetMonday);
+                  toast.success(`${copies.length} mission(s) dupliquée(s) — invitations non envoyées`);
+                }}
+              >
+                <Copy /> Dupliquer la semaine
+              </Button>
+            )}
             {canEdit && (
               <>
                 <Button onClick={() => setTechDialog(true)} variant="secondary">
