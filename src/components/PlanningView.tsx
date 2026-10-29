@@ -820,6 +820,49 @@ function AddTechnicianDialog({
   );
 }
 
+function EditTechnicianDialog({
+  open,
+  onOpenChange,
+  technician,
+  onSave,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  technician: Tech;
+  onSave: (name: string, email: string) => void;
+}) {
+  const [name, setName] = useState(technician.name);
+  const [email, setEmail] = useState(technician.email);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Modifier le technicien</DialogTitle>
+          <DialogDescription>
+            Le nom et l'adresse e-mail sont utilisés pour l'envoi des ordres de mission.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-3">
+          <div className="grid gap-2">
+            <Label>Nom / Prénom</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} />
+          </div>
+          <div className="grid gap-2">
+            <Label>Adresse e-mail</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={200} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => {
+            if (!name.trim() || !email.trim()) { toast.error("Nom et e-mail requis"); return; }
+            onSave(name.trim(), email.trim());
+          }}>Enregistrer</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 const PRESET_COLORS = [
   "#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6",
   "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#6366f1",
