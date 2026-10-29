@@ -22,9 +22,12 @@ import { sendMissionToCalendar, cancelMissionInCalendar } from "@/lib/google-cal
 import type { Technician as Tech } from "@/lib/planning-types";
 
 /** Envoie l'ordre de mission depuis planning.cinemeccanica@gmail.com vers l'agenda des techniciens. */
-function pushToCalendar(a: Assignment, techs: Tech[], okMsg: string) {
+function pushToCalendar(a: Assignment, techs: Tech[], okMsg: string, onMeet?: (url: string | undefined) => void) {
   sendMissionToCalendar({ data: googlePayload(a, techs) })
-    .then(() => toast.success(okMsg))
+    .then((r) => {
+      toast.success(r.meetUrl ? `${okMsg} avec le lien Google Meet` : okMsg);
+      if (onMeet && r.meetUrl && r.meetUrl !== a.meetUrl) onMeet(r.meetUrl);
+    })
     .catch((e) => toast.error(`Envoi agenda impossible : ${e instanceof Error ? e.message : e}`));
 }
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -510,6 +513,7 @@ function AssignmentDialog({
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [link, setLink] = useState(existing?.link ?? "");
   const [teamsUrl, setTeamsUrl] = useState(existing?.teamsUrl ?? "");
+  const [googleMeet, setGoogleMeet] = useState(existing?.googleMeet ?? false);
   const [weekly, setWeekly] = useState(existing?.recurrence === "weekly");
   const [repeatDay, setRepeatDay] = useState(String(new Date(`${existing?.dateISO ?? dateISO}T00:00:00Z`).getUTCDay()));
   const [toConfirm, setToConfirm] = useState(existing?.toConfirm ?? false);
@@ -586,6 +590,8 @@ function AssignmentDialog({
       notes: notes.trim() || undefined,
       link: link.trim() || undefined,
       teamsUrl: normalizeTeamsUrl(teamsUrl),
+      googleMeet: googleMeet || undefined,
+      meetUrl: googleMeet ? existing?.meetUrl : undefined,
       toConfirm: toConfirm || undefined,
       confirmed: toConfirm ? undefined : true,
       sequence: existing ? (existing.sequence ?? 0) + 1 : 0,
@@ -593,7 +599,7 @@ function AssignmentDialog({
     };
     onSave(a);
     toast.success("Mission enregistrée");
-    pushToCalendar(a, selectedTechs, "Ordre de mission envoyé dans l'agenda des techniciens");
+    pushToCalendar(a, selectedTechs, "Ordre de mission envoyé dans l'agenda des techniciens", (meetUrl) => onSave({ ...a, meetUrl }));
   };
 
   const currentAssignment: Assignment = {
@@ -612,6 +618,7 @@ function AssignmentDialog({
     notes,
     link,
     teamsUrl: normalizeTeamsUrl(teamsUrl),
+    googleMeet,
     toConfirm,
     attachments,
   };
@@ -763,6 +770,19 @@ function AssignmentDialog({
               </Button>
             )}
             <div className="mt-2 flex items-center justify-between gap-3">
+              <Label htmlFor="mission-meet" className="flex items-center gap-2"><Video className="size-4" /> Créer un lien Google Meet</Label>
+              <Switch id="mission-meet" checked={googleMeet} onCheckedChange={setGoogleMeet} />
+            </div>
+            {googleMeet && (
+              existing?.meetUrl ? (
+                <Button variant="outline" className="w-fit" asChild>
+                  <a href={existing.meetUrl} target="_blank" rel="noopener noreferrer"><Video /> Rejoindre la réunion Google Meet</a>
+                </Button>
+              ) : (
+                <p className="text-xs text-muted-foreground">Le lien sera créé à l'enregistrement et ajouté à l'invitation{toConfirm ? " une fois le RDV confirmé" : ""}.</p>
+              )
+            )}
+            <div className="mt-2 flex items-center justify-between gap-3">
               <Label htmlFor="mission-weekly" className="flex items-center gap-2"><Repeat className="size-4" /> Répéter chaque semaine</Label>
               <Switch id="mission-weekly" checked={weekly} onCheckedChange={setWeekly} />
             </div>
@@ -854,7 +874,7 @@ function AssignmentDialog({
                   };
                   onSave(confirmed);
                   setToConfirm(false);
-                  pushToCalendar(confirmed, selectedTechs, "RDV confirmé : détails envoyés dans l'agenda des techniciens");
+                  pushToCalendar(confirmed, selectedTechs, "RDV confirmé : détails envoyés dans l'agenda des techniciens", (meetUrl) => onSave({ ...confirmed, meetUrl }));
                 }}
               >
                 Confirmer le RDV
