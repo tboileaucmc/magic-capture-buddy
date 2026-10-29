@@ -483,7 +483,8 @@ function AssignmentDialog({
     existing?.technicianIds ?? [initialTechnicianId],
   );
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? "");
-  const [title, setTitle] = useState(existing?.title ?? "");
+  const initialCategory = categories.find((c) => c.id === (existing?.categoryId ?? categories[0]?.id));
+  const [title, setTitle] = useState(existing?.title ?? (initialCategory?.label === "Affaires" ? "AFF " : ""));
   const [addressSuggestionsActive, setAddressSuggestionsActive] = useState(false);
   const [address, setAddress] = useState(existing?.address ?? "");
   const [startTime, setStartTime] = useState(existing?.startTime ?? defaultStart);
@@ -597,7 +598,14 @@ function AssignmentDialog({
           <div className="grid gap-2">
             <Label>Catégorie</Label>
 
-            <Select value={categoryId} onValueChange={setCategoryId}>
+            <Select
+              value={categoryId}
+              onValueChange={(v) => {
+                setCategoryId(v);
+                const cat = categories.find((c) => c.id === v);
+                if (cat?.label === "Affaires" && !title.trim()) setTitle("AFF ");
+              }}
+            >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {categories.map((c) => (
