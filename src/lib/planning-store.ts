@@ -4,7 +4,6 @@ import type { Json } from "@/integrations/supabase/types";
 import {
   DEFAULT_CATEGORIES,
   DEFAULT_TECHNICIANS,
-  assignmentSlots,
   type Assignment,
   type Category,
   type Technician,
