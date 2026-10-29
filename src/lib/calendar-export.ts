@@ -1,5 +1,17 @@
 import type { Assignment, Technician } from "./planning-types";
 
+/** Accepte uniquement les liens HTTPS des services de réunion Microsoft Teams. */
+export function normalizeTeamsUrl(value: string): string | undefined {
+  try {
+    const url = new URL(value.trim());
+    if (url.protocol !== "https:" || url.username || url.password || url.port) return undefined;
+    if (!["teams.microsoft.com", "teams.live.com", "teams.cloud.microsoft"].includes(url.hostname)) return undefined;
+    return url.href;
+  } catch {
+    return undefined;
+  }
+}
+
 function fmtICS(date: Date): string {
   // YYYYMMDDTHHMMSS (local, floating)
   const p = (n: number) => String(n).padStart(2, "0");
@@ -37,6 +49,7 @@ export function maskIfToConfirm(a: Assignment): Assignment {
     address: "",
     notes: "Un rendez-vous est prévu sur ce créneau. Les détails vous seront communiqués après confirmation.",
     link: undefined,
+    teamsUrl: undefined,
     attachments: [],
   };
 }
@@ -52,6 +65,8 @@ export function buildDescription(input: Assignment): string {
   }
   if (a.notes) lines.push("", a.notes);
   if (a.link) lines.push("", `Lien: ${a.link}`);
+  const teamsUrl = a.teamsUrl ? normalizeTeamsUrl(a.teamsUrl) : undefined;
+  if (teamsUrl) lines.push("", `Réunion Teams : ${teamsUrl}`);
   if (a.attachments?.length) {
     lines.push("", "Pièces jointes:");
     a.attachments.forEach((f) => lines.push(`- ${f.name}`));
@@ -185,6 +200,8 @@ export function buildHtmlDescription(input: Assignment): string {
   }
   if (a.notes && !input.toConfirm) parts.push(`<br><br>📝 <b>Notes :</b><br>${esc(a.notes).replace(/\n/g, "<br>")}`);
   if (a.link) parts.push(`<br><br>🔗 <a href="${esc(a.link)}">Lien utile</a>`);
+  const teamsUrl = a.teamsUrl ? normalizeTeamsUrl(a.teamsUrl) : undefined;
+  if (teamsUrl) parts.push(`<br><br>💻 <a href="${esc(teamsUrl).replace(/"/g, "&quot;")}">Rejoindre la réunion Teams</a>`);
   if (a.attachments?.length) parts.push(`<br><br>📎 Documents joints : ${a.attachments.map((f) => esc(f.name)).join(", ")}`);
   parts.push(`<br><br>Bonne mission et merci ! 🙌<br><i>— L'équipe Planning Cinemeccanica</i>`);
   return parts.join("");
