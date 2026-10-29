@@ -1,7 +1,6 @@
-import rrule from "rrule";
+import { RRule } from "rrule";
 import { assignmentSlots, type Assignment, type HalfDay } from "./planning-types";
 
-const { RRule } = rrule;
 const WEEKDAYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
 /** Calendar dates are treated as UTC-only values, not Paris timestamps. */
