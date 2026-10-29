@@ -388,7 +388,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           open
           technician={editingTech}
           onOpenChange={(o) => !o && setEditingTech(null)}
-          onSave={(name, email) => {
+          onSave={(name: string, email: string) => {
             updateTechnician({ ...editingTech, name, email });
             setEditingTech(null);
             toast.success("Technicien mis à jour");
