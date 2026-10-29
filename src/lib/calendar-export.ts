@@ -1,4 +1,5 @@
 import type { Assignment, Technician } from "./planning-types";
+import { weeklyRule } from "./planning-recurrence";
 
 /** Accepte uniquement les liens HTTPS des services de réunion Microsoft Teams. */
 export function normalizeTeamsUrl(value: string): string | undefined {
@@ -89,12 +90,19 @@ export function buildICS(input: Assignment, techs: Technician[]): string {
     "PRODID:-//Planning Techniciens//FR",
     "CALSCALE:GREGORIAN",
     "METHOD:REQUEST",
+    ...(a.recurrence ? [
+      "BEGIN:VTIMEZONE", "TZID:Europe/Paris",
+      "BEGIN:DAYLIGHT", "DTSTART:19700329T020000", "TZOFFSETFROM:+0100", "TZOFFSETTO:+0200", "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU", "END:DAYLIGHT",
+      "BEGIN:STANDARD", "DTSTART:19701025T030000", "TZOFFSETFROM:+0200", "TZOFFSETTO:+0100", "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU", "END:STANDARD",
+      "END:VTIMEZONE",
+    ] : []),
     "BEGIN:VEVENT",
     `UID:${uid}`,
     `SEQUENCE:${a.sequence ?? 0}`,
     `DTSTAMP:${fmtICS(new Date())}`,
-    `DTSTART:${fmtICS(start)}`,
-    `DTEND:${fmtICS(end)}`,
+    `DTSTART${a.recurrence ? ";TZID=Europe/Paris" : ""}:${fmtICS(start)}`,
+    `DTEND${a.recurrence ? ";TZID=Europe/Paris" : ""}:${fmtICS(end)}`,
+    ...(weeklyRule(a) ? [weeklyRule(a)] : []),
     `SUMMARY:${a.title}`,
     `LOCATION:${a.address}`,
     `DESCRIPTION:${desc}`,
@@ -130,6 +138,8 @@ export function googleCalendarUrl(input: Assignment, techs: Technician[]): strin
     location: a.address,
   });
   for (const t of techs) params.append("add", t.email);
+  const recurrence = weeklyRule(a);
+  if (recurrence) { params.set("recur", recurrence); params.set("ctz", "Europe/Paris"); }
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
@@ -178,6 +188,7 @@ export function googlePayload(input: Assignment, techs: Technician[]) {
     start: `${a.dateISO}T${a.startTime || "08:00"}`,
     end: `${a.endDateISO ?? a.dateISO}T${a.endTime || "17:00"}`,
     attendees: techs.map((t) => t.email).filter((e) => /.+@.+\..+/.test(e)),
+    recurrence: weeklyRule(a) ? [weeklyRule(a) as string] : [],
     attachments: (a.attachments ?? []).map((f) => ({ name: f.name, type: f.type, dataUrl: f.dataUrl })),
   };
 }

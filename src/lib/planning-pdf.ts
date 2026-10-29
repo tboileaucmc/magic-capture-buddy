@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
-import { assignmentSlots, type Assignment, type Category, type HalfDay, type Technician } from "./planning-types";
+import { type Assignment, type Category, type HalfDay, type Technician } from "./planning-types";
+import { assignmentOccursOn } from "./planning-recurrence";
 
 export type PlanningData = { technicians: Technician[]; categories: Category[]; assignments: Assignment[] };
 
@@ -69,7 +70,7 @@ export function buildPlanningPdf(data: PlanningData, start: Date, days = 14): st
   pdf.text("Technicien", m + 2, top + 7);
 
   const find = (techId: string, dISO: string, half: HalfDay) =>
-    data.assignments.find((a) => a.technicianIds.includes(techId) && assignmentSlots(a).some((s) => s.dateISO === dISO && s.half === half));
+    data.assignments.find((a) => a.technicianIds.includes(techId) && assignmentOccursOn(a, dISO, half));
 
   data.technicians.forEach((t, r) => {
     const y = top + headH + r * rowH;

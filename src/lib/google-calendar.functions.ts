@@ -12,6 +12,7 @@ const schema = z.object({
   start: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   end: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   attendees: z.array(z.string().email()).max(50),
+  recurrence: z.array(z.string().regex(/^RRULE:FREQ=WEEKLY;BYDAY=(SU|MO|TU|WE|TH|FR|SA)$/)).max(1).default([]),
   attachments: z
     .array(z.object({ name: z.string().max(300), type: z.string().max(200), dataUrl: z.string() }))
     .max(10)
@@ -95,6 +96,7 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
       start: { dateTime: `${data.start}:00`, timeZone: "Europe/Paris" },
       end: { dateTime: `${data.end}:00`, timeZone: "Europe/Paris" },
       attendees: data.attendees.map((email) => ({ email })),
+      recurrence: data.recurrence,
       status: "confirmed",
       colorId: "7",
       transparency: "transparent",

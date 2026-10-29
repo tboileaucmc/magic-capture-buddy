@@ -33,6 +33,8 @@ export type Assignment = {
   notes?: string;
   link?: string;
   teamsUrl?: string;
+  /** Weekly series anchored to dateISO, with no end date. */
+  recurrence?: "weekly";
   /** RDV à confirmer : on envoie seulement un créneau réservé, sans détails. */
   toConfirm?: boolean;
   /** RDV confirmé après une période « à confirmer » : signalé par une coche verte. */
