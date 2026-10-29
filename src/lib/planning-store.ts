@@ -114,6 +114,10 @@ export function usePlanning() {
     setData((d) => ({ ...d, technicians: [...d.technicians, t] }));
   }, []);
 
+  const updateTechnician = useCallback((t: Technician) => {
+    setData((d) => ({ ...d, technicians: d.technicians.map((x) => (x.id === t.id ? t : x)) }));
+  }, []);
+
   const removeTechnician = useCallback((id: string) => {
     setData((d) => ({
       ...d,
@@ -136,5 +140,5 @@ export function usePlanning() {
     setData((d) => ({ ...d, categories: [...d.categories, c] }));
   }, []);
 
-  return { data, hydrated, upsertAssignment, deleteAssignment, addTechnician, removeTechnician, addCategory, removeCategory };
+  return { data, hydrated, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory };
 }
