@@ -605,7 +605,8 @@ function AssignmentDialog({
               onValueChange={(v) => {
                 setCategoryId(v);
                 const cat = categories.find((c) => c.id === v);
-                if (cat?.label === "Affaires" && !title.trim()) setTitle("AFF ");
+                const prefill = titlePrefill(cat?.label);
+                if (prefill && !title.trim()) setTitle(prefill);
               }}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
