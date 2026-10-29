@@ -8,6 +8,7 @@ import { useRole } from "@/lib/use-role";
 import { CinemaAddressSuggestions } from "@/components/CinemaAddressSuggestions";
 import { PlanningDateInput } from "@/components/PlanningDateInput";
 import { frenchHolidayName, planningDayKind } from "@/lib/planning-day";
+import { ATTACHMENT_ACCEPT, attachmentMimeType } from "@/lib/planning-attachments";
 import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo-cmc.png.asset.json";
 
@@ -509,15 +510,21 @@ function AssignmentDialog({
 
   const handleFiles = async (files: FileList | null) => {
     if (!files) return;
+    const accepted = Array.from(files).flatMap((file) => {
+      const type = attachmentMimeType(file);
+      if (!type) {
+        toast.error(`${file.name} : format non accepté ou taille supérieure à 5 Mo`);
+        return [];
+      }
+      return [{ file, type }];
+    });
     const arr = await Promise.all(
-      Array.from(files)
-        .filter((f) => /^(image\/jpeg|application\/pdf|image\/png)$/.test(f.type))
-        .filter((f) => f.size <= 5 * 1024 * 1024)
+      accepted
         .map(
-          (f) =>
+          ({ file: f, type }) =>
             new Promise<{ name: string; type: string; dataUrl: string }>((resolve) => {
               const r = new FileReader();
-              r.onload = () => resolve({ name: f.name, type: f.type, dataUrl: r.result as string });
+              r.onload = () => resolve({ name: f.name, type, dataUrl: r.result as string });
               r.readAsDataURL(f);
             }),
         ),
@@ -723,8 +730,8 @@ function AssignmentDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label className="flex items-center gap-1"><Paperclip className="size-3.5" /> Pièces jointes (JPEG, PNG, PDF — 5 Mo max)</Label>
-            <Input type="file" accept="image/jpeg,image/png,application/pdf" multiple onChange={(e) => handleFiles(e.target.files)} />
+            <Label className="flex items-center gap-1"><Paperclip className="size-3.5" /> Pièces jointes (JPEG, PNG, PDF, EML, MSG — 5 Mo max)</Label>
+            <Input type="file" accept={ATTACHMENT_ACCEPT} multiple onChange={(e) => handleFiles(e.target.files)} />
             {attachments.length > 0 && (
               <ul className="space-y-1 text-sm">
                 {attachments.map((f, i) => (
