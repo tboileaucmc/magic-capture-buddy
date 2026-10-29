@@ -12,3 +12,4 @@
 - Classify national French holidays and weekends in the browser-safe planning-day helper, with holiday precedence and scoped theme tokens; this keeps date rules testable and mission category colors intact.
 - Keep assignment stacks content-sized with explicit minimum heights, not percentage heights or flex growth inside table cells, so Firefox and Chromium expand multi-mission rows consistently without overlap.
 - Store Teams meeting links separately from generic mission links and normalize them in the browser-safe calendar export helper; every invitation format includes the same link and provisional missions mask it.
+- Weekly series retain one assignment ID and use rrule for bounded occurrence lookup shared by the grid and PDF; Calendar and ICS receive a weekly RRULE in Europe/Paris, and editing/deletion applies to the entire series.

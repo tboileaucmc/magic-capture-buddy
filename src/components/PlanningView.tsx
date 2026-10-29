@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil, Video } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
 import { UsersDialog } from "@/components/UsersDialog";
@@ -14,7 +14,7 @@ import logoAsset from "@/assets/logo-cmc.png.asset.json";
 
 import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
-import { assignmentSlots } from "@/lib/planning-types";
+import { assignmentOccursOn, nextWeeklyDate } from "@/lib/planning-recurrence";
 import { downloadICS, googleCalendarUrl, googlePayload, mailtoUrl, outlookCalendarUrl, normalizeTeamsUrl } from "@/lib/calendar-export";
 import { sendMissionToCalendar, cancelMissionInCalendar } from "@/lib/google-calendar.functions";
 import type { Technician as Tech } from "@/lib/planning-types";
@@ -28,6 +28,7 @@ function pushToCalendar(a: Assignment, techs: Tech[], okMsg: string) {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -109,7 +110,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
   const findAssignments = (techId: string, dateISO: string, half: HalfDay) =>
     data.assignments.filter((a) => {
       if (!a.technicianIds.includes(techId)) return false;
-      return assignmentSlots(a).some((s) => s.dateISO === dateISO && s.half === half);
+      return assignmentOccursOn(a, dateISO, half);
     });
 
   const categoryById = (id: string) => data.categories.find((c) => c.id === id);
@@ -319,7 +320,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                             <div className="flex min-h-[61px] flex-col gap-1">
                               {list.map((a) => {
                                 const cat = categoryById(a.categoryId);
-                                const isFirst = a.dateISO === dateISO && a.half === h;
+                                const isFirst = (a.recurrence === "weekly" || a.dateISO === dateISO) && a.half === h;
                                 return (
                                   <div
                                     key={a.id}
@@ -332,6 +333,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                                     }}
                                   >
                                     <div className="mb-0.5 flex items-center gap-1">
+                                      {a.recurrence && <Repeat className="size-3 shrink-0 text-primary" aria-label="Chaque semaine" />}
                                       <span
                                         className="inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
                                         style={{ backgroundColor: cat?.color }}
@@ -499,12 +501,24 @@ function AssignmentDialog({
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [link, setLink] = useState(existing?.link ?? "");
   const [teamsUrl, setTeamsUrl] = useState(existing?.teamsUrl ?? "");
+  const [weekly, setWeekly] = useState(existing?.recurrence === "weekly");
+  const [repeatDay, setRepeatDay] = useState(String(new Date(`${existing?.dateISO ?? dateISO}T00:00:00Z`).getUTCDay()));
   const [toConfirm, setToConfirm] = useState(existing?.toConfirm ?? false);
   const [attachments, setAttachments] = useState(existing?.attachments ?? []);
   const [deleting, setDeleting] = useState(false);
 
-  const startISO = existing?.dateISO ?? dateISO;
-  const startHalfVal = existing?.half ?? half;
+  const anchorISO = existing?.dateISO ?? dateISO;
+  const startISO = weekly ? nextWeeklyDate(anchorISO, Number(repeatDay)) : anchorISO;
+  const startHalfVal: HalfDay = weekly ? (startTime < "12:00" ? "AM" : "PM") : existing?.half ?? half;
+  const missionEndISO = weekly ? startISO : endDateISO;
+  const missionEndHalf: HalfDay = weekly ? (endTime <= "12:00" ? "AM" : "PM") : endHalf;
+  const validateWeekly = () => {
+    if (weekly && (!startTime || !endTime || endTime <= startTime)) {
+      toast.error("La fin de la réunion doit être après son début, le même jour");
+      return false;
+    }
+    return true;
+  };
   const selectedTechs = allTechnicians.filter((t) => technicianIds.includes(t.id));
   const toggleTech = (id: string) =>
     setTechnicianIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
@@ -534,6 +548,7 @@ function AssignmentDialog({
   };
 
   const save = () => {
+    if (!validateWeekly()) return;
     if (teamsUrl.trim() && !normalizeTeamsUrl(teamsUrl)) {
       toast.error("Saisissez un lien de réunion Microsoft Teams valide (https://…)");
       return;
@@ -551,8 +566,9 @@ function AssignmentDialog({
       technicianIds,
       dateISO: startISO,
       half: startHalfVal,
-      endDateISO: endDateISO !== startISO || endHalf !== startHalfVal ? endDateISO : undefined,
-      endHalf: endDateISO !== startISO || endHalf !== startHalfVal ? endHalf : undefined,
+      endDateISO: missionEndISO !== startISO || missionEndHalf !== startHalfVal ? missionEndISO : undefined,
+      endHalf: missionEndISO !== startISO || missionEndHalf !== startHalfVal ? missionEndHalf : undefined,
+      recurrence: weekly ? "weekly" : undefined,
       categoryId,
       title: title.trim(),
       address: address.trim(),
@@ -563,10 +579,7 @@ function AssignmentDialog({
       teamsUrl: normalizeTeamsUrl(teamsUrl),
       toConfirm: toConfirm || undefined,
       confirmed: toConfirm ? undefined : true,
-      sequence:
-        existing && !!existing.toConfirm !== toConfirm
-          ? (existing.sequence ?? 0) + 1
-          : existing?.sequence,
+      sequence: existing ? (existing.sequence ?? 0) + 1 : 0,
       attachments,
     };
     onSave(a);
@@ -579,8 +592,9 @@ function AssignmentDialog({
     technicianIds,
     dateISO: startISO,
     half: startHalfVal,
-    endDateISO,
-    endHalf,
+    endDateISO: missionEndISO,
+    endHalf: missionEndHalf,
+    recurrence: weekly ? "weekly" : undefined,
     categoryId,
     title: title || "Mission",
     address,
@@ -598,7 +612,7 @@ function AssignmentDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {existing ? "Modifier la mission" : "Nouvelle mission"}
+            {existing?.recurrence ? "Modifier la série hebdomadaire" : existing ? "Modifier la mission" : "Nouvelle mission"}
           </DialogTitle>
           <DialogDescription>
             {new Date(dateISO).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long" })}
@@ -677,12 +691,12 @@ function AssignmentDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
-              <Label>Début</Label>
-              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              <Label htmlFor="mission-start">Début</Label>
+              <Input id="mission-start" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
             </div>
             <div className="grid gap-2">
-              <Label>Fin</Label>
-              <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+              <Label htmlFor="mission-end">Fin</Label>
+              <Input id="mission-end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
             </div>
           </div>
 
@@ -703,14 +717,15 @@ function AssignmentDialog({
                 <Label className="text-xs">Au</Label>
                 <Input
                   type="date"
-                  value={endDateISO}
+                  value={missionEndISO}
+                  disabled={weekly}
                   min={startISO}
                   onChange={(e) => setEndDateISO(e.target.value || startISO)}
                 />
               </div>
               <div className="grid gap-1">
                 <Label className="text-xs">&nbsp;</Label>
-                <Select value={endHalf} onValueChange={(v) => setEndHalf(v as HalfDay)}>
+                <Select value={missionEndHalf} disabled={weekly} onValueChange={(v) => setEndHalf(v as HalfDay)}>
                   <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="AM">Matin</SelectItem>
@@ -737,6 +752,24 @@ function AssignmentDialog({
               <Button variant="outline" className="w-fit" asChild>
                 <a href={normalizeTeamsUrl(teamsUrl)} target="_blank" rel="noopener noreferrer"><Video /> Rejoindre la réunion Teams</a>
               </Button>
+            )}
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <Label htmlFor="mission-weekly" className="flex items-center gap-2"><Repeat className="size-4" /> Répéter chaque semaine</Label>
+              <Switch id="mission-weekly" checked={weekly} onCheckedChange={setWeekly} />
+            </div>
+            {weekly && (
+              <div className="grid gap-3 border-l-2 border-primary pl-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="mission-repeat-day">Jour de la réunion</Label>
+                  <Select value={repeatDay} onValueChange={setRepeatDay}>
+                    <SelectTrigger id="mission-repeat-day"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"].map((day, index) => <SelectItem key={day} value={String(index)}>{day}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <span className="text-sm text-muted-foreground">Chaque { ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"][Number(repeatDay)] } à {startTime.replace(":", "h")} (heure de Paris) · Sans date de fin</span>
+              </div>
             )}
           </div>
 
@@ -776,7 +809,7 @@ function AssignmentDialog({
           <div className="flex flex-wrap gap-2">
             {existing && (
               <Button variant="destructive" disabled={deleting} onClick={async () => {
-                if (!confirm("Supprimer cette mission et annuler son invitation pour tous les techniciens assignés ?")) return;
+                if (!confirm(existing.recurrence ? "Supprimer toute la série hebdomadaire et annuler ses invitations pour tous les techniciens assignés ?" : "Supprimer cette mission et annuler son invitation pour tous les techniciens assignés ?")) return;
                 setDeleting(true);
                 try {
                   await onDelete(existing.id);
@@ -793,6 +826,7 @@ function AssignmentDialog({
               <Button
                 disabled={deleting}
                 onClick={() => {
+                  if (!validateWeekly()) return;
                   if (teamsUrl.trim() && !normalizeTeamsUrl(teamsUrl)) {
                     toast.error("Saisissez un lien de réunion Microsoft Teams valide (https://…)");
                     return;
@@ -839,7 +873,7 @@ function AssignmentDialog({
                 >
                   Outlook (application) — .ics
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                {!weekly && <DropdownMenuItem asChild>
                   <a
                     href={outlookCalendarUrl(currentAssignment, selectedTechs, "work")}
                     target="_blank"
@@ -847,7 +881,7 @@ function AssignmentDialog({
                   >
                     Outlook Web — créer l'ordre de mission
                   </a>
-                </DropdownMenuItem>
+                </DropdownMenuItem>}
               </DropdownMenuContent>
             </DropdownMenu>
 
