@@ -33,6 +33,10 @@ export type Assignment = {
   notes?: string;
   link?: string;
   teamsUrl?: string;
+  /** Ask Google Calendar to create a Meet link for this mission. */
+  googleMeet?: boolean;
+  /** Meet link returned by Google, shown back in the mission sheet. */
+  meetUrl?: string;
   /** Weekly series anchored to dateISO, with no end date. */
   recurrence?: "weekly";
   /** RDV à confirmer : on envoie seulement un créneau réservé, sans détails. */
