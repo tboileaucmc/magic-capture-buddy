@@ -24,7 +24,7 @@ export function assignmentOccursOn(a: Assignment, dateISO: string, half: HalfDay
   if (dateISO < a.dateISO) return false;
   const date = new Date(`${dateISO}T00:00:00Z`);
   const recurring = RRule.fromString(rule);
-  const series = new RRule({ ...recurring.options, dtstart: new Date(`${a.dateISO}T00:00:00Z`) });
+  const series = new RRule({ ...recurring.origOptions, dtstart: new Date(`${a.dateISO}T00:00:00Z`), byhour: 0, byminute: 0, bysecond: 0 });
   const occurrence = series.after(date, true);
   if (occurrence?.getTime() !== date.getTime()) return false;
   return half === a.half || (a.half === "AM" && a.endHalf === "PM");
