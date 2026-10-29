@@ -97,7 +97,8 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
       attendees: data.attendees.map((email) => ({ email })),
       status: "confirmed",
       colorId: "7",
-      reminders: { useDefault: false, overrides: [{ method: "popup", minutes: 24 * 60 }, { method: "popup", minutes: 60 }] },
+      transparency: "transparent",
+      reminders: { useDefault: false, overrides: [] },
       attachments,
     };
     const base = `${GATEWAY_URL}/calendars/primary/events`;
