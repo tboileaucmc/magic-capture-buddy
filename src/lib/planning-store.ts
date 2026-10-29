@@ -83,6 +83,26 @@ export function usePlanning() {
       .catch((e) => console.error("Chargement du planning échoué", e));
   }, []);
 
+  // Mise à jour en direct : applique les changements faits par les autres utilisateurs.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`planning-state-${Math.random().toString(36).slice(2)}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "planning_state" },
+        (payload) => {
+          const remote = (payload.new as { data?: Data } | null)?.data;
+          if (!remote || !Array.isArray(remote.assignments)) return;
+          skipNext.current = true;
+          setData(migrate(remote));
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, []);
+
   useEffect(() => {
     if (!hydrated) return;
     if (skipNext.current) { skipNext.current = false; return; }
