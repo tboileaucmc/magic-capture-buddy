@@ -312,7 +312,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                             dayClass(d),
                           )}
                           style={{ minWidth: dayCount > 7 ? 64 : 72, height: 70, backgroundColor: singleCat?.color ? `${singleCat.color}22` : undefined }}
-                          onClick={() => canEdit && setEditing({ technicianId: t.id, dateISO, half: h, existing: null })}
+                          onClick={() => canEdit && setEditing({ technicianId: t.id, dateISO, half: h })}
                         >
                           {list.length > 0 ? (
                             <div className="flex h-full flex-col gap-1">
