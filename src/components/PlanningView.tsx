@@ -1,6 +1,7 @@
 import { Fragment, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy } from "lucide-react";
+import { duplicateWeek } from "@/lib/planning-duplicate";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
 import { UsersDialog } from "@/components/UsersDialog";
@@ -83,7 +84,7 @@ const VIEW_DAYS: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 const VIEW_STEP: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 
 export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggleTheme: () => void }) {
-  const { data, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory, updateCategoryColor } = usePlanning();
+  const { data, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory, updateCategoryColor, addAssignments } = usePlanning();
   const { role, canEdit, isSupportEditor, isAdmin } = useRole();
   const supportIds = useMemo(() => supportTechnicianIds(data.technicians), [data.technicians]);
   const canEditTech = (id: string) => canEdit || (isSupportEditor && supportIds.has(id));
@@ -175,6 +176,32 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             }}>
               <ChevronRight />
             </Button>
+            {(canEdit || isSupportEditor) && (
+              <Button
+                variant="secondary"
+                title="Copier les missions de la semaine affichée vers une autre semaine"
+                onClick={() => {
+                  const next = new Date(weekStart); next.setDate(next.getDate() + 7);
+                  const answer = prompt(
+                    `Dupliquer les missions de la semaine du ${weekStart.toLocaleDateString("fr-FR")}${isSupportEditor && !canEdit ? " (support uniquement)" : ""} vers la semaine du (jj/mm/aaaa) :`,
+                    next.toLocaleDateString("fr-FR"),
+                  );
+                  if (!answer) return;
+                  const m = answer.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                  const target = m ? new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : null;
+                  if (!target || isNaN(target.getTime())) { toast.error("Date invalide (format jj/mm/aaaa)"); return; }
+                  const targetMonday = startOfWeek(target);
+                  if (fmtISO(targetMonday) === fmtISO(weekStart)) { toast.error("Choisissez une autre semaine"); return; }
+                  const copies = duplicateWeek(data.assignments, fmtISO(weekStart), fmtISO(targetMonday), canEditMission, uid);
+                  if (copies.length === 0) { toast.info("Aucune mission à dupliquer cette semaine"); return; }
+                  addAssignments(copies);
+                  setWeekStart(targetMonday);
+                  toast.success(`${copies.length} mission(s) dupliquée(s) — invitations non envoyées`);
+                }}
+              >
+                <Copy /> Dupliquer la semaine
+              </Button>
+            )}
             {canEdit && (
               <>
                 <Button onClick={() => setTechDialog(true)} variant="secondary">

@@ -156,5 +156,10 @@ export function usePlanning() {
     setData((d) => ({ ...d, categories: d.categories.map((c) => (c.id === id ? { ...c, color } : c)) }));
   }, []);
 
-  return { data, hydrated, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory, updateCategoryColor };
+  const addAssignments = useCallback((list: Assignment[]) => {
+    if (list.length === 0) return;
+    setData((d) => ({ ...d, assignments: [...d.assignments, ...list] }));
+  }, []);
+
+  return { data, hydrated, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory, updateCategoryColor, addAssignments };
 }

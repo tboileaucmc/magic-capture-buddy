@@ -14,3 +14,4 @@
 - Store Teams meeting links separately from generic mission links and normalize them in the browser-safe calendar export helper; every invitation format includes the same link and provisional missions mask it.
 - Weekly series retain one assignment ID and use rrule for bounded occurrence lookup shared by the grid and PDF; Calendar and ICS receive a weekly RRULE in Europe/Paris, and editing/deletion applies to the entire series.
 - Support managers (support_editor role) may only change missions whose technicians are all in the support team (from BRABANT onward); enforced by a planning_state trigger and assertCanEditMission.
+- Week duplication copies one-off missions starting in the displayed week to a chosen week via the browser-safe planning-duplicate helper, filtered by the user's mission write rights; copies get new IDs and no calendar invitation is sent until each is saved.
