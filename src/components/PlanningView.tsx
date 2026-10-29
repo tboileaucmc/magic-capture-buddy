@@ -254,7 +254,20 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                 </tr>
               )}
               {data.technicians.map((t) => (
-                <tr key={t.id}>
+                <Fragment key={t.id}>
+                {t.name.toUpperCase().includes("BRABANT") && (
+                  <tr aria-hidden="true">
+                    <td className="sticky left-0 z-10 border-b border-r bg-muted/50 p-1.5">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Support</div>
+                    </td>
+                    {days.map((d) =>
+                      HALVES.map((h) => (
+                        <td key={`support-${fmtISO(d)}-${h}`} className="border-b border-r bg-muted/50 p-1" />
+                      )),
+                    )}
+                  </tr>
+                )}
+                <tr>
                   <td className="sticky left-0 z-10 border-b border-r bg-card p-2">
                     <div className="flex items-center justify-between gap-2">
                       <div>
