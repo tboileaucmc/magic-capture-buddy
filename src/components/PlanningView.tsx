@@ -105,8 +105,8 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
 
   const stepDays = VIEW_STEP[viewMode];
 
-  const findAssignment = (techId: string, dateISO: string, half: HalfDay) =>
-    data.assignments.find((a) => {
+  const findAssignments = (techId: string, dateISO: string, half: HalfDay) =>
+    data.assignments.filter((a) => {
       if (!a.technicianIds.includes(techId)) return false;
       return assignmentSlots(a).some((s) => s.dateISO === dateISO && s.half === half);
     });
