@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      mission_history: {
+        Row: {
+          action: string
+          after: Json | null
+          before: Json | null
+          created_at: string
+          date_iso: string | null
+          id: string
+          mission_id: string
+          technicians: string | null
+          title: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          date_iso?: string | null
+          id?: string
+          mission_id: string
+          technicians?: string | null
+          title?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          date_iso?: string | null
+          id?: string
+          mission_id?: string
+          technicians?: string | null
+          title?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       planning_state: {
         Row: {
           broadcast_list: string[]
