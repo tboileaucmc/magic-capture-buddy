@@ -162,7 +162,10 @@
   --input: oklch(0.5 0.015 85);
   --ring: var(--primary);
   --cmc-header: oklch(0.29 0 0);
-  --cmc-weekend: oklch(0.37 0.013 85);
+  --cmc-weekend: oklch(0.4 0.035 185);
+  --cmc-weekend-marker: oklch(0.68 0.055 185);
+  --cmc-holiday: oklch(0.44 0.06 85);
+  --cmc-holiday-marker: var(--primary);
   --cmc-sheen: linear-gradient(135deg, var(--background), var(--cmc-header));
   --cmc-shadow: 0 12px 36px color-mix(in oklab, var(--background) 70%, transparent);
   color: var(--foreground);
@@ -198,7 +201,10 @@
   --input: oklch(0.8 0.02 85);
   --ring: var(--primary);
   --cmc-header: oklch(0.935 0.01 85);
-  --cmc-weekend: oklch(0.9 0.02 85);
+  --cmc-weekend: oklch(0.91 0.028 185);
+  --cmc-weekend-marker: oklch(0.5 0.055 185);
+  --cmc-holiday: oklch(0.91 0.07 85);
+  --cmc-holiday-marker: var(--primary);
   --cmc-sheen: linear-gradient(135deg, var(--background), var(--cmc-header));
   --cmc-shadow: 0 12px 36px oklch(0.24 0.01 85 / 18%);
   color: var(--foreground);
@@ -219,7 +225,14 @@
 :is(.cmc-theme, .cmc-theme-light) .planning-grid thead tr:first-child th { color: var(--primary); }
 :is(.cmc-theme, .cmc-theme-light) .planning-grid thead tr:nth-child(2),
 :is(.cmc-theme, .cmc-theme-light) .planning-grid thead tr:nth-child(2) th { background: var(--secondary); }
-:is(.cmc-theme, .cmc-theme-light) .planning-grid .planning-weekend { background: var(--cmc-weekend); }
+:is(.cmc-theme, .cmc-theme-light) .planning-grid :is(th, td).planning-weekend {
+  background-color: var(--cmc-weekend);
+  box-shadow: inset 0 3px var(--cmc-weekend-marker);
+}
+:is(.cmc-theme, .cmc-theme-light) .planning-grid :is(th, td).planning-holiday {
+  background-color: var(--cmc-holiday);
+  box-shadow: inset 0 3px var(--cmc-holiday-marker);
+}
 :is(.cmc-theme, .cmc-theme-light) .planning-grid tbody tr:nth-child(even) { background: color-mix(in oklab, var(--foreground) 3%, var(--card)); }
 :is(.cmc-theme, .cmc-theme-light) .planning-grid tbody td:first-child { background: var(--cmc-header); }
 :is(.cmc-theme, .cmc-theme-light) .planning-grid tbody td:hover { outline: 1px solid var(--primary); outline-offset: -1px; }
