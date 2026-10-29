@@ -7,3 +7,4 @@
 - Drive attachments are tagged with appProperties.planningAttachment so the daily purge cron only trashes app-uploaded files older than its retention window, never other Drive files.
 - Scope Cinemeccanica brand tokens to `.cmc-theme` / `.cmc-theme-light`, with authentication-specific surfaces under `.cmc-auth`; portal dialogs retain independent readable surfaces.
 - Keep planning navigation date input in a separate draft until blur or Enter, then validate before selecting the week; this prevents partial keyboard edits from resetting the displayed date.
+- Classify national French holidays and weekends in the browser-safe planning-day helper, with holiday precedence and scoped theme tokens; this keeps date rules testable and mission category colors intact.

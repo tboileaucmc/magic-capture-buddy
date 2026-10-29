@@ -7,6 +7,7 @@ import { UsersDialog } from "@/components/UsersDialog";
 import { useRole } from "@/lib/use-role";
 import { CinemaAddressSuggestions } from "@/components/CinemaAddressSuggestions";
 import { PlanningDateInput } from "@/components/PlanningDateInput";
+import { frenchHolidayName, planningDayKind } from "@/lib/planning-day";
 import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo-cmc.png.asset.json";
 
@@ -61,10 +62,9 @@ function fmtISO(d: Date): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
-/** Samedi et dimanche sont affichés et planifiables comme les autres jours. */
-function isWeekend(d: Date): boolean {
-  const wd = d.getDay(); // 0=Dim .. 6=Sam
-  return wd === 0 || wd === 6;
+function dayClass(d: Date): string | undefined {
+  const kind = planningDayKind(d);
+  return kind === "weekday" ? undefined : `planning-${kind}`;
 }
 
 function uid(): string {
@@ -216,10 +216,11 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                   <th
                     key={i}
                     colSpan={2}
-                    className={cn("border-b border-r p-2 text-center", isWeekend(d) && "planning-weekend bg-muted/90")}
+                    className={cn("border-b border-r p-2 text-center", dayClass(d))}
+                    title={frenchHolidayName(d)}
                   >
-                    <div className={cn("font-semibold", isWeekend(d) && "text-muted-foreground")}>
-                      {DAY_NAMES[(d.getDay() + 6) % 7]}
+                    <div className="font-semibold">
+                      {DAY_NAMES[(d.getDay() + 6) % 7]}{frenchHolidayName(d) && " · Férié"}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
@@ -230,8 +231,8 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
               <tr className="bg-muted/30">
                 <th className="sticky left-0 z-10 border-b border-r bg-muted/30 p-1" />
                 {days.flatMap((d, i) => [
-                  <th key={`${i}-am`} className={cn("border-b border-r p-1 text-xs font-normal text-muted-foreground", isWeekend(d) && "bg-muted/60")}>Matin</th>,
-                  <th key={`${i}-pm`} className={cn("border-b border-r p-1 text-xs font-normal text-muted-foreground", isWeekend(d) && "bg-muted/60")}>Après-midi</th>,
+                  <th key={`${i}-am`} className={cn("border-b border-r p-1 text-xs font-normal text-muted-foreground", dayClass(d))}>Matin</th>,
+                  <th key={`${i}-pm`} className={cn("border-b border-r p-1 text-xs font-normal text-muted-foreground", dayClass(d))}>Après-midi</th>,
                 ])}
               </tr>
             </thead>
@@ -275,7 +276,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                           key={`${dateISO}-${h}`}
                           className={cn(
                             "cursor-pointer border-b border-r p-1 align-top transition hover:bg-accent/40",
-                            isWeekend(d) && "planning-weekend bg-muted/40",
+                            dayClass(d),
                           )}
                           style={{ minWidth: dayCount > 7 ? 64 : 72, height: 70, backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
                           onClick={() => canEdit && setEditing({ technicianId: t.id, dateISO, half: h, existing: a })}
