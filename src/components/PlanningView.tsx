@@ -597,7 +597,14 @@ function AssignmentDialog({
           <div className="grid gap-2">
             <Label>Catégorie</Label>
 
-            <Select value={categoryId} onValueChange={setCategoryId}>
+            <Select
+              value={categoryId}
+              onValueChange={(v) => {
+                setCategoryId(v);
+                const cat = categories.find((c) => c.id === v);
+                if (cat?.label === "Affaires" && !title.trim()) setTitle("AFF ");
+              }}
+            >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {categories.map((c) => (
