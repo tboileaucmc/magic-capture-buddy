@@ -4,6 +4,15 @@ const b64 = (s: string) =>
   btoa(Array.from(new TextEncoder().encode(s), (b) => String.fromCharCode(b)).join(""));
 const header = (v: string) => (/^[\x00-\x7F]*$/.test(v) ? v : `=?UTF-8?B?${b64(v)}?=`);
 
+/** Numéro de semaine ISO 8601 (semaine 1 = celle contenant le premier jeudi). */
+export function isoWeek(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const y = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d.getTime() - y.getTime()) / 86400000 + 1) / 7);
+}
+
 /** Génère le PDF des 2 semaines à venir et l'envoie depuis planning.cinemeccanica@gmail.com (destinataires en copie cachée). */
 export async function sendPlanningMail(data: PlanningData, recipients: string[]) {
   const lovableKey = process.env.LOVABLE_API_KEY;
@@ -12,10 +21,15 @@ export async function sendPlanningMail(data: PlanningData, recipients: string[])
   if (recipients.length === 0) throw new Error("La liste de diffusion est vide");
   const start = nextMonday();
   const label = periodLabel(start);
-  const pdfBase64 = buildPlanningPdf(data, start);
+  const weeks = [0, 7].map((offset) => {
+    const d = new Date(start);
+    d.setDate(d.getDate() + offset);
+    const n = isoWeek(d);
+    return { name: `Planning_S${String(n).padStart(2, "0")}_${d.getFullYear()}.pdf`, pdf: buildPlanningPdf(data, d, 7) };
+  });
   const boundary = "planning" + Date.now();
   const subject = `📅 Planning techniciens — ${label}`;
-  const html = `<p>Bonjour à tous 👋</p><p>Vous trouverez en pièce jointe le planning des techniciens pour la période <b>${label}</b>.</p><p>Bonne semaine !<br><i>— L'équipe Planning Cinemeccanica</i></p>`;
+  const html = `<p>Bonjour à tous 👋</p><p>Vous trouverez en pièce jointe les plannings des techniciens (un PDF par semaine) pour la période <b>${label}</b>.</p><p>Bonne semaine !<br><i>— L'équipe Planning Cinemeccanica</i></p>`;
   const raw = [
     `From: ${header("Planning Cinemeccanica")} <planning.cinemeccanica@gmail.com>`,
     `To: planning.cinemeccanica@gmail.com`,
@@ -29,12 +43,14 @@ export async function sendPlanningMail(data: PlanningData, recipients: string[])
     "Content-Transfer-Encoding: base64",
     "",
     b64(html),
-    `--${boundary}`,
-    'Content-Type: application/pdf; name="planning.pdf"',
-    'Content-Disposition: attachment; filename="planning.pdf"',
-    "Content-Transfer-Encoding: base64",
-    "",
-    pdfBase64.match(/.{1,76}/g)?.join("\r\n") ?? "",
+    ...weeks.flatMap((w) => [
+      `--${boundary}`,
+      `Content-Type: application/pdf; name="${w.name}"`,
+      `Content-Disposition: attachment; filename="${w.name}"`,
+      "Content-Transfer-Encoding: base64",
+      "",
+      w.pdf.match(/.{1,76}/g)?.join("\r\n") ?? "",
+    ]),
     `--${boundary}--`,
   ].join("\r\n");
   const encoded = b64(raw).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
