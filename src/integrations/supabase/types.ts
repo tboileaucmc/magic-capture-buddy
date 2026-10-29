@@ -70,6 +70,10 @@ export type Database = {
         Args: { _can_edit: boolean; _target: string }
         Returns: undefined
       }
+      admin_set_role: {
+        Args: { _role: string; _target: string }
+        Returns: undefined
+      }
       can_edit: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -78,9 +82,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_support_editor: { Args: { _user_id: string }; Returns: boolean }
+      support_technician_ids: { Args: { _data: Json }; Returns: Json }
     }
     Enums: {
-      app_role: "admin" | "editor"
+      app_role: "admin" | "editor" | "support_editor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -208,7 +214,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "editor"],
+      app_role: ["admin", "editor", "support_editor"],
     },
   },
 } as const
