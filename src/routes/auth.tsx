@@ -28,13 +28,18 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [intro, setIntro] = useState(false);
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     supabase.auth.getSession().then(({ data }) => { if (data.session) navigate({ to: "/planning", replace: true }); });
-    const { data } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate({ to: "/planning", replace: true });
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session && !timer) {
+        setIntro(true);
+        timer = setTimeout(() => navigate({ to: "/planning", replace: true }), 1800);
+      }
     });
-    return () => data.subscription.unsubscribe();
+    return () => { data.subscription.unsubscribe(); if (timer) clearTimeout(timer); };
   }, [navigate]);
 
   const submit = async (e: React.FormEvent) => {
@@ -59,6 +64,13 @@ function AuthPage() {
 
   return (
     <div className="cmc-theme cmc-auth flex min-h-screen items-center justify-center px-6 py-12 text-foreground">
+      {intro && (
+        <div className="cmc-intro fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-background" aria-live="polite">
+          <img src={logoAsset.url} alt="Cinemeccanica France" className="cmc-intro-logo h-auto w-[360px] max-w-[80vw] object-contain" />
+          <div className="cmc-intro-line h-px w-48 bg-primary" />
+          <span className="sr-only">Ouverture du planning…</span>
+        </div>
+      )}
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-6 border-b border-primary/50 pb-6 text-center">
           <img src={logoAsset.url} alt="Cinemeccanica France" width={1010} height={320} className="mx-auto h-auto w-[300px] max-w-full object-contain" />
