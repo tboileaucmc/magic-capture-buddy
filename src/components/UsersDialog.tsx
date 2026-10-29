@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users } from "lucide-react";
+import { Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,14 @@ export function UsersDialog() {
     void load();
   };
 
+  const remove = async (r: Row) => {
+    if (!window.confirm(`Supprimer définitivement le compte ${r.email} ?`)) return;
+    const { error } = await supabase.rpc("admin_delete_user", { _target: r.user_id });
+    if (error) return toast.error(error.message);
+    toast.success("Compte supprimé");
+    void load();
+  };
+
   return (
     <>
       <Button variant="outline" onClick={() => { setOpen(true); void load(); }}>
@@ -46,14 +54,19 @@ export function UsersDialog() {
                 {r.role === "admin" ? (
                   <span className="text-xs font-semibold text-muted-foreground">Super utilisateur</span>
                 ) : (
-                  <Select value={r.role} onValueChange={(v) => void change(r.user_id, v)}>
-                    <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="viewer">Lecture</SelectItem>
-                      <SelectItem value="editor">Écriture</SelectItem>
-                      <SelectItem value="support_editor">Écriture support</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-2">
+                    <Select value={r.role} onValueChange={(v) => void change(r.user_id, v)}>
+                      <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="viewer">Lecture</SelectItem>
+                        <SelectItem value="editor">Écriture</SelectItem>
+                        <SelectItem value="support_editor">Écriture support</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button variant="ghost" size="icon" aria-label={`Supprimer ${r.email}`} onClick={() => void remove(r)}>
+                      <Trash2 className="text-destructive" />
+                    </Button>
+                  </div>
                 )}
               </div>
             ))}
