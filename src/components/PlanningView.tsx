@@ -83,7 +83,7 @@ const VIEW_DAYS: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 const VIEW_STEP: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 
 export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggleTheme: () => void }) {
-  const { data, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory } = usePlanning();
+  const { data, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory, updateCategoryColor } = usePlanning();
   const { role, canEdit, isSupportEditor, isAdmin } = useRole();
   const supportIds = useMemo(() => supportTechnicianIds(data.technicians), [data.technicians]);
   const canEditTech = (id: string) => canEdit || (isSupportEditor && supportIds.has(id));
@@ -212,7 +212,19 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
         <div className="mb-4 flex flex-wrap gap-2">
           {data.categories.map((c) => (
             <span key={c.id} className="group inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
-              <span className="size-3 rounded-full" style={{ backgroundColor: c.color }} />
+              {canEdit ? (
+                <label className="relative size-4 cursor-pointer rounded-full ring-offset-1 hover:ring-2 hover:ring-primary" style={{ backgroundColor: c.color }} title="Changer la couleur">
+                  <input
+                    type="color"
+                    value={c.color}
+                    onChange={(e) => updateCategoryColor(c.id, e.target.value)}
+                    className="absolute inset-0 size-full cursor-pointer opacity-0"
+                    aria-label={`Couleur de ${c.label}`}
+                  />
+                </label>
+              ) : (
+                <span className="size-3 rounded-full" style={{ backgroundColor: c.color }} />
+              )}
               {c.label}
               {canEdit && <button
                 type="button"
