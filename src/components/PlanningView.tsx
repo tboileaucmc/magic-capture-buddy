@@ -1,6 +1,7 @@
 import { Fragment, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy } from "lucide-react";
+import { duplicateWeek } from "@/lib/planning-duplicate";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
 import { UsersDialog } from "@/components/UsersDialog";
@@ -83,7 +84,7 @@ const VIEW_DAYS: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 const VIEW_STEP: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 
 export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggleTheme: () => void }) {
-  const { data, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory, updateCategoryColor } = usePlanning();
+  const { data, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory, updateCategoryColor, addAssignments } = usePlanning();
   const { role, canEdit, isSupportEditor, isAdmin } = useRole();
   const supportIds = useMemo(() => supportTechnicianIds(data.technicians), [data.technicians]);
   const canEditTech = (id: string) => canEdit || (isSupportEditor && supportIds.has(id));
