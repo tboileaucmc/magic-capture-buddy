@@ -254,15 +254,26 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                         <div className="text-xs text-muted-foreground">{t.email}</div>
                       </div>
                       {canEdit && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            if (confirm(`Supprimer ${t.name} ?`)) removeTechnician(t.id);
-                          }}
-                        >
-                          <Trash2 className="text-destructive" />
-                        </Button>
+                        <div className="flex shrink-0 items-center">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setEditingTech(t)}
+                            aria-label={`Modifier ${t.name}`}
+                          >
+                            <Pencil />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              if (confirm(`Supprimer ${t.name} ?`)) removeTechnician(t.id);
+                            }}
+                            aria-label={`Supprimer ${t.name}`}
+                          >
+                            <Trash2 className="text-destructive" />
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </td>
