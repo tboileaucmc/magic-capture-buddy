@@ -301,9 +301,9 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                   {days.map((d) => {
                     const dateISO = fmtISO(d);
                     return HALVES.map((h) => {
-                      const a = findAssignment(t.id, dateISO, h);
-                      const cat = a ? categoryById(a.categoryId) : null;
-                      const isFirst = a ? a.dateISO === dateISO && a.half === h : false;
+                      const list = findAssignments(t.id, dateISO, h);
+                      const single = list.length === 1 ? list[0] : null;
+                      const singleCat = single ? categoryById(single.categoryId) : null;
                       return (
                         <td
                           key={`${dateISO}-${h}`}
@@ -311,36 +311,58 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                             "cursor-pointer border-b border-r p-1 align-top transition hover:bg-accent/40",
                             dayClass(d),
                           )}
-                          style={{ minWidth: dayCount > 7 ? 64 : 72, height: 70, backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
-                          onClick={() => canEdit && setEditing({ technicianId: t.id, dateISO, half: h, existing: a })}
+                          style={{ minWidth: dayCount > 7 ? 64 : 72, height: 70, backgroundColor: singleCat?.color ? `${singleCat.color}22` : undefined }}
+                          onClick={() => canEdit && setEditing({ technicianId: t.id, dateISO, half: h, existing: null })}
                         >
-                          {a ? (
-                            <div className="flex h-full flex-col">
-                              <div className="mb-1 flex items-center gap-1">
-                                <span
-                                  className="inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
-                                  style={{ backgroundColor: cat?.color }}
-                                >
-                                  {cat?.label}
-                                </span>
-                                {a.toConfirm ? (
-                                  <Star
-                                    className="size-3 shrink-0 fill-amber-400 text-amber-500"
-                                    aria-label="A confirmer"
-                                  />
-                                ) : (
-                                  <CheckCircle2
-                                    className="size-3.5 shrink-0 text-emerald-600"
-                                    strokeWidth={2.5}
-                                    aria-label="Confirmé"
-                                  />
-                                )}
-                              </div>
-                              <div className="line-clamp-2 text-xs font-medium">{a.title}</div>
-                              <div className="text-[10px] text-muted-foreground">
-                                {isFirst ? `${a.startTime}–${a.endTime}` : "…"}
-                                {isFirst && a.endDateISO && a.endDateISO !== a.dateISO && " →"}
-                              </div>
+                          {list.length > 0 ? (
+                            <div className="flex h-full flex-col gap-1">
+                              {list.map((a) => {
+                                const cat = categoryById(a.categoryId);
+                                const isFirst = a.dateISO === dateISO && a.half === h;
+                                return (
+                                  <div
+                                    key={a.id}
+                                    className={cn("flex flex-col rounded-sm border border-border/40 p-0.5", list.length > 1 && "flex-1")}
+                                    style={{ backgroundColor: cat?.color ? `${cat.color}22` : undefined }}
+                                    onClick={(e) => {
+                                      if (!canEdit) return;
+                                      e.stopPropagation();
+                                      setEditing({ technicianId: t.id, dateISO, half: h, existing: a });
+                                    }}
+                                  >
+                                    <div className="mb-0.5 flex items-center gap-1">
+                                      <span
+                                        className="inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
+                                        style={{ backgroundColor: cat?.color }}
+                                      >
+                                        {cat?.label}
+                                      </span>
+                                      {a.toConfirm ? (
+                                        <Star
+                                          className="size-3 shrink-0 fill-amber-400 text-amber-500"
+                                          aria-label="A confirmer"
+                                        />
+                                      ) : (
+                                        <CheckCircle2
+                                          className="size-3.5 shrink-0 text-emerald-600"
+                                          strokeWidth={2.5}
+                                          aria-label="Confirmé"
+                                        />
+                                      )}
+                                    </div>
+                                    <div className={cn("text-xs font-medium", list.length > 1 ? "line-clamp-1" : "line-clamp-2")}>{a.title}</div>
+                                    <div className="text-[10px] text-muted-foreground">
+                                      {isFirst ? `${a.startTime}–${a.endTime}` : "…"}
+                                      {isFirst && a.endDateISO && a.endDateISO !== a.dateISO && " →"}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              {canEdit && (
+                                <div className="flex items-center justify-center text-muted-foreground/40">
+                                  <Plus className="size-3" />
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <div className="flex h-full items-center justify-center text-muted-foreground/40">
