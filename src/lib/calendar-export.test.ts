@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 import { buildDescription, buildHtmlDescription, buildICS, googlePayload, normalizeTeamsUrl } from "./calendar-export";
 import type { Assignment } from "./planning-types";
 
@@ -10,24 +11,24 @@ const mission: Assignment = {
 
 describe("Liens de réunion Teams", () => {
   it("accepte les liens HTTPS Microsoft Teams et refuse les autres destinations", () => {
-    expect(normalizeTeamsUrl(` ${teamsUrl} `)).toBe(teamsUrl);
-    expect(normalizeTeamsUrl("https://teams.live.com/meet/123")).toBe("https://teams.live.com/meet/123");
-    expect(normalizeTeamsUrl("https://teams.cloud.microsoft/meet/123")).toBe("https://teams.cloud.microsoft/meet/123");
+    assert.equal(normalizeTeamsUrl(` ${teamsUrl} `), teamsUrl);
+    assert.equal(normalizeTeamsUrl("https://teams.live.com/meet/123"), "https://teams.live.com/meet/123");
+    assert.equal(normalizeTeamsUrl("https://teams.cloud.microsoft/meet/123"), "https://teams.cloud.microsoft/meet/123");
     for (const url of ["javascript:alert(1)", "http://teams.microsoft.com/meet", "https://teams.microsoft.com.evil.example/meet", "https://user:pass@teams.microsoft.com/meet", "not a url"]) {
-      expect(normalizeTeamsUrl(url)).toBeUndefined();
+      assert.equal(normalizeTeamsUrl(url), undefined);
     }
   });
   it("inclut le lien dans les invitations et les exports de mission confirmée", () => {
-    expect(buildDescription(mission)).toContain(teamsUrl);
-    expect(buildICS(mission, [])).toContain(teamsUrl);
-    expect(buildHtmlDescription(mission)).toContain(`href="${teamsUrl}"`);
-    expect(googlePayload(mission, []).description).toContain(teamsUrl);
+    assert.ok(buildDescription(mission).includes(teamsUrl));
+    assert.ok(buildICS(mission, []).includes(teamsUrl));
+    assert.ok(buildHtmlDescription(mission).includes(`href="${teamsUrl}"`));
+    assert.ok(googlePayload(mission, []).description.includes(teamsUrl));
   });
   it("masque le lien Teams dans tous les exports lorsque la mission est à confirmer", () => {
     const provisional = { ...mission, toConfirm: true };
-    expect(buildDescription(provisional)).not.toContain(teamsUrl);
-    expect(buildICS(provisional, [])).not.toContain(teamsUrl);
-    expect(buildHtmlDescription(provisional)).not.toContain(teamsUrl);
-    expect(googlePayload(provisional, []).description).not.toContain(teamsUrl);
+    assert.ok(!buildDescription(provisional).includes(teamsUrl));
+    assert.ok(!buildICS(provisional, []).includes(teamsUrl));
+    assert.ok(!buildHtmlDescription(provisional).includes(teamsUrl));
+    assert.ok(!googlePayload(provisional, []).description.includes(teamsUrl));
   });
 });
