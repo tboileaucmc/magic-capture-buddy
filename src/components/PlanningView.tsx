@@ -483,8 +483,12 @@ function AssignmentDialog({
     existing?.technicianIds ?? [initialTechnicianId],
   );
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? "");
+  const titlePrefill = (label?: string) =>
+    label === "Affaires" ? "AFF " : label === "Maintenance" ? "Maintenance " : "";
   const initialCategory = categories.find((c) => c.id === (existing?.categoryId ?? categories[0]?.id));
-  const [title, setTitle] = useState(existing?.title ?? (initialCategory?.label === "Affaires" ? "AFF " : ""));
+  const initialPrefill = existing?.title ? "" : titlePrefill(initialCategory?.label);
+  const [title, setTitle] = useState(existing?.title ?? initialPrefill);
+  const [lastPrefill, setLastPrefill] = useState(initialPrefill);
   const [addressSuggestionsActive, setAddressSuggestionsActive] = useState(false);
   const [address, setAddress] = useState(existing?.address ?? "");
   const [startTime, setStartTime] = useState(existing?.startTime ?? defaultStart);
@@ -603,7 +607,11 @@ function AssignmentDialog({
               onValueChange={(v) => {
                 setCategoryId(v);
                 const cat = categories.find((c) => c.id === v);
-                if (cat?.label === "Affaires" && !title.trim()) setTitle("AFF ");
+                const prefill = titlePrefill(cat?.label);
+                if (prefill && (!title.trim() || title === lastPrefill)) {
+                  setTitle(prefill);
+                  setLastPrefill(prefill);
+                }
               }}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
