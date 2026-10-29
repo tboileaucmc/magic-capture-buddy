@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Planning Techniciens — Cinemeccanica" },
+      { title: "Accueil — Planning Cinemeccanica" },
       { name: "description", content: "Planning des techniciens Cinemeccanica : missions, agendas et envoi hebdomadaire." },
-      { property: "og:title", content: "Planning Techniciens — Cinemeccanica" },
+      { property: "og:title", content: "Accueil — Planning Cinemeccanica" },
       { property: "og:description", content: "Planning des techniciens Cinemeccanica : missions, agendas et envoi hebdomadaire." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

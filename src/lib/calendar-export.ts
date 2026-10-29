@@ -180,6 +180,7 @@ export function outlookCalendarUrl(
 /** Données à envoyer à Google Agenda (masquées si « à confirmer »). */
 export function googlePayload(input: Assignment, techs: Technician[]) {
   const a = maskIfToConfirm(input);
+  const recurrence = weeklyRule(a);
   return {
     id: a.id,
     title: `${input.toConfirm ? "⏳" : "🎬"} ${a.title}`,
@@ -188,7 +189,7 @@ export function googlePayload(input: Assignment, techs: Technician[]) {
     start: `${a.dateISO}T${a.startTime || "08:00"}`,
     end: `${a.endDateISO ?? a.dateISO}T${a.endTime || "17:00"}`,
     attendees: techs.map((t) => t.email).filter((e) => /.+@.+\..+/.test(e)),
-    recurrence: weeklyRule(a) ? [weeklyRule(a) as string] : [],
+    recurrence: recurrence ? [recurrence] : [],
     attachments: (a.attachments ?? []).map((f) => ({ name: f.name, type: f.type, dataUrl: f.dataUrl })),
   };
 }

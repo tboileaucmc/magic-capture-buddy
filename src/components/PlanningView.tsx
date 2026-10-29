@@ -579,10 +579,7 @@ function AssignmentDialog({
       teamsUrl: normalizeTeamsUrl(teamsUrl),
       toConfirm: toConfirm || undefined,
       confirmed: toConfirm ? undefined : true,
-      sequence:
-        existing && !!existing.toConfirm !== toConfirm
-          ? (existing.sequence ?? 0) + 1
-          : existing?.sequence,
+      sequence: existing ? (existing.sequence ?? 0) + 1 : 0,
       attachments,
     };
     onSave(a);
@@ -876,7 +873,7 @@ function AssignmentDialog({
                 >
                   Outlook (application) — .ics
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                {!weekly && <DropdownMenuItem asChild>
                   <a
                     href={outlookCalendarUrl(currentAssignment, selectedTechs, "work")}
                     target="_blank"
@@ -884,7 +881,7 @@ function AssignmentDialog({
                   >
                     Outlook Web — créer l'ordre de mission
                   </a>
-                </DropdownMenuItem>
+                </DropdownMenuItem>}
               </DropdownMenuContent>
             </DropdownMenu>
 
