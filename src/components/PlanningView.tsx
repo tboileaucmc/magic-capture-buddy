@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
 import { UsersDialog } from "@/components/UsersDialog";
@@ -76,7 +76,7 @@ const VIEW_DAYS: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 const VIEW_STEP: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 
 export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggleTheme: () => void }) {
-  const { data, upsertAssignment, deleteAssignment, addTechnician, removeTechnician, addCategory, removeCategory } = usePlanning();
+  const { data, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory } = usePlanning();
   const { role, canEdit, isAdmin } = useRole();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const [viewMode, setViewMode] = useState<ViewMode>("1w");
@@ -87,6 +87,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
     existing?: Assignment;
   } | null>(null);
   const [techDialog, setTechDialog] = useState(false);
+  const [editingTech, setEditingTech] = useState<Tech | null>(null);
   const [catDialog, setCatDialog] = useState(false);
   const cancelMission = useServerFn(cancelMissionInCalendar);
 
@@ -253,15 +254,26 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                         <div className="text-xs text-muted-foreground">{t.email}</div>
                       </div>
                       {canEdit && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            if (confirm(`Supprimer ${t.name} ?`)) removeTechnician(t.id);
-                          }}
-                        >
-                          <Trash2 className="text-destructive" />
-                        </Button>
+                        <div className="flex shrink-0 items-center">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setEditingTech(t)}
+                            aria-label={`Modifier ${t.name}`}
+                          >
+                            <Pencil />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              if (confirm(`Supprimer ${t.name} ?`)) removeTechnician(t.id);
+                            }}
+                            aria-label={`Supprimer ${t.name}`}
+                          >
+                            <Trash2 className="text-destructive" />
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </td>
@@ -369,6 +381,20 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           toast.success("Technicien ajouté");
         }}
       />
+
+      {editingTech && (
+        <EditTechnicianDialog
+          key={editingTech.id}
+          open
+          technician={editingTech}
+          onOpenChange={(o) => !o && setEditingTech(null)}
+          onSave={(name: string, email: string) => {
+            updateTechnician({ ...editingTech, name, email });
+            setEditingTech(null);
+            toast.success("Technicien mis à jour");
+          }}
+        />
+      )}
 
       <AddCategoryDialog
         open={catDialog}
@@ -788,6 +814,49 @@ function AddTechnicianDialog({
             onAdd(name.trim(), email.trim());
             setName(""); setEmail("");
           }}>Ajouter</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditTechnicianDialog({
+  open,
+  onOpenChange,
+  technician,
+  onSave,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  technician: Tech;
+  onSave: (name: string, email: string) => void;
+}) {
+  const [name, setName] = useState(technician.name);
+  const [email, setEmail] = useState(technician.email);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Modifier le technicien</DialogTitle>
+          <DialogDescription>
+            Le nom et l'adresse e-mail sont utilisés pour l'envoi des ordres de mission.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-3">
+          <div className="grid gap-2">
+            <Label>Nom / Prénom</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} />
+          </div>
+          <div className="grid gap-2">
+            <Label>Adresse e-mail</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={200} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => {
+            if (!name.trim() || !email.trim()) { toast.error("Nom et e-mail requis"); return; }
+            onSave(name.trim(), email.trim());
+          }}>Enregistrer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
