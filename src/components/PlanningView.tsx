@@ -613,7 +613,7 @@ function AssignmentDialog({
   const [attachments, setAttachments] = useState(existing?.attachments ?? []);
   const [deleting, setDeleting] = useState(false);
 
-  const anchorISO = existing?.dateISO ?? dateISO;
+  const [anchorISO, setAnchorISO] = useState(existing?.dateISO ?? dateISO);
   const isFullWeek = fullWeek && !weekly;
   const weekMondayISO = shiftISO(anchorISO, -((new Date(`${anchorISO}T00:00:00Z`).getUTCDay() + 6) % 7));
   const startISO = weekly ? nextWeeklyDate(anchorISO, Number(repeatDay)) : isFullWeek ? weekMondayISO : anchorISO;
@@ -834,7 +834,7 @@ function AssignmentDialog({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr_auto]">
               <div className="grid gap-1">
                 <Label className="text-xs">Du</Label>
-                <Input type="date" value={startISO} disabled />
+                <Input type="date" value={startISO} disabled={weekly} onChange={(e) => { const v = e.target.value; if (!v) return; const delta = Math.round((Date.parse(`${v}T00:00:00Z`) - Date.parse(`${anchorISO}T00:00:00Z`)) / 86400000); setAnchorISO(v); setEndDateISO((d) => { const n = shiftISO(d, delta); return n < v ? v : n; }); }} />
               </div>
               <div className="grid gap-1">
                 <Label className="text-xs">&nbsp;</Label>
