@@ -36,6 +36,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -101,6 +102,30 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
   const [techDialog, setTechDialog] = useState(false);
   const [editingTech, setEditingTech] = useState<Tech | null>(null);
   const [catDialog, setCatDialog] = useState(false);
+  const [dupOpen, setDupOpen] = useState(false);
+  const [dupTarget, setDupTarget] = useState("");
+  const [dupTechs, setDupTechs] = useState<Set<string>>(new Set());
+  const dupCandidates = data.technicians.filter((t) => canEditTech(t.id));
+  const openDuplicate = () => {
+    const next = new Date(weekStart); next.setDate(next.getDate() + 7);
+    setDupTarget(fmtISO(next));
+    setDupTechs(new Set(dupCandidates.map((t) => t.id)));
+    setDupOpen(true);
+  };
+  const runDuplicate = () => {
+    const [y, m, d] = dupTarget.split("-").map(Number);
+    const target = y ? new Date(y, m - 1, d) : null;
+    if (!target || isNaN(target.getTime())) { toast.error("Date invalide"); return; }
+    if (dupTechs.size === 0) { toast.error("Choisissez au moins un technicien"); return; }
+    const targetMonday = startOfWeek(target);
+    if (fmtISO(targetMonday) === fmtISO(weekStart)) { toast.error("Choisissez une autre semaine"); return; }
+    const copies = duplicateWeek(data.assignments, fmtISO(weekStart), fmtISO(targetMonday), canEditMission, uid, dupTechs);
+    if (copies.length === 0) { toast.info("Aucune mission à dupliquer pour ces techniciens"); return; }
+    addAssignments(copies);
+    setDupOpen(false);
+    setWeekStart(targetMonday);
+    toast.success(`${copies.length} mission(s) dupliquée(s) — invitations non envoyées`);
+  };
   const cancelMission = useServerFn(cancelMissionInCalendar);
 
   const dayCount = VIEW_DAYS[viewMode];
@@ -181,28 +206,51 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
               <Button
                 variant="secondary"
                 title="Copier les missions de la semaine affichée vers une autre semaine"
-                onClick={() => {
-                  const next = new Date(weekStart); next.setDate(next.getDate() + 7);
-                  const answer = prompt(
-                    `Dupliquer les missions de la semaine du ${weekStart.toLocaleDateString("fr-FR")}${isSupportEditor && !canEdit ? " (support uniquement)" : ""} vers la semaine du (jj/mm/aaaa) :`,
-                    next.toLocaleDateString("fr-FR"),
-                  );
-                  if (!answer) return;
-                  const m = answer.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-                  const target = m ? new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : null;
-                  if (!target || isNaN(target.getTime())) { toast.error("Date invalide (format jj/mm/aaaa)"); return; }
-                  const targetMonday = startOfWeek(target);
-                  if (fmtISO(targetMonday) === fmtISO(weekStart)) { toast.error("Choisissez une autre semaine"); return; }
-                  const copies = duplicateWeek(data.assignments, fmtISO(weekStart), fmtISO(targetMonday), canEditMission, uid);
-                  if (copies.length === 0) { toast.info("Aucune mission à dupliquer cette semaine"); return; }
-                  addAssignments(copies);
-                  setWeekStart(targetMonday);
-                  toast.success(`${copies.length} mission(s) dupliquée(s) — invitations non envoyées`);
-                }}
+                onClick={openDuplicate}
               >
                 <Copy /> Dupliquer la semaine
               </Button>
             )}
+            <Dialog open={dupOpen} onOpenChange={setDupOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Dupliquer la semaine</DialogTitle>
+                  <DialogDescription>
+                    Missions de la semaine du {weekStart.toLocaleDateString("fr-FR")}. Les invitations ne sont pas envoyées.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="dup-target">Vers la semaine du</Label>
+                    <Input id="dup-target" type="date" value={dupTarget} onChange={(e) => setDupTarget(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Techniciens</Label>
+                      <div className="flex gap-1">
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setDupTechs(new Set(dupCandidates.map((t) => t.id)))}>Tous</Button>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setDupTechs(new Set())}>Aucun</Button>
+                      </div>
+                    </div>
+                    <div className="grid max-h-64 grid-cols-2 gap-2 overflow-y-auto rounded-md border p-3">
+                      {dupCandidates.map((t) => (
+                        <label key={t.id} className="flex cursor-pointer items-center gap-2 text-sm">
+                          <Checkbox
+                            checked={dupTechs.has(t.id)}
+                            onCheckedChange={(v) => setDupTechs((s) => { const n = new Set(s); if (v) n.add(t.id); else n.delete(t.id); return n; })}
+                          />
+                          {t.name}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDupOpen(false)}>Annuler</Button>
+                  <Button onClick={runDuplicate}><Copy /> Dupliquer</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             {canEdit && (
               <>
                 <Button onClick={() => setTechDialog(true)} variant="secondary">

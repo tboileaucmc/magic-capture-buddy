@@ -28,3 +28,13 @@ test("skips weekly series and missions the user cannot write", () => {
   );
   assert.deepEqual(out.map((a) => a.dateISO), ["2026-11-16"]);
 });
+
+test("copies only missions of the chosen technicians, keeping only them", () => {
+  const out = duplicateWeek(
+    [base({ id: "a", technicianIds: ["t1", "t2"] }), base({ id: "b", technicianIds: ["t3"] }), base({ id: "c", technicianIds: ["t2"] })],
+    "2026-11-02", "2026-11-09", () => true, () => "new", new Set(["t1", "t2"]),
+  );
+  assert.deepEqual(out.map((a) => a.technicianIds), [["t1", "t2"], ["t2"]]);
+  const one = duplicateWeek([base({ technicianIds: ["t1", "t2"] })], "2026-11-02", "2026-11-09", () => true, () => "n", new Set(["t2"]));
+  assert.deepEqual(one[0].technicianIds, ["t2"]);
+});
