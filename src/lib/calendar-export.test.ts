@@ -9,6 +9,16 @@ const mission: Assignment = {
   categoryId: "chantier", title: "AFF test", address: "", startTime: "08:00", endTime: "12:00", teamsUrl,
 };
 
+it("uses the public Waze launch page in every invitation format", () => {
+  const a = { ...mission, address: "12 rue de Paris, Lyon" };
+  const url = "https://planning.cinemeccanica-france.fr/waze?address=12%20rue%20de%20Paris%2C%20Lyon";
+  assert.ok(buildDescription(a).includes(url));
+  assert.ok(buildHtmlDescription(a).includes(`href="${url}"`));
+  assert.ok(buildICS(a, []).includes(url));
+  assert.ok(googlePayload(a, []).description.includes(url));
+  assert.ok(!buildDescription({ ...a, toConfirm: true }).includes(url));
+});
+
 describe("Liens de réunion Teams", () => {
   it("accepte les liens HTTPS Microsoft Teams et refuse les autres destinations", () => {
     assert.equal(normalizeTeamsUrl(` ${teamsUrl} `), teamsUrl);
