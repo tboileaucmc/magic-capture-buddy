@@ -77,6 +77,39 @@ export type Database = {
         }
         Relationships: []
       }
+      technician_profiles: {
+        Row: {
+          equipment: Json
+          last_ct: string | null
+          phone: string | null
+          plate: string | null
+          technician_id: string
+          trainings: Json
+          updated_at: string
+          vehicle: string | null
+        }
+        Insert: {
+          equipment?: Json
+          last_ct?: string | null
+          phone?: string | null
+          plate?: string | null
+          technician_id: string
+          trainings?: Json
+          updated_at?: string
+          vehicle?: string | null
+        }
+        Update: {
+          equipment?: Json
+          last_ct?: string | null
+          phone?: string | null
+          plate?: string | null
+          technician_id?: string
+          trainings?: Json
+          updated_at?: string
+          vehicle?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

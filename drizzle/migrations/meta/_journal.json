@@ -43,6 +43,13 @@
       "when": 1793274389712,
       "tag": "0005_admin_delete_user",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793352450414,
+      "tag": "0006_technician_profiles",
+      "breakpoints": true
     }
   ]
 }
