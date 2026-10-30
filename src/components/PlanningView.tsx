@@ -729,11 +729,9 @@ function AssignmentDialog({
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="mission" className="flex min-h-0 flex-1 flex-col">
-          <TabsList className="grid h-auto shrink-0 grid-cols-4 rounded-none border-b bg-background p-2">
-            <TabsTrigger value="mission" className="gap-2 px-1 py-2 data-[state=active]:text-primary"><Users className="hidden size-4 sm:block" />Mission</TabsTrigger>
-            <TabsTrigger value="period" className="gap-2 px-1 py-2 data-[state=active]:text-primary"><Clock className="hidden size-4 sm:block" />Période</TabsTrigger>
-            <TabsTrigger value="visio" className="gap-2 px-1 py-2 data-[state=active]:text-primary"><Video className="hidden size-4 sm:block" />Visio</TabsTrigger>
-            <TabsTrigger value="documents" className="gap-2 px-1 py-2 data-[state=active]:text-primary"><Paperclip className="hidden size-4 sm:block" />Documents</TabsTrigger>
+          <TabsList className="grid h-auto shrink-0 grid-cols-2 rounded-none border-b bg-background p-2">
+            <TabsTrigger value="mission" className="gap-2 whitespace-normal px-1 py-2 data-[state=active]:text-primary"><Users className="hidden size-4 sm:block" />Mission et période</TabsTrigger>
+            <TabsTrigger value="visio" className="gap-2 whitespace-normal px-1 py-2 data-[state=active]:text-primary"><Video className="hidden size-4 sm:block" />Visio et documents</TabsTrigger>
           </TabsList>
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
             <TabsContent value="mission" className="mt-0 grid gap-5">
@@ -812,9 +810,7 @@ function AssignmentDialog({
               <Button variant="outline" size="sm" onClick={() => openWaze(address)}><MapPin /> Waze</Button>
             </div>
           )}
-            </TabsContent>
-            <TabsContent value="period" className="mt-0 grid gap-5">
-          <div className="grid gap-3">
+          <div className="grid gap-3 border-t pt-5">
             <Label className="text-xs uppercase text-muted-foreground">Période de la mission</Label>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr_auto]">
               <div className="grid gap-1">
@@ -908,9 +904,7 @@ function AssignmentDialog({
               )
             )}
           </div>
-            </TabsContent>
-            <TabsContent value="documents" className="mt-0 grid gap-5">
-          <div className="grid gap-2">
+          <div className="grid gap-2 border-t pt-5">
             <Label htmlFor="mission-files" className="flex items-center gap-1"><Paperclip className="size-3.5" /> Pièces jointes (JPEG, PNG, PDF, EML, MSG — 5 Mo max)</Label>
             <Input id="mission-files" type="file" accept={ATTACHMENT_ACCEPT} multiple onChange={(e) => handleFiles(e.target.files)} />
             {attachments.length > 0 && (
