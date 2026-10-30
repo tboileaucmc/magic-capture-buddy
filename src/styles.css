@@ -267,3 +267,17 @@
 .cmc-welcome-line { animation: cmc-intro-line-in .9s ease-out .6s both; transform-origin: center; }
 @keyframes cmc-intro-line-in { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .cmc-welcome-logo, .cmc-welcome-shine, .cmc-welcome-line { animation: none; } .cmc-welcome-shine { display: none; } }
+
+/* Enhanced welcome animation */
+@keyframes cmc-welcome-logo2 {
+  0% { opacity: 0; clip-path: inset(0 100% 0 0); transform: perspective(600px) rotateX(25deg) scale(.9); filter: blur(10px) brightness(2); }
+  55% { opacity: 1; clip-path: inset(0 0 0 0); transform: perspective(600px) rotateX(0) scale(1.04); filter: blur(0) brightness(1.3); }
+  75% { transform: scale(.99); filter: brightness(1); }
+  100% { opacity: 1; clip-path: inset(0 0 0 0); transform: none; filter: drop-shadow(0 0 0 transparent); }
+}
+@keyframes cmc-welcome-glow { 0%,100% { filter: drop-shadow(0 0 0 transparent); } 50% { filter: drop-shadow(0 0 18px color-mix(in oklab, var(--primary) 55%, transparent)); } }
+.cmc-welcome-logo { animation: cmc-welcome-logo2 1.4s cubic-bezier(.2,.8,.2,1) both, cmc-welcome-glow 3.5s ease-in-out 2.4s infinite; }
+.cmc-welcome-shine { animation: cmc-welcome-shine 1.2s ease-in-out 1.1s both, cmc-welcome-shine 1.2s ease-in-out 6s infinite; }
+@keyframes cmc-spark { 0% { opacity: 0; transform: translateY(0) scale(0); } 30% { opacity: 1; transform: translateY(-8px) scale(1); } 100% { opacity: 0; transform: translateY(-34px) scale(.3); } }
+.cmc-spark { width: 5px; height: 5px; border-radius: 9999px; background: var(--primary); box-shadow: 0 0 8px var(--primary); opacity: 0; animation: cmc-spark 1.3s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .cmc-spark { display: none; } .cmc-welcome-logo { animation: none; } }
