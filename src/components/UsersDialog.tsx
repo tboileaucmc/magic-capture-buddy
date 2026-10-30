@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 type Row = { user_id: string; email: string; role: string };
 
 /** Réservé au super utilisateur : donne ou retire les droits d'écriture. */
-export function UsersDialog() {
-  const [open, setOpen] = useState(false);
+export function UsersDialog({ open: controlledOpen, onOpenChange }: { open?: boolean; onOpenChange?: (open: boolean) => void } = {}) {
+  const [localOpen, setLocalOpen] = useState(false);
+  const open = controlledOpen ?? localOpen;
+  const setOpen = onOpenChange ?? setLocalOpen;
   const [rows, setRows] = useState<Row[]>([]);
 
   const load = async () => {
@@ -26,6 +28,10 @@ export function UsersDialog() {
     void load();
   };
 
+  useEffect(() => {
+    if (open) void load();
+  }, [open]);
+
   const remove = async (r: Row) => {
     if (!window.confirm(`Supprimer définitivement le compte ${r.email} ?`)) return;
     const { error } = await supabase.rpc("admin_delete_user", { _target: r.user_id });
@@ -36,9 +42,9 @@ export function UsersDialog() {
 
   return (
     <>
-      <Button variant="outline" onClick={() => { setOpen(true); void load(); }}>
+      {controlledOpen === undefined && <Button variant="outline" onClick={() => setOpen(true)}>
         <Users /> Utilisateurs
-      </Button>
+      </Button>}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>

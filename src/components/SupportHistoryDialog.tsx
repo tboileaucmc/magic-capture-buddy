@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { History } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,8 +16,10 @@ type Row = {
 };
 
 /** Super utilisateur : historique des missions de l'équipe support. */
-export function SupportHistoryDialog() {
-  const [open, setOpen] = useState(false);
+export function SupportHistoryDialog({ open: controlledOpen, onOpenChange }: { open?: boolean; onOpenChange?: (open: boolean) => void } = {}) {
+  const [localOpen, setLocalOpen] = useState(false);
+  const open = controlledOpen ?? localOpen;
+  const setOpen = onOpenChange ?? setLocalOpen;
   const [rows, setRows] = useState<Row[]>([]);
 
   const load = async () => {
@@ -30,11 +32,15 @@ export function SupportHistoryDialog() {
     setRows(data ?? []);
   };
 
+  useEffect(() => {
+    if (open) void load();
+  }, [open]);
+
   return (
     <>
-      <Button variant="outline" onClick={() => { setOpen(true); void load(); }}>
+      {controlledOpen === undefined && <Button variant="outline" onClick={() => setOpen(true)}>
         <History /> Historique support
-      </Button>
+      </Button>}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>

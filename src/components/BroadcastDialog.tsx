@@ -9,8 +9,10 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 
 
 /** Liste de diffusion (mémorisée sur ce poste) + bouton d'envoi du planning PDF. */
-export function BroadcastDialog() {
-  const [open, setOpen] = useState(false);
+export function BroadcastDialog({ open: controlledOpen, onOpenChange }: { open?: boolean; onOpenChange?: (open: boolean) => void } = {}) {
+  const [localOpen, setLocalOpen] = useState(false);
+  const open = controlledOpen ?? localOpen;
+  const setOpen = onOpenChange ?? setLocalOpen;
   const [emails, setEmails] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -36,7 +38,7 @@ export function BroadcastDialog() {
 
   return (
     <>
-      <Button variant="secondary" onClick={() => setOpen(true)}><Mail /> Envoyer le planning</Button>
+      {controlledOpen === undefined && <Button variant="secondary" onClick={() => setOpen(true)}><Mail /> Envoyer le planning</Button>}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
