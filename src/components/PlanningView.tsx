@@ -2,6 +2,7 @@ import { Fragment, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy } from "lucide-react";
 import { duplicateWeek } from "@/lib/planning-duplicate";
+import { openWaze } from "@/lib/waze";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
 import { UsersDialog } from "@/components/UsersDialog";
