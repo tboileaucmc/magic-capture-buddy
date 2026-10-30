@@ -50,6 +50,13 @@
       "when": 1793352450414,
       "tag": "0006_technician_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793353663111,
+      "tag": "0007_technician_fuel_card",
+      "breakpoints": true
     }
   ]
 }

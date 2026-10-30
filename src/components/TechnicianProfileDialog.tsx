@@ -25,6 +25,7 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
   const [vehicle, setVehicle] = useState("");
   const [plate, setPlate] = useState("");
   const [lastCt, setLastCt] = useState("");
+  const [fuelCard, setFuelCard] = useState("");
   const [trainings, setTrainings] = useState<Trainings>({});
   const [equipment, setEquipment] = useState<Item[]>([]);
 
@@ -37,6 +38,7 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
       setVehicle(data?.vehicle ?? "");
       setPlate(data?.plate ?? "");
       setLastCt(data?.last_ct ?? "");
+      setFuelCard(data?.fuel_card ?? "");
       setTrainings((data?.trainings as Trainings) ?? {});
       setEquipment(Array.isArray(data?.equipment) ? (data.equipment as Item[]) : []);
     })();
@@ -49,6 +51,7 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
       vehicle: vehicle.trim() || null,
       plate: plate.trim().toUpperCase() || null,
       last_ct: lastCt || null,
+      fuel_card: fuelCard.trim() || null,
       trainings: trainings as unknown as Json,
       equipment: equipment.filter((e) => e.name.trim() || e.sn.trim()) as unknown as Json,
       updated_at: new Date().toISOString(),
@@ -89,6 +92,10 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
               <div className="space-y-1">
                 <Label>Dernier CT</Label>
                 <Input type="date" value={lastCt} onChange={(e) => setLastCt(e.target.value)} />
+              </div>
+              <div className="space-y-1 sm:col-span-3">
+                <Label>N° de carte GR</Label>
+                <Input value={fuelCard} onChange={(e) => setFuelCard(e.target.value)} placeholder="Numéro de carte carburant" />
               </div>
             </div>
             <div className="space-y-2">
