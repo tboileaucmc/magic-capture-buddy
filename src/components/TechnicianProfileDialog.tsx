@@ -3,6 +3,7 @@ import { Phone, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { threeCxCallUrl } from "@/lib/3cx";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
   const [fuelCard, setFuelCard] = useState("");
   const [trainings, setTrainings] = useState<Trainings>({});
   const [equipment, setEquipment] = useState<Item[]>([]);
+  const extensionCallUrl = threeCxCallUrl(ext3cx);
 
   useEffect(() => {
     if (!open) return;
@@ -95,9 +97,9 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
                 <Label>Poste 3CX</Label>
                 <div className="flex gap-1">
                   <Input inputMode="numeric" value={ext3cx} onChange={(e) => setExt3cx(e.target.value)} placeholder="101" />
-                  {ext3cx.trim() && (
+                  {extensionCallUrl && (
                     <Button variant="outline" size="icon" asChild>
-                      <a href={`tel:${ext3cx.replace(/[^\d+*#]/g, "")}`} aria-label={`Appeler le poste ${ext3cx}`} title="Appeler avec 3CX"><Phone /></a>
+                      <a href={extensionCallUrl} target="_blank" rel="noopener noreferrer" aria-label={`Appeler le poste ${ext3cx} dans 3CX en ligne`} title="Ouvrir le poste dans 3CX en ligne"><Phone /></a>
                     </Button>
                   )}
                 </div>
