@@ -22,6 +22,7 @@ const TRAINING_GROUPS: Array<{ label: string; items: Array<[keyof Trainings, str
 export function TechnicianProfileDialog({ technicianId, name, light }: { technicianId: string; name: string; light: boolean }) {
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState("");
+  const [ext3cx, setExt3cx] = useState("");
   const [vehicle, setVehicle] = useState("");
   const [plate, setPlate] = useState("");
   const [lastCt, setLastCt] = useState("");
@@ -35,6 +36,7 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
       const { data, error } = await supabase.from("technician_profiles").select("*").eq("technician_id", technicianId).maybeSingle();
       if (error) return toast.error(error.message);
       setPhone(data?.phone ?? "");
+      setExt3cx(data?.extension_3cx ?? "");
       setVehicle(data?.vehicle ?? "");
       setPlate(data?.plate ?? "");
       setLastCt(data?.last_ct ?? "");
@@ -48,6 +50,7 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
     const { error } = await supabase.from("technician_profiles").upsert({
       technician_id: technicianId,
       phone: phone.trim() || null,
+      extension_3cx: ext3cx.trim() || null,
       vehicle: vehicle.trim() || null,
       plate: plate.trim().toUpperCase() || null,
       last_ct: lastCt || null,
@@ -76,9 +79,15 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
             <DialogDescription>Visible uniquement par les super utilisateurs.</DialogDescription>
           </DialogHeader>
           <div className="max-h-[65vh] space-y-4 overflow-y-auto pr-1">
-            <div className="space-y-1">
-              <Label>Téléphone</Label>
-              <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="06 12 34 56 78" />
+            <div className="grid grid-cols-[1fr_8rem] gap-3">
+              <div className="space-y-1">
+                <Label>Téléphone</Label>
+                <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="06 12 34 56 78" />
+              </div>
+              <div className="space-y-1">
+                <Label>Poste 3CX</Label>
+                <Input inputMode="numeric" value={ext3cx} onChange={(e) => setExt3cx(e.target.value)} placeholder="101" />
+              </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-1 sm:col-span-3">
