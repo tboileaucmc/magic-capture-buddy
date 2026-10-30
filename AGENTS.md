@@ -9,6 +9,7 @@
 - Validate attachment formats in the browser-safe planning-attachments helper and normalize email MIME types by extension because browsers often leave EML/MSG types empty.
 - Scope Cinemeccanica brand tokens to `.cmc-theme` / `.cmc-theme-light`, with authentication-specific surfaces under `.cmc-auth`; mission-sheet portals explicitly receive the current planning theme, while other portals retain independent readable surfaces.
 - Mission-sheet tabs group identity, periods, video calls, and documents; field state stays in the dialog so tab navigation never discards drafts.
+- Waze invitation links use the public `/waze` launcher with an address-only query, requiring no session; a user-initiated Android package intent opens the app, while a separate HTTPS fallback remains available because mail clients may suppress native schemes.
 - Keep planning navigation date input in a separate draft until blur or Enter, then validate before selecting the week; this prevents partial keyboard edits from resetting the displayed date.
 - Classify national French holidays and weekends in the browser-safe planning-day helper, with holiday precedence and scoped theme tokens; this keeps date rules testable and mission category colors intact.
 - Keep assignment stacks content-sized with explicit minimum heights, not percentage heights or flex growth inside table cells, so Firefox and Chromium expand multi-mission rows consistently without overlap.
