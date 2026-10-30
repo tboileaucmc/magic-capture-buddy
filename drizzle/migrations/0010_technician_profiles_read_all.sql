@@ -1,0 +1,1 @@
+CREATE POLICY "Signed-in users read technician profiles" ON public.technician_profiles FOR SELECT TO authenticated USING (true);

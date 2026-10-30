@@ -71,6 +71,13 @@
       "when": 1793360461061,
       "tag": "0009_add_technician_btp_card",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793368501169,
+      "tag": "0010_technician_profiles_read_all",
+      "breakpoints": true
     }
   ]
 }
