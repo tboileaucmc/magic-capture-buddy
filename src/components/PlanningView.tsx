@@ -398,13 +398,17 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                   </td>
                   {days.map((d) => {
                     const dateISO = fmtISO(d);
-                    return HALVES.map((h) => {
-                      const list = findAssignments(t.id, dateISO, h);
+                    const amList = findAssignments(t.id, dateISO, "AM");
+                    const pmList = findAssignments(t.id, dateISO, "PM");
+                    const merged = amList.length > 0 && amList.length === pmList.length && amList.every((a, i) => a.id === pmList[i].id);
+                    return (merged ? (["AM"] as HalfDay[]) : HALVES).map((h) => {
+                      const list = h === "AM" ? amList : pmList;
                       const single = list.length === 1 ? list[0] : null;
                       const singleCat = single ? categoryById(single.categoryId) : null;
                       return (
                         <td
                           key={`${dateISO}-${h}`}
+                          colSpan={merged ? 2 : undefined}
                           className={cn(
                             "cursor-pointer border-b border-r p-1 align-top transition hover:bg-accent/40",
                             dayClass(d),
@@ -416,7 +420,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                             <div className="flex min-h-[61px] flex-col gap-1">
                               {list.map((a) => {
                                 const cat = categoryById(a.categoryId);
-                                const isFirst = (a.recurrence === "weekly" || a.dateISO === dateISO) && a.half === h;
+                                const isFirst = (a.recurrence === "weekly" || a.dateISO === dateISO) && (merged || a.half === h);
                                 return (
                                   <div
                                     key={a.id}
