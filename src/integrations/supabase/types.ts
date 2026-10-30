@@ -80,6 +80,7 @@ export type Database = {
       technician_profiles: {
         Row: {
           equipment: Json
+          extension_3cx: string | null
           fuel_card: string | null
           last_ct: string | null
           phone: string | null
@@ -91,6 +92,7 @@ export type Database = {
         }
         Insert: {
           equipment?: Json
+          extension_3cx?: string | null
           fuel_card?: string | null
           last_ct?: string | null
           phone?: string | null
@@ -102,6 +104,7 @@ export type Database = {
         }
         Update: {
           equipment?: Json
+          extension_3cx?: string | null
           fuel_card?: string | null
           last_ct?: string | null
           phone?: string | null

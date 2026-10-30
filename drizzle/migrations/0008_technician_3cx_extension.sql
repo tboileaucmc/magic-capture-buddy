@@ -1,0 +1,1 @@
+ALTER TABLE public.technician_profiles ADD COLUMN extension_3cx text;
