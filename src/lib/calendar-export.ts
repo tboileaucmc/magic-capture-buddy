@@ -107,6 +107,9 @@ export function buildICS(input: Assignment, techs: Technician[]): string {
     `DESCRIPTION:${desc}`,
     `ORGANIZER;CN=Planning Cinemeccanica:mailto:planning.cinemeccanica@gmail.com`,
     ...attendees,
+    ...(a.teamsUrl && normalizeTeamsUrl(a.teamsUrl)
+      ? ["BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:Réunion Teams dans 15 minutes", "TRIGGER:-PT15M", "END:VALARM"]
+      : []),
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");
@@ -190,6 +193,7 @@ export function googlePayload(input: Assignment, techs: Technician[]) {
     attendees: techs.map((t) => t.email).filter((e) => /.+@.+\..+/.test(e)),
     recurrence: recurrence ? [recurrence] : [],
     meet: Boolean(input.googleMeet && !input.toConfirm),
+    reminder15: Boolean(a.teamsUrl && normalizeTeamsUrl(a.teamsUrl)),
     attachments: (a.attachments ?? []).map((f) => ({ name: f.name, type: f.type, dataUrl: f.dataUrl })),
   };
 }
