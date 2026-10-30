@@ -63,7 +63,9 @@ function AuthPage() {
   };
 
   return (
-    <div className="cmc-theme cmc-auth flex min-h-screen items-center justify-center px-6 py-12 text-foreground">
+    <div className="cmc-theme cmc-auth relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-12 text-foreground">
+      <div aria-hidden className="cmc-stripes cmc-stripes-tl"><span /><span /><span /></div>
+      <div aria-hidden className="cmc-stripes cmc-stripes-br"><span /><span /><span /></div>
       {intro && (
         <div className="cmc-intro fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-background" aria-live="polite">
           <img src={logoAsset.url} alt="Cinemeccanica France" className="cmc-intro-logo h-auto w-[360px] max-w-[80vw] object-contain" />
@@ -71,7 +73,7 @@ function AuthPage() {
           <span className="sr-only">Ouverture du planning…</span>
         </div>
       )}
-      <div className="w-full max-w-sm space-y-6">
+      <div className="relative z-10 w-full max-w-sm space-y-6">
         <div className="space-y-6 border-b border-primary/50 pb-6 text-center">
           <div className="cmc-welcome relative mx-auto rounded-md w-[300px] max-w-full overflow-hidden">
             <img src={logoAsset.url} alt="Cinemeccanica France" width={1010} height={320} className="cmc-welcome-logo h-auto w-full object-contain" />

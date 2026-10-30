@@ -284,3 +284,17 @@
 @keyframes cmc-welcome-spin { from { transform: perspective(800px) rotateY(0); } to { transform: perspective(800px) rotateY(360deg); } }
 .cmc-welcome { overflow: visible; animation: cmc-welcome-spin 1.2s cubic-bezier(.45,0,.2,1) 1.5s both; }
 @media (prefers-reduced-motion: reduce) { .cmc-welcome { animation: none; } }
+
+/* Golden diagonal stripes (auth) */
+.cmc-stripes { position: absolute; width: 420px; height: 420px; pointer-events: none; z-index: 0; }
+.cmc-stripes-tl { top: -120px; left: -120px; }
+.cmc-stripes-br { bottom: -120px; right: -120px; transform: rotate(180deg); }
+.cmc-stripes span { position: absolute; left: -50%; width: 200%; border-radius: 9999px; transform: rotate(-45deg); transform-origin: center;
+  background: linear-gradient(90deg, transparent 5%, color-mix(in oklab, var(--primary) 90%, white) 50%, transparent 95%);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--primary) 70%, transparent); animation: cmc-stripe-in 1.2s ease-out both; }
+.cmc-stripes span:nth-child(1) { top: 46%; height: 3px; }
+.cmc-stripes span:nth-child(2) { top: 54%; height: 1.5px; opacity: .8; animation-delay: .15s; }
+.cmc-stripes span:nth-child(3) { top: 62%; height: 1px; opacity: .5; animation-delay: .3s; }
+@keyframes cmc-stripe-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@media (max-width: 640px) { .cmc-stripes { width: 260px; height: 260px; } }
+@media (prefers-reduced-motion: reduce) { .cmc-stripes span { animation: none; } }
