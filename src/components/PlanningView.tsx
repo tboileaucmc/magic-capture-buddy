@@ -610,14 +610,16 @@ function AssignmentDialog({
   const [weekly, setWeekly] = useState(existing?.recurrence === "weekly");
   const [repeatDay, setRepeatDay] = useState(String(new Date(`${existing?.dateISO ?? dateISO}T00:00:00Z`).getUTCDay()));
   const [toConfirm, setToConfirm] = useState(existing?.toConfirm ?? false);
+  const [fullDay, setFullDay] = useState(!!existing && existing.half === "AM" && existing.endHalf === "PM" && (existing.endDateISO ?? existing.dateISO) === existing.dateISO);
   const [attachments, setAttachments] = useState(existing?.attachments ?? []);
   const [deleting, setDeleting] = useState(false);
 
   const anchorISO = existing?.dateISO ?? dateISO;
   const startISO = weekly ? nextWeeklyDate(anchorISO, Number(repeatDay)) : anchorISO;
-  const startHalfVal: HalfDay = weekly ? (startTime < "12:00" ? "AM" : "PM") : existing?.half ?? half;
-  const missionEndISO = weekly ? startISO : endDateISO;
-  const missionEndHalf: HalfDay = weekly ? (endTime <= "12:00" ? "AM" : "PM") : endHalf;
+  const isFullDay = fullDay && !weekly;
+  const startHalfVal: HalfDay = weekly ? (startTime < "12:00" ? "AM" : "PM") : isFullDay ? "AM" : existing?.half ?? half;
+  const missionEndISO = weekly || isFullDay ? startISO : endDateISO;
+  const missionEndHalf: HalfDay = weekly ? (endTime <= "12:00" ? "AM" : "PM") : isFullDay ? "PM" : endHalf;
   const validateWeekly = () => {
     if (weekly && (!startTime || !endTime || endTime <= startTime)) {
       toast.error("La fin de la réunion doit être après son début, le même jour");
@@ -812,7 +814,15 @@ function AssignmentDialog({
             </div>
           )}
           <div className="grid gap-3 border-t pt-5">
-            <Label className="text-xs uppercase text-muted-foreground">Période de la mission</Label>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label className="text-xs uppercase text-muted-foreground">Période de la mission</Label>
+              {!weekly && (
+                <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                  <Checkbox checked={fullDay} onCheckedChange={(v) => setFullDay(v === true)} />
+                  Journée entière
+                </label>
+              )}
+            </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr_auto]">
               <div className="grid gap-1">
                 <Label className="text-xs">Du</Label>
@@ -829,14 +839,14 @@ function AssignmentDialog({
                 <Input
                   type="date"
                   value={missionEndISO}
-                  disabled={weekly}
+                  disabled={weekly || isFullDay}
                   min={startISO}
                   onChange={(e) => setEndDateISO(e.target.value || startISO)}
                 />
               </div>
               <div className="grid gap-1">
                 <Label className="text-xs">&nbsp;</Label>
-                <Select value={missionEndHalf} disabled={weekly} onValueChange={(v) => setEndHalf(v as HalfDay)}>
+                <Select value={missionEndHalf} disabled={weekly || isFullDay} onValueChange={(v) => setEndHalf(v as HalfDay)}>
                   <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="AM">Matin</SelectItem>
