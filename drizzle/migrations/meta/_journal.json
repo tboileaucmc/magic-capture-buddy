@@ -64,6 +64,13 @@
       "when": 1793353778534,
       "tag": "0008_technician_3cx_extension",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793360461061,
+      "tag": "0009_add_technician_btp_card",
+      "breakpoints": true
     }
   ]
 }
