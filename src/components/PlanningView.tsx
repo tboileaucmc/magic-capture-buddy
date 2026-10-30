@@ -868,7 +868,7 @@ function AssignmentDialog({
             <div className="flex flex-wrap gap-2 rounded-md border bg-muted/30 p-2 text-xs">
               <a className="underline" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`} target="_blank" rel="noreferrer">Ouvrir dans Google Maps</a>
               <span>•</span>
-              <a className="underline" href={`https://waze.com/ul?q=${encodeURIComponent(address)}&navigate=yes`} target="_blank" rel="noreferrer">Ouvrir dans Waze</a>
+              <button type="button" className="underline" onClick={() => openWaze(address)}>Ouvrir dans Waze</button>
             </div>
           )}
         </div>
