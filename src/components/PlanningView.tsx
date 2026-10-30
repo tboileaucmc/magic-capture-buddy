@@ -611,15 +611,22 @@ function AssignmentDialog({
   const [repeatDay, setRepeatDay] = useState(String(new Date(`${existing?.dateISO ?? dateISO}T00:00:00Z`).getUTCDay()));
   const [toConfirm, setToConfirm] = useState(existing?.toConfirm ?? false);
   const [fullDay, setFullDay] = useState(!!existing && existing.half === "AM" && existing.endHalf === "PM" && (existing.endDateISO ?? existing.dateISO) === existing.dateISO);
+  const [fullWeek, setFullWeek] = useState(() => {
+    if (!existing || existing.half !== "AM" || existing.endHalf !== "PM" || !existing.endDateISO) return false;
+    const d = new Date(`${existing.dateISO}T00:00:00Z`);
+    return d.getUTCDay() === 1 && existing.endDateISO === shiftISO(existing.dateISO, 4);
+  });
   const [attachments, setAttachments] = useState(existing?.attachments ?? []);
   const [deleting, setDeleting] = useState(false);
 
   const anchorISO = existing?.dateISO ?? dateISO;
-  const startISO = weekly ? nextWeeklyDate(anchorISO, Number(repeatDay)) : anchorISO;
-  const isFullDay = fullDay && !weekly;
+  const isFullWeek = fullWeek && !weekly;
+  const weekMondayISO = shiftISO(anchorISO, -((new Date(`${anchorISO}T00:00:00Z`).getUTCDay() + 6) % 7));
+  const startISO = weekly ? nextWeeklyDate(anchorISO, Number(repeatDay)) : isFullWeek ? weekMondayISO : anchorISO;
+  const isFullDay = (fullDay || isFullWeek) && !weekly;
   const missionEndTime = isFullDay ? "18:00" : endTime;
   const startHalfVal: HalfDay = weekly ? (startTime < "12:00" ? "AM" : "PM") : isFullDay ? "AM" : existing?.half ?? half;
-  const missionEndISO = weekly || isFullDay ? startISO : endDateISO;
+  const missionEndISO = weekly ? startISO : isFullWeek ? shiftISO(weekMondayISO, 4) : isFullDay ? startISO : endDateISO;
   const missionEndHalf: HalfDay = weekly ? (endTime <= "12:00" ? "AM" : "PM") : isFullDay ? "PM" : endHalf;
   const validateWeekly = () => {
     if (weekly && (!startTime || !endTime || endTime <= startTime)) {
@@ -819,8 +826,14 @@ function AssignmentDialog({
               <Label className="text-xs uppercase text-muted-foreground">Période de la mission</Label>
               {!weekly && (
                 <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
-                  <Checkbox checked={fullDay} onCheckedChange={(v) => { setFullDay(v === true); if (v === true) setEndTime("18:00"); }} />
+                  <Checkbox checked={fullDay && !fullWeek} onCheckedChange={(v) => { setFullDay(v === true); if (v === true) { setFullWeek(false); setEndTime("18:00"); } }} />
                   Journée entière
+                </label>
+              )}
+              {!weekly && (
+                <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                  <Checkbox checked={fullWeek} onCheckedChange={(v) => { setFullWeek(v === true); if (v === true) { setFullDay(false); setEndTime("18:00"); } }} />
+                  Semaine entière (lun.–ven.)
                 </label>
               )}
             </div>
@@ -1198,4 +1211,10 @@ function AddCategoryDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function shiftISO(iso: string, days: number) {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
 }
