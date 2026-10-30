@@ -14,6 +14,7 @@ const schema = z.object({
   attendees: z.array(z.string().email()).max(50),
   recurrence: z.array(z.string().regex(/^RRULE:FREQ=WEEKLY;BYDAY=(SU|MO|TU|WE|TH|FR|SA)$/)).max(1).default([]),
   meet: z.boolean().default(false),
+  reminder15: z.boolean().default(false),
   attachments: z
     .array(z.object({ name: z.string().max(300), type: z.string().max(200), dataUrl: z.string() }))
     .max(10)
@@ -101,7 +102,7 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
       status: "confirmed",
       colorId: "7",
       transparency: "transparent",
-      reminders: { useDefault: false, overrides: [] },
+      reminders: { useDefault: false, overrides: data.reminder15 ? [{ method: "popup", minutes: 15 }] : [] },
       attachments,
       ...(data.meet
         ? { conferenceData: { createRequest: { requestId: `meet-${id}`, conferenceSolutionKey: { type: "hangoutsMeet" } } } }
