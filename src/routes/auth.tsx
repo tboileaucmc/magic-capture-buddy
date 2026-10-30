@@ -73,9 +73,14 @@ function AuthPage() {
       )}
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-6 border-b border-primary/50 pb-6 text-center">
-          <div className="cmc-welcome relative mx-auto w-[300px] max-w-full overflow-hidden">
+          <div className="cmc-welcome relative mx-auto rounded-md w-[300px] max-w-full overflow-hidden">
             <img src={logoAsset.url} alt="Cinemeccanica France" width={1010} height={320} className="cmc-welcome-logo h-auto w-full object-contain" />
             <span aria-hidden className="cmc-welcome-shine pointer-events-none absolute inset-0" />
+          </div>
+          <div aria-hidden className="pointer-events-none relative mx-auto h-0 w-[300px] max-w-full">
+            {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <span key={i} className="cmc-spark absolute" style={{ left: `${8 + i * 12}%`, top: `${-90 + ((i * 37) % 70)}px`, animationDelay: `${1.2 + i * 0.12}s` }} />
+            ))}
           </div>
           <div aria-hidden className="cmc-welcome-line mx-auto mt-3 h-px w-40 bg-primary" />
           <h1 className="text-2xl font-bold">Planning Techniciens</h1>
