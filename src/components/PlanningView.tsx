@@ -8,6 +8,7 @@ import { BroadcastDialog } from "@/components/BroadcastDialog";
 import { UsersDialog } from "@/components/UsersDialog";
 import { useRole } from "@/lib/use-role";
 import { SupportHistoryDialog } from "@/components/SupportHistoryDialog";
+import { TechnicianProfileDialog } from "@/components/TechnicianProfileDialog";
 import { supportTechnicianIds, isSupportOnly } from "@/lib/planning-support";
 import { CinemaAddressSuggestions } from "@/components/CinemaAddressSuggestions";
 import { PlanningDateInput } from "@/components/PlanningDateInput";
@@ -374,7 +375,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                   <td className="sticky left-0 z-10 border-b border-r bg-card p-2">
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        <div className="font-medium">{t.name}</div>
+                        {isAdmin ? <TechnicianProfileDialog technicianId={t.id} name={t.name} light={light} /> : <div className="font-medium">{t.name}</div>}
                         {canEdit && <div className="text-xs text-muted-foreground">{t.email}</div>}
                       </div>
                       {canEdit && (
