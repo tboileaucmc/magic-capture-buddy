@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Corriger le lien Waze des invitations Android via une ouverture dédiée ; lancement réel sur téléphone à vérifier.
 - [x] Réorganiser la fiche de mission par rubriques et reprendre le thème actif du planning.
 - [x] Choix multiple des techniciens pour la duplication de semaine, selon les droits d’écriture.
 - [x] Ajouter et vérifier les réunions hebdomadaires sans fin dans le planning et les invitations (enregistrement et semaine suivante vérifiés ; pas d’envoi réel de test).

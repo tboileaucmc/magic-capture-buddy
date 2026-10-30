@@ -1,5 +1,6 @@
 import type { Assignment, Technician } from "./planning-types";
 import { weeklyRule } from "./planning-recurrence";
+import { wazeInvitationUrl } from "./waze";
 
 /** Accepte uniquement les liens HTTPS des services de réunion Microsoft Teams. */
 export function normalizeTeamsUrl(value: string): string | undefined {
@@ -62,7 +63,7 @@ export function buildDescription(input: Assignment): string {
     const enc = encodeURIComponent(a.address);
     lines.push(`Adresse: ${a.address}`);
     lines.push(`Google Maps: https://www.google.com/maps/search/?api=1&query=${enc}`);
-    lines.push(`Waze: https://waze.com/ul?q=${enc}&navigate=yes`);
+    lines.push(`Waze: ${wazeInvitationUrl(a.address)}`);
   }
   if (a.notes) lines.push("", a.notes);
   if (a.link) lines.push("", `Lien: ${a.link}`);
@@ -209,7 +210,7 @@ export function buildHtmlDescription(input: Assignment): string {
   if (a.address) {
     const enc = encodeURIComponent(a.address);
     parts.push(`<br>📍 <b>Où :</b> ${esc(a.address)}`);
-    parts.push(`<br>🚗 <a href="https://waze.com/ul?q=${enc}&navigate=yes">Y aller avec Waze</a> · 🗺️ <a href="https://www.google.com/maps/search/?api=1&query=${enc}">Ouvrir dans Google Maps</a>`);
+    parts.push(`<br>🚗 <a href="${wazeInvitationUrl(a.address)}">Y aller avec Waze</a> · 🗺️ <a href="https://www.google.com/maps/search/?api=1&query=${enc}">Ouvrir dans Google Maps</a>`);
   }
   if (a.notes && !input.toConfirm) parts.push(`<br><br>📝 <b>Notes :</b><br>${esc(a.notes).replace(/\n/g, "<br>")}`);
   if (a.link) parts.push(`<br><br>🔗 <a href="${esc(a.link)}">Lien utile</a>`);

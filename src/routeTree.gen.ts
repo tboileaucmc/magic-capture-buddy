@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as WazeRouteImport } from './routes/waze'
 import { Route as AuthenticatedPlanningRouteImport } from './routes/_authenticated/planning'
 import { Route as ApiPublicJobsPurgeAttachmentsRouteImport } from './routes/api/public/jobs/purge-attachments'
 import { Route as ApiPublicJobsWeeklyPlanningRouteImport } from './routes/api/public/jobs/weekly-planning'
@@ -28,6 +29,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WazeRoute = WazeRouteImport.update({
+  id: '/waze',
+  path: '/waze',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedPlanningRoute = AuthenticatedPlanningRouteImport.update({
@@ -51,6 +57,7 @@ const ApiPublicJobsWeeklyPlanningRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/waze': typeof WazeRoute
   '/planning': typeof AuthenticatedPlanningRoute
   '/api/public/jobs/purge-attachments': typeof ApiPublicJobsPurgeAttachmentsRoute
   '/api/public/jobs/weekly-planning': typeof ApiPublicJobsWeeklyPlanningRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/waze': typeof WazeRoute
   '/planning': typeof AuthenticatedPlanningRoute
   '/api/public/jobs/purge-attachments': typeof ApiPublicJobsPurgeAttachmentsRoute
   '/api/public/jobs/weekly-planning': typeof ApiPublicJobsWeeklyPlanningRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/waze': typeof WazeRoute
   '/_authenticated/planning': typeof AuthenticatedPlanningRoute
   '/api/public/jobs/purge-attachments': typeof ApiPublicJobsPurgeAttachmentsRoute
   '/api/public/jobs/weekly-planning': typeof ApiPublicJobsWeeklyPlanningRoute
@@ -76,6 +85,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/waze'
     | '/planning'
     | '/api/public/jobs/purge-attachments'
     | '/api/public/jobs/weekly-planning'
@@ -83,6 +93,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/waze'
     | '/planning'
     | '/api/public/jobs/purge-attachments'
     | '/api/public/jobs/weekly-planning'
@@ -91,6 +102,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/waze'
     | '/_authenticated/planning'
     | '/api/public/jobs/purge-attachments'
     | '/api/public/jobs/weekly-planning'
@@ -100,6 +112,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  WazeRoute: typeof WazeRoute
   ApiPublicJobsPurgeAttachmentsRoute: typeof ApiPublicJobsPurgeAttachmentsRoute
   ApiPublicJobsWeeklyPlanningRoute: typeof ApiPublicJobsWeeklyPlanningRoute
 }
@@ -125,6 +138,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/waze': {
+      id: '/waze'
+      path: '/waze'
+      fullPath: '/waze'
+      preLoaderRoute: typeof WazeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/planning': {
@@ -166,6 +186,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  WazeRoute: WazeRoute,
   ApiPublicJobsPurgeAttachmentsRoute: ApiPublicJobsPurgeAttachmentsRoute,
   ApiPublicJobsWeeklyPlanningRoute: ApiPublicJobsWeeklyPlanningRoute,
 }
