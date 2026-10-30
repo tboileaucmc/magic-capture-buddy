@@ -108,10 +108,6 @@ export function TechnicianProfileDialog({ technicianId, name, light, readOnly = 
                 </div>
               </div>
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="technician-btp-card">Numéro de carte BTP</Label>
-              <Input id="technician-btp-card" value={btpCard} onChange={(e) => setBtpCard(e.target.value)} placeholder="Numéro de carte BTP" />
-            </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-1 sm:col-span-3">
                 <Label>Véhicule</Label>
@@ -124,10 +120,6 @@ export function TechnicianProfileDialog({ technicianId, name, light, readOnly = 
               <div className="space-y-1">
                 <Label>Dernier CT</Label>
                 <Input type="date" value={lastCt} onChange={(e) => setLastCt(e.target.value)} />
-              </div>
-              <div className="space-y-1 sm:col-span-3">
-                <Label>N° de carte GR</Label>
-                <Input value={fuelCard} onChange={(e) => setFuelCard(e.target.value)} placeholder="Numéro de carte carburant" />
               </div>
             </div>
             <div className="space-y-2">
