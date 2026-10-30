@@ -24,6 +24,7 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState("");
   const [ext3cx, setExt3cx] = useState("");
+  const [btpCard, setBtpCard] = useState("");
   const [vehicle, setVehicle] = useState("");
   const [plate, setPlate] = useState("");
   const [lastCt, setLastCt] = useState("");
@@ -39,6 +40,7 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
       if (error) return toast.error(error.message);
       setPhone(data?.phone ?? "");
       setExt3cx(data?.extension_3cx ?? "");
+      setBtpCard(data?.btp_card ?? "");
       setVehicle(data?.vehicle ?? "");
       setPlate(data?.plate ?? "");
       setLastCt(data?.last_ct ?? "");
@@ -53,6 +55,7 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
       technician_id: technicianId,
       phone: phone.trim() || null,
       extension_3cx: ext3cx.trim() || null,
+      btp_card: btpCard.trim() || null,
       vehicle: vehicle.trim() || null,
       plate: plate.trim().toUpperCase() || null,
       last_ct: lastCt || null,
@@ -104,6 +107,10 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
                   )}
                 </div>
               </div>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="technician-btp-card">Numéro de carte BTP</Label>
+              <Input id="technician-btp-card" value={btpCard} onChange={(e) => setBtpCard(e.target.value)} placeholder="Numéro de carte BTP" />
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-1 sm:col-span-3">
