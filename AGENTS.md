@@ -17,5 +17,6 @@
 - Weekly series retain one assignment ID and use rrule for bounded occurrence lookup shared by the grid and PDF; Calendar and ICS receive a weekly RRULE in Europe/Paris, and editing/deletion applies to the entire series.
 - Support managers (support_editor role) may only change missions whose technicians are all in the support team (from BRABANT onward); enforced by a planning_state trigger and assertCanEditMission.
 - Week duplication copies one-off missions starting in the displayed week via the browser-safe planning-duplicate helper, filtered by selected technician IDs and mission write rights; shared mission copies retain only selected technicians, get new IDs, and send no calendar invitation until saved individually.
+- Technician profiles are readable by every signed-in user and writable only by admins (RLS + readOnly dialog), so read-only accounts can still place calls.
 - Technician extension buttons use the browser-safe 3CX URL helper to open the web dialer in a separate tab; call confirmation stays in 3CX and ordinary phone numbers retain native telephone links.
 - Administration dialogs support controlled opening from the planning menu and remain mounted outside the dropdown so closing the menu does not discard the dialog.

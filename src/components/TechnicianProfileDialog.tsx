@@ -19,8 +19,8 @@ const TRAINING_GROUPS: Array<{ label: string; items: Array<[keyof Trainings, str
   { label: "Autres", items: [["habElec", "Habilitation électrique"], ["cacesNacelle", "CACES Nacelle"]] },
 ];
 
-/** Fiche technicien réservée aux super utilisateurs. */
-export function TechnicianProfileDialog({ technicianId, name, light }: { technicianId: string; name: string; light: boolean }) {
+/** Fiche technicien : modifiable par les super utilisateurs, consultable (avec appels) par les autres. */
+export function TechnicianProfileDialog({ technicianId, name, light, readOnly = false }: { technicianId: string; name: string; light: boolean; readOnly?: boolean }) {
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState("");
   const [ext3cx, setExt3cx] = useState("");
@@ -81,9 +81,9 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
         <DialogContent className={`max-w-lg ${light ? "cmc-theme-light" : "cmc-theme"}`}>
           <DialogHeader>
             <DialogTitle>Fiche de {name}</DialogTitle>
-            <DialogDescription>Visible uniquement par les super utilisateurs.</DialogDescription>
+            <DialogDescription>{readOnly ? "Consultation seule — les boutons téléphone permettent d’appeler." : "Modifiable uniquement par les super utilisateurs."}</DialogDescription>
           </DialogHeader>
-          <div className="max-h-[65vh] space-y-4 overflow-y-auto pr-1">
+          <fieldset disabled={readOnly} className="contents"><div className="max-h-[65vh] space-y-4 overflow-y-auto pr-1">
             <div className="grid grid-cols-[1fr_10rem] gap-3">
               <div className="space-y-1">
                 <Label>Téléphone</Label>
@@ -149,25 +149,25 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Matériel</Label>
-                <Button type="button" size="sm" variant="outline" onClick={() => setEquipment((l) => [...l, { name: "", sn: "" }])}>
+                {!readOnly && <Button type="button" size="sm" variant="outline" onClick={() => setEquipment((l) => [...l, { name: "", sn: "" }])}>
                   <Plus /> Ajouter
-                </Button>
+                </Button>}
               </div>
               {equipment.length === 0 && <p className="text-xs text-muted-foreground">Aucun matériel.</p>}
               {equipment.map((e, i) => (
                 <div key={i} className="flex gap-2">
                   <Input value={e.name} onChange={(ev) => setItem(i, { name: ev.target.value })} placeholder="Matériel" />
                   <Input value={e.sn} onChange={(ev) => setItem(i, { sn: ev.target.value })} placeholder="N° de série" className="w-40" />
-                  <Button type="button" variant="ghost" size="icon" aria-label="Retirer" onClick={() => setEquipment((l) => l.filter((_, j) => j !== i))}>
+                  {!readOnly && <Button type="button" variant="ghost" size="icon" aria-label="Retirer" onClick={() => setEquipment((l) => l.filter((_, j) => j !== i))}>
                     <Trash2 className="text-destructive" />
-                  </Button>
+                  </Button>}
                 </div>
               ))}
             </div>
-          </div>
+          </div></fieldset>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-            <Button onClick={() => void save()}>Enregistrer</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>{readOnly ? "Fermer" : "Annuler"}</Button>
+            {!readOnly && <Button onClick={() => void save()}>Enregistrer</Button>}
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -378,7 +378,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                   <td className="sticky left-0 z-10 border-b border-r bg-card p-2">
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        {isAdmin ? <TechnicianProfileDialog technicianId={t.id} name={t.name} light={light} /> : <div className="font-medium">{t.name}</div>}
+                        <TechnicianProfileDialog technicianId={t.id} name={t.name} light={light} readOnly={!isAdmin} />
                         {canEdit && <div className="text-xs text-muted-foreground">{t.email}</div>}
                       </div>
                       {canEdit && (
