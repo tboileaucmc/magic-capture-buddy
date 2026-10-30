@@ -75,7 +75,6 @@ function AuthPage() {
         <div className="space-y-6 border-b border-primary/50 pb-6 text-center">
           <div className="cmc-welcome relative mx-auto rounded-md w-[300px] max-w-full overflow-hidden">
             <img src={logoAsset.url} alt="Cinemeccanica France" width={1010} height={320} className="cmc-welcome-logo h-auto w-full object-contain" />
-            <span aria-hidden className="cmc-welcome-shine pointer-events-none absolute inset-0" />
           </div>
           <div aria-hidden className="pointer-events-none relative mx-auto h-0 w-[300px] max-w-full">
             {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
