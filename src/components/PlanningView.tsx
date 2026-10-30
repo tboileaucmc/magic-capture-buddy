@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock } from "lucide-react";
 import { duplicateWeek } from "@/lib/planning-duplicate";
 import { openWaze } from "@/lib/waze";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -498,6 +499,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
 
       {editing && (
         <AssignmentDialog
+          light={light}
           open
           onOpenChange={(o) => !o && setEditing(null)}
           allTechnicians={canEdit ? data.technicians : data.technicians.filter((t) => supportIds.has(t.id))}
@@ -557,6 +559,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
 }
 
 function AssignmentDialog({
+  light,
   open,
   onOpenChange,
   allTechnicians,
@@ -568,6 +571,7 @@ function AssignmentDialog({
   onSave,
   onDelete,
 }: {
+  light: boolean;
   open: boolean;
   onOpenChange: (o: boolean) => void;
   allTechnicians: ReturnType<typeof usePlanning>["data"]["technicians"];
@@ -713,23 +717,40 @@ function AssignmentDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!deleting) onOpenChange(o); }}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className={cn("mission-sheet flex max-h-[92dvh] w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden rounded-lg p-0 sm:max-w-3xl", light ? "cmc-theme-light" : "cmc-theme")}>
+        <DialogHeader className="shrink-0 border-b px-6 py-5 pr-12 text-left">
+          <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase text-primary"><FileText className="size-4" /> Ordre de mission</div>
+          <DialogTitle className="leading-snug">
             {existing?.recurrence ? "Modifier la série hebdomadaire" : existing ? "Modifier la mission" : "Nouvelle mission"}
           </DialogTitle>
           <DialogDescription>
             {new Date(dateISO).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long" })}
-            {" • "}
-            {half === "AM" ? "Matin" : "Après-midi"}
+            {" • "}{half === "AM" ? "Matin" : "Après-midi"}
           </DialogDescription>
         </DialogHeader>
+        <Tabs defaultValue="mission" className="flex min-h-0 flex-1 flex-col">
+          <TabsList className="grid h-auto shrink-0 grid-cols-4 rounded-none border-b bg-background p-2">
+            <TabsTrigger value="mission" className="gap-2 px-1 py-2 data-[state=active]:text-primary"><Users className="hidden size-4 sm:block" />Mission</TabsTrigger>
+            <TabsTrigger value="period" className="gap-2 px-1 py-2 data-[state=active]:text-primary"><Clock className="hidden size-4 sm:block" />Période</TabsTrigger>
+            <TabsTrigger value="visio" className="gap-2 px-1 py-2 data-[state=active]:text-primary"><Video className="hidden size-4 sm:block" />Visio</TabsTrigger>
+            <TabsTrigger value="documents" className="gap-2 px-1 py-2 data-[state=active]:text-primary"><Paperclip className="hidden size-4 sm:block" />Documents</TabsTrigger>
+          </TabsList>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+            <TabsContent value="mission" className="mt-0 grid gap-5">
+              <label className="flex items-start gap-3 border-b pb-4 text-sm">
+                <Checkbox checked={toConfirm} onCheckedChange={(v) => setToConfirm(v === true)} className="mt-0.5" />
+                <span className="space-y-1"><strong>À confirmer</strong><span className="block text-xs text-muted-foreground">Invitation sans adresse ni détails jusqu’à confirmation.</span></span>
+              </label>
+          <div className="grid gap-2">
+            <Label htmlFor="mission-title">Intitulé / Affaire</Label>
+            <Input id="mission-title" value={title} onChange={(e) => { setTitle(e.target.value); setAddressSuggestionsActive(true); }} maxLength={120} placeholder="Ex : Cinéma Pathé Beaugrenelle Paris" />
+          </div>
 
-        <div className="grid gap-4">
-          <label className="flex items-center gap-2 rounded-md border p-2 text-sm">
-            <input type="checkbox" checked={toConfirm} onChange={(e) => setToConfirm(e.target.checked)} className="size-4" />
-            <span><strong>A confirmer</strong> — le technicien reçoit seulement « RDV à confirmer », sans adresse ni détails</span>
-          </label>
+          <div className="grid gap-2">
+            <Label htmlFor="mission-address" className="flex items-center gap-1"><MapPin className="size-3.5" /> Adresse / Lieu</Label>
+            <Input id="mission-address" value={address} onChange={(e) => { setAddress(e.target.value); setAddressSuggestionsActive(false); }} maxLength={250} placeholder="12 rue de la Paix, 75002 Paris" />
+            <CinemaAddressSuggestions title={title} active={addressSuggestionsActive} onSelect={(value) => { setAddress(value); setAddressSuggestionsActive(false); }} />
+          </div>
 
           <div className="grid gap-2">
             <Label>Catégorie</Label>
@@ -762,51 +783,40 @@ function AssignmentDialog({
 
           <div className="grid gap-2">
             <Label>Techniciens assignés</Label>
-            <div className="flex flex-wrap gap-2 rounded-md border p-2">
+            <div className="flex flex-wrap gap-2">
               {allTechnicians.length === 0 && (
                 <span className="text-xs text-muted-foreground">Aucun technicien disponible.</span>
               )}
               {allTechnicians.map((t) => {
                 const checked = technicianIds.includes(t.id);
                 return (
-                  <button
+                  <Button
                     type="button"
                     key={t.id}
                     onClick={() => toggleTech(t.id)}
-                    className={`rounded-full border px-3 py-1 text-xs transition ${checked ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:bg-accent"}`}
+                    variant={checked ? "default" : "outline"}
+                    size="sm"
+                    aria-pressed={checked}
+                    className="h-auto min-h-8 whitespace-normal text-xs"
                   >
                     {checked ? "✓ " : ""}{t.name}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="mission-title">Intitulé / Affaire</Label>
-            <Input id="mission-title" value={title} onChange={(e) => { setTitle(e.target.value); setAddressSuggestionsActive(true); }} maxLength={120} placeholder="Ex : Cinéma Pathé Beaugrenelle Paris" />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="mission-address" className="flex items-center gap-1"><MapPin className="size-3.5" /> Adresse / Lieu</Label>
-            <Input id="mission-address" value={address} onChange={(e) => { setAddress(e.target.value); setAddressSuggestionsActive(false); }} maxLength={250} placeholder="12 rue de la Paix, 75002 Paris" />
-            <CinemaAddressSuggestions title={title} active={addressSuggestionsActive} onSelect={(value) => { setAddress(value); setAddressSuggestionsActive(false); }} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-2">
-              <Label htmlFor="mission-start">Début</Label>
-              <Input id="mission-start" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+          {address && (
+            <div className="flex flex-wrap gap-2 border-t pt-3">
+              <Button variant="outline" size="sm" asChild><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`} target="_blank" rel="noreferrer"><MapPin /> Google Maps</a></Button>
+              <Button variant="outline" size="sm" onClick={() => openWaze(address)}><MapPin /> Waze</Button>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="mission-end">Fin</Label>
-              <Input id="mission-end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="grid gap-2 rounded-md border bg-muted/20 p-3">
+          )}
+            </TabsContent>
+            <TabsContent value="period" className="mt-0 grid gap-5">
+          <div className="grid gap-3">
             <Label className="text-xs uppercase text-muted-foreground">Période de la mission</Label>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr,auto,1fr,auto]">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr_auto]">
               <div className="grid gap-1">
                 <Label className="text-xs">Du</Label>
                 <Input type="date" value={startISO} disabled />
@@ -838,38 +848,21 @@ function AssignmentDialog({
                 </Select>
               </div>
             </div>
-            <p className="text-[11px] text-muted-foreground">
-              Laissez identique au début pour une mission d'une demi-journée. Les samedis et dimanches sont planifiables et
-              inclus dans les périodes multi-jours.
-            </p>
+
           </div>
 
-          <div className="grid gap-2">
-            <Label className="flex items-center gap-1"><LinkIcon className="size-3.5" /> Lien (optionnel)</Label>
-            <Input value={link} onChange={(e) => setLink(e.target.value)} maxLength={500} placeholder="https://…" />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="mission-teams" className="flex items-center gap-1"><Video className="size-3.5" /> Réunion Teams (optionnel)</Label>
-            <Input id="mission-teams" type="url" value={teamsUrl} onChange={(e) => setTeamsUrl(e.target.value)} maxLength={4000} placeholder="https://teams.microsoft.com/l/meetup-join/…" />
-            {normalizeTeamsUrl(teamsUrl) && (
-              <Button variant="outline" className="w-fit" asChild>
-                <a href={normalizeTeamsUrl(teamsUrl)} target="_blank" rel="noopener noreferrer"><Video /> Rejoindre la réunion Teams</a>
-              </Button>
-            )}
-            <div className="mt-2 flex items-center justify-between gap-3">
-              <Label htmlFor="mission-meet" className="flex items-center gap-2"><Video className="size-4" /> Créer un lien Google Meet</Label>
-              <Switch id="mission-meet" checked={googleMeet} onCheckedChange={setGoogleMeet} />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-2">
+              <Label htmlFor="mission-start">Début</Label>
+              <Input id="mission-start" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
             </div>
-            {googleMeet && (
-              existing?.meetUrl ? (
-                <Button variant="outline" className="w-fit" asChild>
-                  <a href={existing.meetUrl} target="_blank" rel="noopener noreferrer"><Video /> Rejoindre la réunion Google Meet</a>
-                </Button>
-              ) : (
-                <p className="text-xs text-muted-foreground">Le lien sera créé à l'enregistrement et ajouté à l'invitation{toConfirm ? " une fois le RDV confirmé" : ""}.</p>
-              )
-            )}
+            <div className="grid gap-2">
+              <Label htmlFor="mission-end">Fin</Label>
+              <Input id="mission-end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid gap-3 border-t pt-4">
             <div className="mt-2 flex items-center justify-between gap-3">
               <Label htmlFor="mission-weekly" className="flex items-center gap-2"><Repeat className="size-4" /> Répéter chaque semaine</Label>
               <Switch id="mission-weekly" checked={weekly} onCheckedChange={setWeekly} />
@@ -891,20 +884,41 @@ function AssignmentDialog({
           </div>
 
 
+            </TabsContent>
+            <TabsContent value="visio" className="mt-0 grid gap-5">
           <div className="grid gap-2">
-            <Label>Notes</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={1000} rows={3} />
+            <Label htmlFor="mission-teams" className="flex items-center gap-1"><Video className="size-3.5" /> Réunion Teams (optionnel)</Label>
+            <Input id="mission-teams" type="url" value={teamsUrl} onChange={(e) => setTeamsUrl(e.target.value)} maxLength={4000} placeholder="https://teams.microsoft.com/l/meetup-join/…" />
+            {normalizeTeamsUrl(teamsUrl) && (
+              <Button variant="outline" className="w-fit" asChild>
+                <a href={normalizeTeamsUrl(teamsUrl)} target="_blank" rel="noopener noreferrer"><Video /> Rejoindre la réunion Teams</a>
+              </Button>
+            )}
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <Label htmlFor="mission-meet" className="flex items-center gap-2"><Video className="size-4" /> Créer un lien Google Meet</Label>
+              <Switch id="mission-meet" checked={googleMeet} onCheckedChange={setGoogleMeet} />
+            </div>
+            {googleMeet && (
+              existing?.meetUrl ? (
+                <Button variant="outline" className="w-fit" asChild>
+                  <a href={existing.meetUrl} target="_blank" rel="noopener noreferrer"><Video /> Rejoindre la réunion Google Meet</a>
+                </Button>
+              ) : (
+                <p className="text-xs text-muted-foreground">Le lien sera créé à l'enregistrement et ajouté à l'invitation{toConfirm ? " une fois le RDV confirmé" : ""}.</p>
+              )
+            )}
           </div>
-
+            </TabsContent>
+            <TabsContent value="documents" className="mt-0 grid gap-5">
           <div className="grid gap-2">
-            <Label className="flex items-center gap-1"><Paperclip className="size-3.5" /> Pièces jointes (JPEG, PNG, PDF, EML, MSG — 5 Mo max)</Label>
-            <Input type="file" accept={ATTACHMENT_ACCEPT} multiple onChange={(e) => handleFiles(e.target.files)} />
+            <Label htmlFor="mission-files" className="flex items-center gap-1"><Paperclip className="size-3.5" /> Pièces jointes (JPEG, PNG, PDF, EML, MSG — 5 Mo max)</Label>
+            <Input id="mission-files" type="file" accept={ATTACHMENT_ACCEPT} multiple onChange={(e) => handleFiles(e.target.files)} />
             {attachments.length > 0 && (
               <ul className="space-y-1 text-sm">
                 {attachments.map((f, i) => (
                   <li key={i} className="flex items-center justify-between rounded border bg-muted/30 px-2 py-1">
-                    <a href={f.dataUrl} download={f.name} className="truncate underline">{f.name}</a>
-                    <Button variant="ghost" size="icon" onClick={() => setAttachments((p) => p.filter((_, j) => j !== i))}>
+                    <a href={f.dataUrl} download={f.name} className="min-w-0 break-all underline">{f.name}</a>
+                    <Button variant="ghost" size="icon" aria-label={`Retirer ${f.name}`} className="shrink-0" onClick={() => setAttachments((p) => p.filter((_, j) => j !== i))}>
                       <Trash2 className="size-3.5" />
                     </Button>
                   </li>
@@ -913,16 +927,21 @@ function AssignmentDialog({
             )}
           </div>
 
-          {address && (
-            <div className="flex flex-wrap gap-2 rounded-md border bg-muted/30 p-2 text-xs">
-              <a className="underline" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`} target="_blank" rel="noreferrer">Ouvrir dans Google Maps</a>
-              <span>•</span>
-              <button type="button" className="underline" onClick={() => openWaze(address)}>Ouvrir dans Waze</button>
-            </div>
-          )}
-        </div>
+          <div className="grid gap-2">
+            <Label className="flex items-center gap-1"><LinkIcon className="size-3.5" /> Lien (optionnel)</Label>
+            <Input value={link} onChange={(e) => setLink(e.target.value)} maxLength={500} placeholder="https://…" />
+          </div>
 
-        <DialogFooter className="flex-wrap gap-2 sm:justify-between">
+          <div className="grid gap-2">
+            <Label htmlFor="mission-notes">Notes / Consignes</Label>
+            <Textarea id="mission-notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={1000} rows={6} />
+          </div>
+
+            </TabsContent>
+          </div>
+        </Tabs>
+
+        <DialogFooter className="shrink-0 flex-wrap gap-3 border-t bg-background px-6 py-4 sm:justify-between sm:space-x-0">
           <div className="flex flex-wrap gap-2">
             {existing && (
               <Button variant="destructive" disabled={deleting} onClick={async () => {
