@@ -102,6 +102,7 @@ export function buildICS(input: Assignment, techs: Technician[]): string {
     `DTSTART${a.recurrence ? ";TZID=Europe/Paris" : ""}:${fmtICS(start)}`,
     `DTEND${a.recurrence ? ";TZID=Europe/Paris" : ""}:${fmtICS(end)}`,
     ...(weeklyRule(a) ? [weeklyRule(a)] : []),
+    ...(a.categoryId === "astreinte" ? ["TRANSP:TRANSPARENT"] : []),
     `SUMMARY:${a.title}`,
     `LOCATION:${a.address}`,
     `DESCRIPTION:${desc}`,
