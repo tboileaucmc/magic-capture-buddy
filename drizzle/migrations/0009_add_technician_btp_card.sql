@@ -1,0 +1,1 @@
+ALTER TABLE public.technician_profiles ADD COLUMN btp_card text;
