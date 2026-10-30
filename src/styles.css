@@ -281,3 +281,6 @@
 @keyframes cmc-spark { 0% { opacity: 0; transform: translateY(0) scale(0); } 30% { opacity: 1; transform: translateY(-8px) scale(1); } 100% { opacity: 0; transform: translateY(-34px) scale(.3); } }
 .cmc-spark { width: 5px; height: 5px; border-radius: 9999px; background: var(--primary); box-shadow: 0 0 8px var(--primary); opacity: 0; animation: cmc-spark 1.3s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .cmc-spark { display: none; } .cmc-welcome-logo { animation: none; } }
+@keyframes cmc-welcome-spin { from { transform: perspective(800px) rotateY(0); } to { transform: perspective(800px) rotateY(360deg); } }
+.cmc-welcome { overflow: visible; animation: cmc-welcome-spin 1.2s cubic-bezier(.45,0,.2,1) 1.5s both; }
+@media (prefers-reduced-motion: reduce) { .cmc-welcome { animation: none; } }
