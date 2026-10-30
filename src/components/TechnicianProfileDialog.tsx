@@ -108,6 +108,18 @@ export function TechnicianProfileDialog({ technicianId, name, light, readOnly = 
                 </div>
               </div>
             </div>
+            {!readOnly && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="technician-btp-card">Numéro de carte BTP</Label>
+                  <Input id="technician-btp-card" value={btpCard} onChange={(e) => setBtpCard(e.target.value)} placeholder="Numéro de carte BTP" />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="technician-gr-card">N° de carte GR</Label>
+                  <Input id="technician-gr-card" value={fuelCard} onChange={(e) => setFuelCard(e.target.value)} placeholder="Numéro de carte carburant" />
+                </div>
+              </div>
+            )}
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-1 sm:col-span-3">
                 <Label>Véhicule</Label>
