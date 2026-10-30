@@ -73,7 +73,11 @@ function AuthPage() {
       )}
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-6 border-b border-primary/50 pb-6 text-center">
-          <img src={logoAsset.url} alt="Cinemeccanica France" width={1010} height={320} className="mx-auto h-auto w-[300px] max-w-full object-contain" />
+          <div className="cmc-welcome relative mx-auto w-[300px] max-w-full overflow-hidden">
+            <img src={logoAsset.url} alt="Cinemeccanica France" width={1010} height={320} className="cmc-welcome-logo h-auto w-full object-contain" />
+            <span aria-hidden className="cmc-welcome-shine pointer-events-none absolute inset-0" />
+          </div>
+          <div aria-hidden className="cmc-welcome-line mx-auto mt-3 h-px w-40 bg-primary" />
           <h1 className="text-2xl font-bold">Planning Techniciens</h1>
           <p className="text-sm text-muted-foreground">{mode === "login" ? "Connectez-vous pour accéder au planning." : "Créez votre compte."}</p>
         </div>
