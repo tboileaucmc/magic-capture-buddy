@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as WazeRouteImport } from './routes/waze'
 import { Route as AuthenticatedPlanningRouteImport } from './routes/_authenticated/planning'
 import { Route as ApiPublicJobsPurgeAttachmentsRouteImport } from './routes/api/public/jobs/purge-attachments'
@@ -29,6 +30,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WazeRoute = WazeRouteImport.update({
@@ -57,6 +63,7 @@ const ApiPublicJobsWeeklyPlanningRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/waze': typeof WazeRoute
   '/planning': typeof AuthenticatedPlanningRoute
   '/api/public/jobs/purge-attachments': typeof ApiPublicJobsPurgeAttachmentsRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/waze': typeof WazeRoute
   '/planning': typeof AuthenticatedPlanningRoute
   '/api/public/jobs/purge-attachments': typeof ApiPublicJobsPurgeAttachmentsRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/waze': typeof WazeRoute
   '/_authenticated/planning': typeof AuthenticatedPlanningRoute
   '/api/public/jobs/purge-attachments': typeof ApiPublicJobsPurgeAttachmentsRoute
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/reset-password'
     | '/waze'
     | '/planning'
     | '/api/public/jobs/purge-attachments'
@@ -93,6 +103,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/reset-password'
     | '/waze'
     | '/planning'
     | '/api/public/jobs/purge-attachments'
@@ -102,6 +113,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/reset-password'
     | '/waze'
     | '/_authenticated/planning'
     | '/api/public/jobs/purge-attachments'
@@ -112,6 +124,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   WazeRoute: typeof WazeRoute
   ApiPublicJobsPurgeAttachmentsRoute: typeof ApiPublicJobsPurgeAttachmentsRoute
   ApiPublicJobsWeeklyPlanningRoute: typeof ApiPublicJobsWeeklyPlanningRoute
@@ -138,6 +151,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/waze': {
@@ -186,6 +206,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   WazeRoute: WazeRoute,
   ApiPublicJobsPurgeAttachmentsRoute: ApiPublicJobsPurgeAttachmentsRoute,
   ApiPublicJobsWeeklyPlanningRoute: ApiPublicJobsWeeklyPlanningRoute,

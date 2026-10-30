@@ -42,6 +42,15 @@ function AuthPage() {
     return () => { data.subscription.unsubscribe(); if (timer) clearTimeout(timer); };
   }, [navigate]);
 
+  const forgot = async () => {
+    if (!email) { toast.error("Saisissez d'abord votre adresse e-mail."); return; }
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
+    setBusy(false);
+    if (error) toast.error(error.message);
+    else toast.success("Un e-mail de réinitialisation vous a été envoyé.");
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -92,6 +101,11 @@ function AuthPage() {
             <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
           <div className="space-y-1"><Label htmlFor="pw">Mot de passe</Label>
             <Input id="pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+          {mode === "login" && (
+            <button type="button" className="text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline" onClick={forgot} disabled={busy}>
+              Mot de passe oublié ?
+            </button>
+          )}
           <Button type="submit" className="w-full" disabled={busy}>{mode === "login" ? "Se connecter" : "Créer le compte"}</Button>
         </form>
         <Button type="button" variant="link" className="h-auto w-full whitespace-normal text-center text-sm text-muted-foreground"
