@@ -60,9 +60,7 @@ export function buildDescription(input: Assignment): string {
   const a = maskIfToConfirm(input);
   const lines: string[] = [];
   if (a.address) {
-    const enc = encodeURIComponent(a.address);
     lines.push(`Adresse: ${a.address}`);
-    lines.push(`Google Maps: https://www.google.com/maps/search/?api=1&query=${enc}`);
     lines.push(`Waze: ${wazeInvitationUrl(a.address)}`);
   }
   if (a.notes) lines.push("", a.notes);
@@ -198,25 +196,22 @@ export function googlePayload(input: Assignment, techs: Technician[]) {
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-/** Description HTML chaleureuse pour l'invitation Google Agenda. */
+/** Invitation concise : destinations masquées derrière des libellés, sans doublon d'itinéraire. */
 export function buildHtmlDescription(input: Assignment): string {
   const a = maskIfToConfirm(input);
   const parts: string[] = [];
-  parts.push(`👋 <b>Bonjour !</b><br>Une nouvelle mission vous attend. Voici tout ce qu'il faut savoir :`);
-  parts.push(`<br><br>🎬 <b>Mission :</b> ${esc(a.title)}`);
+  parts.push(`<b>Mission :</b> ${esc(a.title)}`);
   if (input.toConfirm) {
-    parts.push(`<br><br>⏳ <i>Ce rendez-vous est encore à confirmer. Gardez le créneau libre, les détails arrivent très vite !</i>`);
+    parts.push(`<br><i>Rendez-vous à confirmer.</i>`);
   }
   if (a.address) {
-    const enc = encodeURIComponent(a.address);
-    parts.push(`<br>📍 <b>Où :</b> ${esc(a.address)}`);
-    parts.push(`<br>🚗 <a href="${wazeInvitationUrl(a.address)}">Y aller avec Waze</a> · 🗺️ <a href="https://www.google.com/maps/search/?api=1&query=${enc}">Ouvrir dans Google Maps</a>`);
+    parts.push(`<br><b>Adresse :</b> ${esc(a.address)}`);
+    parts.push(`<br><a href="${wazeInvitationUrl(a.address)}">Itinéraire Waze</a>`);
   }
-  if (a.notes && !input.toConfirm) parts.push(`<br><br>📝 <b>Notes :</b><br>${esc(a.notes).replace(/\n/g, "<br>")}`);
-  if (a.link) parts.push(`<br><br>🔗 <a href="${esc(a.link)}">Lien utile</a>`);
+  if (a.notes && !input.toConfirm) parts.push(`<br><br><b>Notes :</b><br>${esc(a.notes).replace(/\n/g, "<br>")}`);
+  if (a.link) parts.push(`<br><br><a href="${esc(a.link).replace(/"/g, "&quot;")}">Lien utile</a>`);
   const teamsUrl = a.teamsUrl ? normalizeTeamsUrl(a.teamsUrl) : undefined;
-  if (teamsUrl) parts.push(`<br><br>💻 <a href="${esc(teamsUrl).replace(/"/g, "&quot;")}">Rejoindre la réunion Teams</a>`);
-  if (a.attachments?.length) parts.push(`<br><br>📎 Documents joints : ${a.attachments.map((f) => esc(f.name)).join(", ")}`);
-  parts.push(`<br><br>Bonne mission et merci ! 🙌<br><i>— L'équipe Planning Cinemeccanica</i>`);
+  if (teamsUrl) parts.push(`<br><br><a href="${esc(teamsUrl).replace(/"/g, "&quot;")}">Rejoindre Teams</a>`);
+  if (a.attachments?.length) parts.push(`<br><br><b>Documents joints :</b> ${a.attachments.map((f) => esc(f.name)).join(", ")}`);
   return parts.join("");
 }
