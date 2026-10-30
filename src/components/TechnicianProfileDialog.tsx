@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Phone, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
@@ -79,14 +79,28 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
             <DialogDescription>Visible uniquement par les super utilisateurs.</DialogDescription>
           </DialogHeader>
           <div className="max-h-[65vh] space-y-4 overflow-y-auto pr-1">
-            <div className="grid grid-cols-[1fr_8rem] gap-3">
+            <div className="grid grid-cols-[1fr_10rem] gap-3">
               <div className="space-y-1">
                 <Label>Téléphone</Label>
-                <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="06 12 34 56 78" />
+                <div className="flex gap-1">
+                  <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="06 12 34 56 78" />
+                  {phone.trim() && (
+                    <Button variant="outline" size="icon" asChild>
+                      <a href={`tel:${phone.replace(/[^\d+]/g, "")}`} aria-label={`Appeler ${phone}`} title="Appeler"><Phone /></a>
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="space-y-1">
                 <Label>Poste 3CX</Label>
-                <Input inputMode="numeric" value={ext3cx} onChange={(e) => setExt3cx(e.target.value)} placeholder="101" />
+                <div className="flex gap-1">
+                  <Input inputMode="numeric" value={ext3cx} onChange={(e) => setExt3cx(e.target.value)} placeholder="101" />
+                  {ext3cx.trim() && (
+                    <Button variant="outline" size="icon" asChild>
+                      <a href={`tel:${ext3cx.replace(/[^\d+*#]/g, "")}`} aria-label={`Appeler le poste ${ext3cx}`} title="Appeler avec 3CX"><Phone /></a>
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
