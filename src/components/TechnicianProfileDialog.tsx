@@ -9,14 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-type Trainings = { barco1?: boolean; barco2?: boolean; christie?: boolean; dolby?: boolean };
+type Trainings = { barco1?: boolean; barco2?: boolean; christie?: boolean; dolby?: boolean; habElec?: boolean; cacesNacelle?: boolean };
 type Item = { name: string; sn: string };
 
-const TRAININGS: Array<[keyof Trainings, string]> = [
-  ["barco1", "Barco niveau 1"],
-  ["barco2", "Barco niveau 2"],
-  ["christie", "Christie"],
-  ["dolby", "Dolby"],
+const TRAINING_GROUPS: Array<{ label: string; items: Array<[keyof Trainings, string]> }> = [
+  { label: "Projecteur", items: [["barco1", "Barco niveau 1"], ["barco2", "Barco niveau 2"], ["christie", "Christie"]] },
+  { label: "Son", items: [["dolby", "Dolby Atmos"]] },
+  { label: "Autres", items: [["habElec", "Habilitation électrique"], ["cacesNacelle", "CACES Nacelle"]] },
 ];
 
 /** Fiche technicien réservée aux super utilisateurs. */
@@ -94,14 +93,19 @@ export function TechnicianProfileDialog({ technicianId, name, light }: { technic
             </div>
             <div className="space-y-2">
               <Label>Formations</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {TRAININGS.map(([k, label]) => (
-                  <label key={k} className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={!!trainings[k]} onCheckedChange={(v) => setTrainings((t) => ({ ...t, [k]: v === true }))} />
-                    {label}
-                  </label>
-                ))}
-              </div>
+              {TRAINING_GROUPS.map((g) => (
+                <div key={g.label} className="rounded border p-2">
+                  <div className="mb-1 text-xs font-semibold uppercase text-muted-foreground">{g.label}</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {g.items.map(([k, label]) => (
+                      <label key={k} className="flex items-center gap-2 text-sm">
+                        <Checkbox checked={!!trainings[k]} onCheckedChange={(v) => setTrainings((t) => ({ ...t, [k]: v === true }))} />
+                        {label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
