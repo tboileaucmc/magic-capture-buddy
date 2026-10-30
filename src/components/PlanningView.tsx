@@ -617,6 +617,7 @@ function AssignmentDialog({
   const anchorISO = existing?.dateISO ?? dateISO;
   const startISO = weekly ? nextWeeklyDate(anchorISO, Number(repeatDay)) : anchorISO;
   const isFullDay = fullDay && !weekly;
+  const missionEndTime = isFullDay ? "18:00" : endTime;
   const startHalfVal: HalfDay = weekly ? (startTime < "12:00" ? "AM" : "PM") : isFullDay ? "AM" : existing?.half ?? half;
   const missionEndISO = weekly || isFullDay ? startISO : endDateISO;
   const missionEndHalf: HalfDay = weekly ? (endTime <= "12:00" ? "AM" : "PM") : isFullDay ? "PM" : endHalf;
@@ -681,7 +682,7 @@ function AssignmentDialog({
       title: title.trim(),
       address: address.trim(),
       startTime,
-      endTime,
+      endTime: missionEndTime,
       notes: notes.trim() || undefined,
       link: link.trim() || undefined,
       teamsUrl: normalizeTeamsUrl(teamsUrl),
@@ -709,7 +710,7 @@ function AssignmentDialog({
     title: title || "Mission",
     address,
     startTime,
-    endTime,
+    endTime: missionEndTime,
     notes,
     link,
     teamsUrl: normalizeTeamsUrl(teamsUrl),
@@ -818,7 +819,7 @@ function AssignmentDialog({
               <Label className="text-xs uppercase text-muted-foreground">Période de la mission</Label>
               {!weekly && (
                 <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
-                  <Checkbox checked={fullDay} onCheckedChange={(v) => setFullDay(v === true)} />
+                  <Checkbox checked={fullDay} onCheckedChange={(v) => { setFullDay(v === true); if (v === true) setEndTime("18:00"); }} />
                   Journée entière
                 </label>
               )}
@@ -865,7 +866,7 @@ function AssignmentDialog({
             </div>
             <div className="grid gap-2">
               <Label htmlFor="mission-end">Fin</Label>
-              <Input id="mission-end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+              <Input id="mission-end" type="time" value={isFullDay ? "18:00" : endTime} disabled={isFullDay} onChange={(e) => setEndTime(e.target.value)} />
             </div>
           </div>
 
