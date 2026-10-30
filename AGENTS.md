@@ -7,7 +7,8 @@
 - Write access is role-based: user_roles (admin/editor) + can_edit() gate planning_state writes in RLS and in Google server functions; accounts without a role are read-only, and only admins manage roles via admin_* RPCs.
 - Drive attachments are tagged with appProperties.planningAttachment so the daily purge cron only trashes app-uploaded files older than its retention window, never other Drive files.
 - Validate attachment formats in the browser-safe planning-attachments helper and normalize email MIME types by extension because browsers often leave EML/MSG types empty.
-- Scope Cinemeccanica brand tokens to `.cmc-theme` / `.cmc-theme-light`, with authentication-specific surfaces under `.cmc-auth`; portal dialogs retain independent readable surfaces.
+- Scope Cinemeccanica brand tokens to `.cmc-theme` / `.cmc-theme-light`, with authentication-specific surfaces under `.cmc-auth`; mission-sheet portals explicitly receive the current planning theme, while other portals retain independent readable surfaces.
+- Mission-sheet tabs group identity, periods, video calls, and documents; field state stays in the dialog so tab navigation never discards drafts.
 - Keep planning navigation date input in a separate draft until blur or Enter, then validate before selecting the week; this prevents partial keyboard edits from resetting the displayed date.
 - Classify national French holidays and weekends in the browser-safe planning-day helper, with holiday precedence and scoped theme tokens; this keeps date rules testable and mission category colors intact.
 - Keep assignment stacks content-sized with explicit minimum heights, not percentage heights or flex growth inside table cells, so Firefox and Chromium expand multi-mission rows consistently without overlap.
