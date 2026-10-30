@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, ChevronDown, Shield, Tags, History, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock } from "lucide-react";
 import { duplicateWeek } from "@/lib/planning-duplicate";
 import { openWaze } from "@/lib/waze";
 import { toast } from "sonner";
@@ -105,6 +105,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
   const [techDialog, setTechDialog] = useState(false);
   const [editingTech, setEditingTech] = useState<Tech | null>(null);
   const [catDialog, setCatDialog] = useState(false);
+  const [adminDialog, setAdminDialog] = useState<"broadcast" | "users" | "history" | null>(null);
   const [dupOpen, setDupOpen] = useState(false);
   const [dupTarget, setDupTarget] = useState("");
   const [dupTechs, setDupTechs] = useState<Set<string>>(new Set());
@@ -247,19 +248,27 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-            {canEdit && (
-              <>
-                <Button onClick={() => setTechDialog(true)} variant="secondary">
-                  <Plus /> Technicien
-                </Button>
-                <Button onClick={() => setCatDialog(true)} variant="secondary">
-                  <Plus /> Catégorie
-                </Button>
-                <BroadcastDialog />
-              </>
+            {(canEdit || isAdmin) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="secondary"><Shield /> Administrateur <ChevronDown /></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className={`w-56 ${light ? "cmc-theme-light" : "cmc-theme"}`}>
+                  {canEdit && <>
+                    <DropdownMenuItem onSelect={() => setTechDialog(true)}><Users /> Techniciens</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setCatDialog(true)}><Tags /> Catégories</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setAdminDialog("broadcast")}><Mail /> Envoyer le planning</DropdownMenuItem>
+                  </>}
+                  {isAdmin && <>
+                    <DropdownMenuItem onSelect={() => setAdminDialog("users")}><Users /> Utilisateurs</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setAdminDialog("history")}><History /> Historique support</DropdownMenuItem>
+                  </>}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-            {isAdmin && <UsersDialog />}
-            {isAdmin && <SupportHistoryDialog />}
+            {canEdit && <BroadcastDialog open={adminDialog === "broadcast"} onOpenChange={(open) => setAdminDialog(open ? "broadcast" : null)} />}
+            {isAdmin && <UsersDialog open={adminDialog === "users"} onOpenChange={(open) => setAdminDialog(open ? "users" : null)} />}
+            {isAdmin && <SupportHistoryDialog open={adminDialog === "history"} onOpenChange={(open) => setAdminDialog(open ? "history" : null)} />}
             {isSupportEditor && (
               <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">Écriture : support</span>
             )}
