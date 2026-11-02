@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Protéger les formations et cartes GR/BTP côté serveur et vérifier les exports et les accès selon les rôles.
 - [x] Corriger le lien Waze des invitations Android via une ouverture dédiée ; lancement réel sur téléphone à vérifier.
 - [x] Réorganiser la fiche de mission par rubriques et reprendre le thème actif du planning.
 - [x] Choix multiple des techniciens pour la duplication de semaine, selon les droits d’écriture.
