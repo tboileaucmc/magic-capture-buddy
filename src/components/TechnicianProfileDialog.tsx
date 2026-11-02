@@ -134,7 +134,7 @@ export function TechnicianProfileDialog({ technicianId, name, light, readOnly = 
                 <Input type="date" value={lastCt} onChange={(e) => setLastCt(e.target.value)} />
               </div>
             </div>
-            <div className="space-y-2">
+            {!readOnly && <div className="space-y-2">
               <Label>Formations</Label>
               {TRAINING_GROUPS.map((g) => (
                 <div key={g.label} className="rounded border p-2">
@@ -149,7 +149,7 @@ export function TechnicianProfileDialog({ technicianId, name, light, readOnly = 
                   </div>
                 </div>
               ))}
-            </div>
+            </div>}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Matériel</Label>
