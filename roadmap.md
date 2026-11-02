@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Protéger les formations et cartes GR/BTP côté serveur et vérifier les exports et les accès selon les rôles.
+- [x] Protéger formations et cartes GR/BTP : accès serveur lecture seule/admin testés sur données existantes, exports PDF/invitations testés ; contrôle visuel connecté indisponible sans session.
 - [x] Corriger le lien Waze des invitations Android via une ouverture dédiée ; lancement réel sur téléphone à vérifier.
 - [x] Réorganiser la fiche de mission par rubriques et reprendre le thème actif du planning.
 - [x] Choix multiple des techniciens pour la duplication de semaine, selon les droits d’écriture.
