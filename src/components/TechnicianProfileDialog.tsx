@@ -36,8 +36,9 @@ export function TechnicianProfileDialog({ technicianId, name, light, readOnly = 
   useEffect(() => {
     if (!open) return;
     void (async () => {
-      const { data, error } = await supabase.from("technician_profiles").select("*").eq("technician_id", technicianId).maybeSingle();
+      const { data: result, error } = await supabase.rpc("get_technician_profile", { _technician_id: technicianId });
       if (error) return toast.error(error.message);
+      const data = result as { phone?: string; extension_3cx?: string; btp_card?: string; vehicle?: string; plate?: string; last_ct?: string; fuel_card?: string; trainings?: Trainings; equipment?: Item[] } | null;
       setPhone(data?.phone ?? "");
       setExt3cx(data?.extension_3cx ?? "");
       setBtpCard(data?.btp_card ?? "");
@@ -51,6 +52,7 @@ export function TechnicianProfileDialog({ technicianId, name, light, readOnly = 
   }, [open, technicianId]);
 
   const save = async () => {
+    if (readOnly) return;
     const { error } = await supabase.from("technician_profiles").upsert({
       technician_id: technicianId,
       phone: phone.trim() || null,
