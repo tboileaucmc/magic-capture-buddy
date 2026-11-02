@@ -160,6 +160,10 @@ export type Database = {
         Returns: undefined
       }
       can_edit: { Args: { _user_id: string }; Returns: boolean }
+      get_technician_profile: {
+        Args: { _technician_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
