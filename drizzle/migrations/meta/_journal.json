@@ -78,6 +78,13 @@
       "when": 1793368501169,
       "tag": "0010_technician_profiles_read_all",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793636793531,
+      "tag": "0011_protect_technician_profile_confidential_fields",
+      "breakpoints": true
     }
   ]
 }
