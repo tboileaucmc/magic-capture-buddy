@@ -50,7 +50,7 @@ export function UsersDialog({ open: controlledOpen, onOpenChange }: { open?: boo
           <DialogHeader>
             <DialogTitle>Droits des utilisateurs</DialogTitle>
             <DialogDescription>
-              Les nouveaux comptes sont en lecture seule. Passez-les en « Écriture » pour qu'ils puissent modifier le planning, ou en « Écriture support » pour ne gérer que les missions de François, Hugo, Nabil et Amaury.
+              Les nouveaux comptes sont en lecture seule. Le niveau « Écriture » permet de modifier le planning. Le niveau « Admin support » permet de créer, modifier et supprimer uniquement les missions de François, Hugo, Nabil et Amaury, sans gérer les comptes ni modifier les fiches techniciens.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -66,7 +66,7 @@ export function UsersDialog({ open: controlledOpen, onOpenChange }: { open?: boo
                       <SelectContent>
                         <SelectItem value="viewer">Lecture</SelectItem>
                         <SelectItem value="editor">Écriture</SelectItem>
-                        <SelectItem value="support_editor">Écriture support</SelectItem>
+                        <SelectItem value="support_editor">Admin support</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button variant="ghost" size="icon" aria-label={`Supprimer ${r.email}`} onClick={() => void remove(r)}>
