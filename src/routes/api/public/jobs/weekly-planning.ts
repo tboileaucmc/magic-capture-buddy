@@ -1,16 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
+import { shouldSendWeeklyPlanning } from "@/lib/planning-mail-schedule";
 
-/** Envoi automatique hebdomadaire du planning (déclenché le jeudi à 14h, heure de Paris). */
+/** Jeudi 14 h Paris, ou mercredi 17 h si le jeudi est férié. */
 export const Route = createFileRoute("/api/public/jobs/weekly-planning")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const authFailure = await authenticateCronRequest(request);
         if (authFailure) return authFailure;
-        // Planifié à 12h et 13h UTC : on n'envoie qu'à 14h heure de Paris (gère heure d'été / d'hiver).
-        const parisHour = Number(new Date().toLocaleString("en-GB", { timeZone: "Europe/Paris", hour: "2-digit", hour12: false }));
-        if (parisHour !== 14) return Response.json({ skipped: `il est ${parisHour}h à Paris` });
+        // Les deux horaires UTC couvrent été/hiver ; le filtre évite le second envoi.
+        if (!shouldSendWeeklyPlanning(new Date())) return Response.json({ skipped: "hors du créneau d’envoi hebdomadaire" });
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: row, error } = await supabaseAdmin
           .from("planning_state").select("data, broadcast_list").eq("id", "main").maybeSingle();

@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Avancer l’envoi hebdomadaire au mercredi 17 h (Paris) si le jeudi est férié, sans second envoi le jeudi : 10 tests réussis, horaires automatiques enregistrés et relus ; publication nécessaire pour appliquer la nouvelle règle au site en ligne, aucun e-mail réel de test envoyé.
 - [x] Corriger la validation d’une réunion isolée et permettre son annulation pour une seule semaine : 28 tests réussis ; enregistrement relu après rechargement, annulation Google et réunion de la semaine suivante vérifiés sur une série temporaire sans invités, puis nettoyée.
 - [x] Modifier une réunion isolée ou toute sa série : 25 tests réussis et deux choix vérifiés sur la réunion existante en connexion réelle ; enregistrement avec envoi d’invitation non testé pour ne pas notifier les techniciens.
 - [x] Protéger formations et cartes GR/BTP : accès serveur lecture seule/admin testés sur données existantes, exports PDF/invitations testés ; contrôle visuel connecté indisponible sans session.
