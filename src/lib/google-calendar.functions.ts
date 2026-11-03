@@ -16,7 +16,14 @@ const schema = z.object({
   meet: z.boolean().default(false),
   reminder15: z.boolean().default(false),
   attachments: z
-    .array(z.object({ name: z.string().max(300), type: z.string().max(200), dataUrl: z.string() }))
+    .array(
+      z.object({
+        name: z.string().max(300),
+        type: z.enum(["image/jpeg", "image/png", "application/pdf", "message/rfc822", "application/vnd.ms-outlook"]),
+        // 20 Mo maximum par fichier (encodage base64 ≈ 4/3 + en-tête).
+        dataUrl: z.string().max(Math.ceil((20 * 1024 * 1024 * 4) / 3) + 200, "Fichier trop volumineux (20 Mo maximum)"),
+      }),
+    )
     .max(10)
     .default([]),
 });
