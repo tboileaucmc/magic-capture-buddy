@@ -39,7 +39,10 @@ const DRIVE = "https://connector-gateway.lovable.dev/google_drive";
 /** Dépose le fichier dans le Drive du compte planning, le rend lisible par lien, renvoie l'URL. */
 export async function uploadToDrive(f: { name: string; type: string; dataUrl: string }, lovableKey: string, driveKey: string) {
   const b64 = f.dataUrl.split(",")[1] ?? "";
+  const allowed = ["image/jpeg", "image/png", "application/pdf", "message/rfc822", "application/vnd.ms-outlook"];
+  if (!allowed.includes(f.type)) throw new Error("Format de fichier non autorisé");
   const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  if (bytes.byteLength > 20 * 1024 * 1024) throw new Error("Fichier trop volumineux (20 Mo maximum)");
   const boundary = "mission" + Date.now();
   // Marqueur permettant à la purge trimestrielle de ne toucher qu'aux pièces jointes du planning.
   const meta = JSON.stringify({ name: f.name, mimeType: f.type, appProperties: { planningAttachment: "1" } });
