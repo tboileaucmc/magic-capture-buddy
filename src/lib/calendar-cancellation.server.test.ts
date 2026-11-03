@@ -22,6 +22,27 @@ describe("Mission calendar cancellation", () => {
     }
   });
   test("does not allow planning deletion after a provider failure", async () => {
-    await assert.rejects(cancelCalendarMission("mission", "test", "test", async () => new Response("Unavailable", { status: 503 })), /\[503\]/);
+    await assert.rejects(cancelCalendarMission("mission", "test", "test", async (_input, init) => new Response("Unavailable", { status: init?.method === "PATCH" ? 200 : 503 })), /\[503\]/);
+  });
+  test("removes automatic and default reminders before notifying attendees of cancellation", async () => {
+    const calls: Array<{ url: string; method: string; body: unknown }> = [];
+    await cancelCalendarMission("mission", "test", "test", async (input, init) => {
+      calls.push({ url: String(input), method: init?.method ?? "", body: init?.body ? JSON.parse(String(init.body)) : null });
+      return new Response(null, { status: 204 });
+    });
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0]?.method, "PATCH");
+    assert.equal(calls[0]?.url.endsWith("?sendUpdates=none"), true);
+    assert.deepEqual(calls[0]?.body, { reminders: { useDefault: false, overrides: [] } });
+    assert.equal(calls[1]?.method, "DELETE");
+    assert.equal(calls[1]?.url.endsWith("?sendUpdates=all"), true);
+  });
+  test("preserves the mission for retry if reminder removal fails", async () => {
+    let calls = 0;
+    await assert.rejects(cancelCalendarMission("mission", "test", "test", async () => {
+      calls++;
+      return new Response(null, { status: 503 });
+    }), /Suppression du rappel échouée/);
+    assert.equal(calls, 1);
   });
 });
