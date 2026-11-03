@@ -43,7 +43,8 @@ function endDate(a: Assignment): Date {
 }
 
 /** Si « A confirmer », masque les informations précises mais garde l'intitulé + « à confirmer ». */
-export function maskIfToConfirm(a: Assignment): Assignment {
+export function maskIfToConfirm(input: Assignment): Assignment {
+  const a = input.remote && !/télétravail/i.test(input.title) ? { ...input, title: `${input.title} — Télétravail` } : input;
   if (!a.toConfirm) return a;
   return {
     ...a,
