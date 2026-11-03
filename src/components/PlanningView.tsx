@@ -271,7 +271,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             {isAdmin && <UsersDialog open={adminDialog === "users"} onOpenChange={(open) => setAdminDialog(open ? "users" : null)} />}
             {isAdmin && <SupportHistoryDialog open={adminDialog === "history"} onOpenChange={(open) => setAdminDialog(open ? "history" : null)} />}
             {isSupportEditor && (
-              <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">Écriture : support</span>
+              <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">Admin support</span>
             )}
             {role === "viewer" && (
               <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">Lecture seule</span>
