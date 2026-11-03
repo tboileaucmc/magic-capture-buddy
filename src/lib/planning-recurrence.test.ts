@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { assignmentOccursOn, nextWeeklyDate, weeklyRule, meetingOccurrence, saveMeetingAssignment } from "./planning-recurrence";
+import { assignmentOccursOn, nextWeeklyDate, weeklyRule, meetingOccurrence, saveMeetingAssignment, deleteMeetingAssignment } from "./planning-recurrence";
 import { buildICS, googlePayload } from "./calendar-export";
 import type { Assignment } from "./planning-types";
 
@@ -11,6 +11,21 @@ const meeting: Assignment = {
 };
 
 describe("Réunions hebdomadaires", () => {
+  it("supprime uniquement la réunion de cette semaine sans supprimer la semaine suivante", () => {
+    const occurrence = meetingOccurrence(meeting, "2026-11-06");
+    const [series] = deleteMeetingAssignment([meeting], occurrence);
+    assert.equal(assignmentOccursOn(series, "2026-11-06", "PM"), false);
+    assert.equal(assignmentOccursOn(series, "2026-11-13", "PM"), true);
+    assert.equal(series.id, "weekly-test");
+  });
+  it("supprime une réunion déplacée sans faire réapparaître la réunion originale", () => {
+    const moved = { ...meetingOccurrence(meeting, "2026-11-06"), dateISO: "2026-11-09" };
+    const out = deleteMeetingAssignment(saveMeetingAssignment([meeting], moved), moved);
+    assert.equal(out.length, 1);
+    assert.equal(assignmentOccursOn(out[0], "2026-11-06", "PM"), false);
+    assert.equal(assignmentOccursOn(out[0], "2026-11-13", "PM"), true);
+    assert.equal(deleteMeetingAssignment([meeting, moved], meeting).length, 0);
+  });
   it("répète chaque vendredi à 15h30 sans date de fin dans les invitations", () => {
     assert.equal(weeklyRule(meeting), "RRULE:FREQ=WEEKLY;BYDAY=FR");
     const payload = googlePayload(meeting, []);
