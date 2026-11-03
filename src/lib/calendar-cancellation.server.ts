@@ -3,8 +3,8 @@ export function missionEventId(id: string) {
   return "m" + Array.from(new TextEncoder().encode(id)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export async function cancelCalendarMission(id: string, lovableKey: string, calendarKey: string, request: typeof fetch = fetch) {
-  const eventUrl = `https://connector-gateway.lovable.dev/google_calendar/calendar/v3/calendars/primary/events/${missionEventId(id)}`;
+export async function cancelCalendarMission(id: string, lovableKey: string, calendarKey: string, request: typeof fetch = fetch, instanceId?: string) {
+  const eventUrl = `https://connector-gateway.lovable.dev/google_calendar/calendar/v3/calendars/primary/events/${instanceId ?? missionEventId(id)}`;
   const headers = { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": calendarKey };
   // Remove the app's reminder before cancellation, without an extra invitation email.
   const cleared = await request(`${eventUrl}?sendUpdates=none`, {
