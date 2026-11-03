@@ -651,7 +651,7 @@ function AssignmentDialog({
     const accepted = Array.from(files).flatMap((file) => {
       const type = attachmentMimeType(file);
       if (!type) {
-        toast.error(`${file.name} : format non accepté ou taille supérieure à 5 Mo`);
+        toast.error(`${file.name} : format non accepté ou taille supérieure à 20 Mo`);
         return [];
       }
       return [{ file, type }];
@@ -937,7 +937,7 @@ function AssignmentDialog({
             )}
           </div>
           <div className="grid gap-2 border-t pt-5">
-            <Label htmlFor="mission-files" className="flex items-center gap-1"><Paperclip className="size-3.5" /> Pièces jointes (JPEG, PNG, PDF, EML, MSG — 5 Mo max)</Label>
+            <Label htmlFor="mission-files" className="flex items-center gap-1"><Paperclip className="size-3.5" /> Pièces jointes (JPEG, PNG, PDF, EML, MSG — 20 Mo max)</Label>
             <Input id="mission-files" type="file" accept={ATTACHMENT_ACCEPT} multiple onChange={(e) => handleFiles(e.target.files)} />
             {attachments.length > 0 && (
               <ul className="space-y-1 text-sm">
