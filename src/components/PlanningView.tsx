@@ -628,7 +628,7 @@ function AssignmentDialog({
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? "");
   const isNoc = categories.find((c) => c.id === categoryId)?.label.trim().toUpperCase() === "NOC";
   const titlePrefill = (label?: string) =>
-    label === "Affaires" ? "AFF " : label === "Maintenance" ? "Maintenance " : "";
+    label === "Affaires" ? "AFF " : label === "Maintenance" ? "Maintenance " : label?.trim().toUpperCase() === "NOC" ? "SUPPORT" : "";
   const initialCategory = categories.find((c) => c.id === (existing?.categoryId ?? categories[0]?.id));
   const initialPrefill = existing?.title ? "" : titlePrefill(initialCategory?.label);
   const [title, setTitle] = useState(existing?.title ?? initialPrefill);
@@ -832,7 +832,7 @@ function AssignmentDialog({
                 setCategoryId(v);
                 const cat = categories.find((c) => c.id === v);
                 const prefill = titlePrefill(cat?.label);
-                if (prefill && (!title.trim() || title === lastPrefill)) {
+                if (prefill === "SUPPORT" || (prefill && (!title.trim() || title === lastPrefill))) {
                   setTitle(prefill);
                   setLastPrefill(prefill);
                 }
