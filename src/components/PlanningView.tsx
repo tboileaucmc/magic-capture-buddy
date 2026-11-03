@@ -468,6 +468,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                                       )}
                                     </div>
                                     <div className={cn("text-xs font-medium", list.length > 1 ? "line-clamp-1" : "line-clamp-2")}>{a.title}</div>
+                                    {a.remote && <div className="text-[10px] font-semibold text-primary">Télétravail</div>}
                                     <div className="text-[10px] text-muted-foreground">
                                       {isFirst ? `${a.startTime}–${a.endTime}` : "…"}
                                       {isFirst && a.endDateISO && a.endDateISO !== a.dateISO && " →"}

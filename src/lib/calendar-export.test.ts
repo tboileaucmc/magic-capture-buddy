@@ -42,3 +42,8 @@ describe("Liens de réunion Teams", () => {
     assert.ok(!googlePayload(provisional, []).description.includes(teamsUrl));
   });
 });
+it("télétravail visible dans la notification", () => {
+  const a = { id: "r", technicianIds: [], dateISO: "2026-11-02", half: "AM", categoryId: "n", title: "SUPPORT", address: "", startTime: "08:00", endTime: "17:00", remote: true } as never;
+  assert.match(googlePayload(a, []).title, /Télétravail/);
+  assert.match(buildHtmlDescription(a), /Télétravail/);
+});
