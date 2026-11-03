@@ -78,7 +78,7 @@ export function buildICS(input: Assignment, techs: Technician[]): string {
   const a = maskIfToConfirm(input);
   const start = startDate(a);
   const end = endDate(a);
-  const uid = `${a.id}@planning.local`;
+  const uid = `${a.seriesId ?? a.id}@planning.local`;
   const desc = buildDescription(a).replace(/\n/g, "\\n");
   const attendees = techs.map(
     (t) => `ATTENDEE;CN=${t.name};RSVP=TRUE:mailto:${t.email}`,
@@ -89,7 +89,7 @@ export function buildICS(input: Assignment, techs: Technician[]): string {
     "PRODID:-//Planning Techniciens//FR",
     "CALSCALE:GREGORIAN",
     "METHOD:REQUEST",
-    ...(a.recurrence ? [
+    ...(a.recurrence || a.seriesId ? [
       "BEGIN:VTIMEZONE", "TZID:Europe/Paris",
       "BEGIN:DAYLIGHT", "DTSTART:19700329T020000", "TZOFFSETFROM:+0100", "TZOFFSETTO:+0200", "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU", "END:DAYLIGHT",
       "BEGIN:STANDARD", "DTSTART:19701025T030000", "TZOFFSETFROM:+0200", "TZOFFSETTO:+0100", "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU", "END:STANDARD",
@@ -99,9 +99,11 @@ export function buildICS(input: Assignment, techs: Technician[]): string {
     `UID:${uid}`,
     `SEQUENCE:${a.sequence ?? 0}`,
     `DTSTAMP:${fmtICS(new Date())}`,
-    `DTSTART${a.recurrence ? ";TZID=Europe/Paris" : ""}:${fmtICS(start)}`,
-    `DTEND${a.recurrence ? ";TZID=Europe/Paris" : ""}:${fmtICS(end)}`,
+    `DTSTART${a.recurrence || a.seriesId ? ";TZID=Europe/Paris" : ""}:${fmtICS(start)}`,
+    `DTEND${a.recurrence || a.seriesId ? ";TZID=Europe/Paris" : ""}:${fmtICS(end)}`,
+    ...(a.seriesId && a.originalDateISO && a.originalStartTime ? [`RECURRENCE-ID;TZID=Europe/Paris:${a.originalDateISO.replace(/-/g, "")}T${a.originalStartTime.replace(":", "")}00`] : []),
     ...(weeklyRule(a) ? [weeklyRule(a)] : []),
+    ...(a.recurrence && a.excludedDates?.length ? [`EXDATE;TZID=Europe/Paris:${a.excludedDates.map((d) => `${d.replace(/-/g, "")}T${a.startTime.replace(":", "")}00`).join(",")}`] : []),
     ...(a.categoryId === "astreinte" ? ["TRANSP:TRANSPARENT"] : []),
     `SUMMARY:${a.title}`,
     `LOCATION:${a.address}`,
@@ -186,6 +188,9 @@ export function googlePayload(input: Assignment, techs: Technician[]) {
   const recurrence = weeklyRule(a);
   return {
     id: a.id,
+    occurrence: a.seriesId && a.originalDateISO && a.originalStartTime
+      ? { seriesId: a.seriesId, dateISO: a.originalDateISO, startTime: a.originalStartTime }
+      : undefined,
     title: `${input.toConfirm ? "⏳" : "🎬"} ${a.title}`,
     location: a.address,
     description: buildHtmlDescription(input),

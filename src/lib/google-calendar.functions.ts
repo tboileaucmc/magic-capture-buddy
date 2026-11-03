@@ -12,6 +12,11 @@ const schema = z.object({
   start: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   end: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   attendees: z.array(z.string().email()).max(50),
+  occurrence: z.object({
+    seriesId: z.string().min(1).max(200),
+    dateISO: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    startTime: z.string().regex(/^\d{2}:\d{2}$/),
+  }).optional(),
   recurrence: z.array(z.string().regex(/^RRULE:FREQ=WEEKLY;BYDAY=(SU|MO|TU|WE|TH|FR|SA)$/)).max(1).default([]),
   meet: z.boolean().default(false),
   reminder15: z.boolean().default(false),
@@ -82,6 +87,19 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { assertCanEditMission } = await import("./roles.server");
     await assertCanEditMission(context.supabase, context.userId, { attendees: data.attendees, missionId: data.id });
+    if (data.occurrence) {
+      await assertCanEditMission(context.supabase, context.userId, { missionId: data.occurrence.seriesId });
+      const { data: row, error } = await context.supabase.from("planning_state").select("data").eq("id", "main").maybeSingle();
+      if (error) throw new Error(error.message);
+      const planning = row?.data as unknown as { assignments?: import("./planning-types").Assignment[] };
+      const series = planning?.assignments?.find((a) => a.id === data.occurrence?.seriesId);
+      const { assignmentOccursOn } = await import("./planning-recurrence");
+      const storedException = planning?.assignments?.find((a) => a.id === data.id && a.seriesId === series?.id && a.originalDateISO === data.occurrence?.dateISO && a.originalStartTime === data.occurrence?.startTime);
+      if (!series || series.recurrence !== "weekly" || data.id !== `${series.id}--${data.occurrence.dateISO}` ||
+        (!storedException && (data.occurrence.startTime !== series.startTime || !assignmentOccursOn(series, data.occurrence.dateISO, series.half)))) {
+        throw new Error("Cette réunion ne correspond pas à la série sélectionnée");
+      }
+    }
     const lovableKey = process.env.LOVABLE_API_KEY;
     const calKey = process.env.GOOGLE_CALENDAR_API_KEY;
     if (!lovableKey || !calKey) throw new Error("Agenda Google non connecté");
@@ -91,21 +109,22 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
       "Content-Type": "application/json",
     };
     const { missionEventId } = await import("./calendar-cancellation.server");
-    const id = missionEventId(data.id);
+    const { calendarOccurrenceId } = await import("./calendar-occurrence.server");
+    const id = data.occurrence ? await calendarOccurrenceId(data.occurrence, headers) : missionEventId(data.id);
     const driveKey = process.env.GOOGLE_DRIVE_API_KEY;
     const attachments = [];
     if (driveKey) {
       for (const f of data.attachments) attachments.push(await uploadToDrive(f, lovableKey, driveKey));
     }
     const body = {
-      id,
+      ...(!data.occurrence ? { id } : {}),
       summary: data.title,
       location: data.location,
       description: data.description,
       start: { dateTime: `${data.start}:00`, timeZone: "Europe/Paris" },
       end: { dateTime: `${data.end}:00`, timeZone: "Europe/Paris" },
       attendees: data.attendees.map((email) => ({ email })),
-      recurrence: data.recurrence,
+      ...(!data.occurrence ? { recurrence: data.recurrence } : {}),
       status: "confirmed",
       colorId: "7",
       transparency: "transparent",
@@ -116,8 +135,8 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
         : {}),
     };
     const base = `${GATEWAY_URL}/calendars/primary/events`;
-    let res = await fetch(`${base}/${id}?sendUpdates=all&supportsAttachments=true&conferenceDataVersion=1`, { method: "PUT", headers, body: JSON.stringify(body) });
-    if (res.status === 404) {
+    let res = await fetch(`${base}/${id}?sendUpdates=all&supportsAttachments=true&conferenceDataVersion=1`, { method: "PATCH", headers, body: JSON.stringify(body) });
+    if (res.status === 404 && !data.occurrence) {
       res = await fetch(`${base}?sendUpdates=all&supportsAttachments=true&conferenceDataVersion=1`, { method: "POST", headers, body: JSON.stringify(body) });
     }
     if (!res.ok) {

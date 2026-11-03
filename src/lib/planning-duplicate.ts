@@ -37,6 +37,10 @@ export function duplicateWeek(
         endDateISO: a.endDateISO ? shiftISO(a.endDateISO, offset) : undefined,
         sequence: undefined,
         meetUrl: undefined,
+        seriesId: undefined,
+        originalDateISO: undefined,
+        originalStartTime: undefined,
+        excludedDates: undefined,
       };
       return copy;
     });
