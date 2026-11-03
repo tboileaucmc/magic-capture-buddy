@@ -1,8 +1,6 @@
 import { jsPDF } from "jspdf";
 import { type Assignment, type Category, type HalfDay, type Technician } from "./planning-types";
 import { assignmentOccursOn } from "./planning-recurrence";
-import { supportTechnicianIds } from "./planning-support";
-import { defaultSupportCategory } from "./planning-defaults";
 
 export type PlanningData = { technicians: Technician[]; categories: Category[]; assignments: Assignment[] };
 
@@ -35,7 +33,6 @@ const tint = (c: [number, number, number], k = 0.75) => c.map((v) => Math.round(
 
 /** Dessine le planning (techniciens × jours × demi-journées) dans un PDF A3 paysage. Renvoie le PDF en base64. */
 export function buildPlanningPdf(data: PlanningData, start: Date, days = 14): string {
-  const supportIds = supportTechnicianIds(data.technicians);
   const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a3" });
   const W = pdf.internal.pageSize.getWidth();
   const H = pdf.internal.pageSize.getHeight();
@@ -87,19 +84,19 @@ export function buildPlanningPdf(data: PlanningData, start: Date, days = 14): st
       (["AM", "PM"] as HalfDay[]).forEach((half, h) => {
         const x = m + nameW + (i * 2 + h) * cellW;
         const a = find(t.id, iso(d), half);
-        const cat = a ? data.categories.find((c) => c.id === a.categoryId) : defaultSupportCategory(t.id, supportIds, data.categories);
+        const cat = a ? data.categories.find((c) => c.id === a.categoryId) : undefined;
         const we = d.getUTCDay() === 0 || d.getUTCDay() === 6;
         const fill: [number, number, number] = cat ? tint(hexToRgb(cat.color)) : we ? [245, 245, 245] : [255, 255, 255];
         pdf.setFillColor(...fill);
         pdf.rect(x, y, cellW, rowH, "FD");
-        if (a || cat) {
+        if (a) {
           pdf.setFontSize(5.5);
           pdf.setFont("helvetica", "bold");
           pdf.setTextColor(...(cat ? hexToRgb(cat.color) : [0, 0, 0] as [number, number, number]));
-          pdf.text(`${a?.toConfirm ? "* " : ""}${cat?.label ?? ""}`, x + 0.8, y + 2.8, { maxWidth: cellW - 1.6 });
+          pdf.text(`${a.toConfirm ? "* " : ""}${cat?.label ?? ""}`, x + 0.8, y + 2.8, { maxWidth: cellW - 1.6 });
           pdf.setTextColor(30, 30, 30);
           pdf.setFont("helvetica", "normal");
-          if (a) pdf.text(pdf.splitTextToSize(a.title, cellW - 1.6).slice(0, Math.floor((rowH - 4) / 2.3)), x + 0.8, y + 5.5);
+          pdf.text(pdf.splitTextToSize(a.title, cellW - 1.6).slice(0, Math.floor((rowH - 4) / 2.3)), x + 0.8, y + 5.5);
         }
       });
     });

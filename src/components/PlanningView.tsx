@@ -11,7 +11,6 @@ import { SupportHistoryDialog } from "@/components/SupportHistoryDialog";
 import { WeekNumberInput } from "@/components/WeekNumberInput";
 import { TechnicianProfileDialog } from "@/components/TechnicianProfileDialog";
 import { supportTechnicianIds, isSupportOnly } from "@/lib/planning-support";
-import { defaultSupportCategory } from "@/lib/planning-defaults";
 import { CinemaAddressSuggestions } from "@/components/CinemaAddressSuggestions";
 import { PlanningDateInput } from "@/components/PlanningDateInput";
 import { frenchHolidayName, planningDayKind } from "@/lib/planning-day";
@@ -416,7 +415,6 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                       const list = h === "AM" ? amList : pmList;
                       const single = list.length === 1 ? list[0] : null;
                       const singleCat = single ? categoryById(single.categoryId) : null;
-                      const defaultCategory = defaultSupportCategory(t.id, supportIds, data.categories, list.length > 0);
                       return (
                         <td
                           key={`${dateISO}-${h}`}
@@ -425,7 +423,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                             "cursor-pointer border-b border-r p-1 align-top transition hover:bg-accent/40",
                             dayClass(d),
                           )}
-                          style={{ minWidth: dayCount > 7 ? 64 : 72, height: 70, backgroundColor: (singleCat ?? defaultCategory)?.color ? `${(singleCat ?? defaultCategory)?.color}22` : undefined }}
+                          style={{ minWidth: dayCount > 7 ? 64 : 72, height: 70, backgroundColor: singleCat?.color ? `${singleCat.color}22` : undefined }}
                           onClick={() => canEditTech(t.id) && setEditing({ technicianId: t.id, dateISO, half: h })}
                         >
                           {list.length > 0 ? (
@@ -480,11 +478,6 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                                   <Plus className="size-3" />
                                 </div>
                               )}
-                            </div>
-                          ) : defaultCategory ? (
-                            <div className="flex min-h-[61px] flex-col items-center justify-center gap-1">
-                              <span className="text-xs font-semibold">{defaultCategory.label}</span>
-                              {canEditTech(t.id) && <Plus className="size-3 text-muted-foreground/40" />}
                             </div>
                           ) : (
                             <div className="flex min-h-[61px] items-center justify-center text-muted-foreground/40">
@@ -546,7 +539,6 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           allTechnicians={canEdit ? data.technicians : data.technicians.filter((t) => supportIds.has(t.id))}
           initialTechnicianId={editing.technicianId}
           categories={data.categories}
-          defaultCategoryId={defaultSupportCategory(editing.technicianId, supportIds, data.categories)?.id}
           dateISO={editing.dateISO}
           half={editing.half}
           existing={editing.existing}
@@ -607,7 +599,6 @@ function AssignmentDialog({
   allTechnicians,
   initialTechnicianId,
   categories,
-  defaultCategoryId,
   dateISO,
   half,
   existing,
@@ -620,7 +611,6 @@ function AssignmentDialog({
   allTechnicians: ReturnType<typeof usePlanning>["data"]["technicians"];
   initialTechnicianId: string;
   categories: ReturnType<typeof usePlanning>["data"]["categories"];
-  defaultCategoryId?: string;
   dateISO: string;
   half: HalfDay;
   existing?: Assignment;
@@ -633,10 +623,10 @@ function AssignmentDialog({
   const [technicianIds, setTechnicianIds] = useState<string[]>(
     existing?.technicianIds ?? [initialTechnicianId],
   );
-  const [categoryId, setCategoryId] = useState(existing?.categoryId ?? defaultCategoryId ?? categories[0]?.id ?? "");
+  const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? "");
   const titlePrefill = (label?: string) =>
     label === "Affaires" ? "AFF " : label === "Maintenance" ? "Maintenance " : "";
-  const initialCategory = categories.find((c) => c.id === (existing?.categoryId ?? defaultCategoryId ?? categories[0]?.id));
+  const initialCategory = categories.find((c) => c.id === (existing?.categoryId ?? categories[0]?.id));
   const initialPrefill = existing?.title ? "" : titlePrefill(initialCategory?.label);
   const [title, setTitle] = useState(existing?.title ?? initialPrefill);
   const [lastPrefill, setLastPrefill] = useState(initialPrefill);

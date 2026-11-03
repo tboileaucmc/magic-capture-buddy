@@ -22,17 +22,3 @@ for (const field of ["trainings", "fuel_card", "btp_card"]) {
     for (const output of exports) assert.ok(!output.includes(marker), `${field} leaked in export`);
   });
 }
-
-it("PDF shows NOC in free support slots without replacing an occupied slot", () => {
-  const noc = { id: "noc", label: "NOC", color: "#f59e0b" };
-  const data = {
-    technicians: [{ id: "tech", name: "BRABANT François", email: "tech@example.com" }],
-    categories: [noc], assignments: [mission],
-  };
-  const before = JSON.stringify(data);
-  const pdf = Buffer.from(buildPlanningPdf(data, new Date("2026-11-02T00:00:00Z"), 7), "base64").toString("latin1");
-  // Thirteen free half-days plus the category legend, but not the occupied Monday morning.
-  assert.equal((pdf.match(/\(NOC\)/g) ?? []).length, 14);
-  assert.ok(pdf.includes("Mission publique"));
-  assert.equal(JSON.stringify(data), before);
-});
