@@ -21,4 +21,4 @@
 - Raw technician profile rows are admin-only under RLS; all profile readers use get_technician_profile(), whose server-side role check and explicit public-field allowlist preserve calls while withholding confidential data from non-admins and direct exports.
 - Technician extension buttons use the browser-safe 3CX URL helper to open the web dialer in a separate tab; call confirmation stays in 3CX and ordinary phone numbers retain native telephone links.
 - Administration dialogs support controlled opening from the planning menu and remain mounted outside the dropdown so closing the menu does not discard the dialog.
-- The support-only user-facing role reuses support_editor to preserve existing assignments and database enforcement.
+- Support roles reuse support_editor; grid/PDF defaults share a display-only helper, never persisted or sent to Calendar.
