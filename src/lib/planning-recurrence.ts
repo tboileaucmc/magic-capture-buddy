@@ -1,7 +1,8 @@
-import rrule from "rrule";
+import * as rrule from "rrule";
 import { assignmentSlots, type Assignment, type HalfDay } from "./planning-types";
 
-const { RRule } = rrule;
+// Browser ESM exposes named exports; server CommonJS exposes a default object.
+const RRule = rrule.RRule ?? (rrule as typeof rrule & { default?: typeof rrule }).default?.RRule;
 
 const WEEKDAYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
@@ -23,6 +24,7 @@ export function assignmentOccursOn(a: Assignment, dateISO: string, half: HalfDay
   const rule = weeklyRule(a);
   if (!rule) return assignmentSlots(a).some((s) => s.dateISO === dateISO && s.half === half);
   if (dateISO < a.dateISO || a.excludedDates?.includes(dateISO)) return false;
+  if (!RRule) throw new Error("Le moteur de récurrence est indisponible");
   const date = new Date(`${dateISO}T00:00:00Z`);
   const recurring = RRule.fromString(rule);
   const series = new RRule({ ...recurring.origOptions, dtstart: new Date(`${a.dateISO}T00:00:00Z`), byhour: 0, byminute: 0, bysecond: 0 });
