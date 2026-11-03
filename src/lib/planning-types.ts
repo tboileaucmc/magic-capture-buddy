@@ -47,6 +47,8 @@ export type Assignment = {
   originalStartTime?: string;
   /** RDV à confirmer : on envoie seulement un créneau réservé, sans détails. */
   toConfirm?: boolean;
+  /** NOC en télétravail : icône maison dans le planning. */
+  remote?: boolean;
   /** RDV confirmé après une période « à confirmer » : signalé par une coche verte. */
   confirmed?: boolean;
   /** Version de l'événement agenda (incrémentée pour remplacer l'événement existant). */

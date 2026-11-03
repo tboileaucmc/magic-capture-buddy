@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, ChevronDown, Shield, Tags, History, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, ChevronDown, Shield, Tags, History, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock, Home } from "lucide-react";
 import { duplicateWeek } from "@/lib/planning-duplicate";
 import { openWaze } from "@/lib/waze";
 import { toast } from "sonner";
@@ -452,7 +452,9 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                                       >
                                         {cat?.label}
                                       </span>
-                                      {a.toConfirm ? (
+                                      {a.remote ? (
+                                        <Home className="size-3.5 shrink-0 text-primary" strokeWidth={2.5} aria-label="Télétravail" />
+                                      ) : a.toConfirm ? (
                                         <Star
                                           className="size-3 shrink-0 fill-amber-400 text-amber-500"
                                           aria-label="A confirmer"
@@ -624,6 +626,7 @@ function AssignmentDialog({
     existing?.technicianIds ?? [initialTechnicianId],
   );
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? "");
+  const isNoc = categories.find((c) => c.id === categoryId)?.label.trim().toUpperCase() === "NOC";
   const titlePrefill = (label?: string) =>
     label === "Affaires" ? "AFF " : label === "Maintenance" ? "Maintenance " : "";
   const initialCategory = categories.find((c) => c.id === (existing?.categoryId ?? categories[0]?.id));
@@ -643,6 +646,7 @@ function AssignmentDialog({
   const [weekly, setWeekly] = useState(existing?.recurrence === "weekly");
   const [repeatDay, setRepeatDay] = useState(String(new Date(`${existing?.dateISO ?? dateISO}T00:00:00Z`).getUTCDay()));
   const [toConfirm, setToConfirm] = useState(existing?.toConfirm ?? false);
+  const [remote, setRemote] = useState(existing?.remote ?? false);
   const [fullDay, setFullDay] = useState(!!existing && existing.half === "AM" && existing.endHalf === "PM" && (existing.endDateISO ?? existing.dateISO) === existing.dateISO);
   const [fullWeek, setFullWeek] = useState(() => {
     if (!existing || existing.half !== "AM" || existing.endHalf !== "PM" || !existing.endDateISO) return false;
@@ -751,6 +755,7 @@ function AssignmentDialog({
       googleMeet: googleMeet || undefined,
       meetUrl: googleMeet ? existing?.meetUrl : undefined,
       toConfirm: toConfirm || undefined,
+      remote: isNoc && remote ? true : undefined,
       confirmed: toConfirm ? undefined : true,
       sequence: existing ? (existing.sequence ?? 0) + 1 : 0,
       attachments,
@@ -845,6 +850,12 @@ function AssignmentDialog({
                 ))}
               </SelectContent>
             </Select>
+            {isNoc && (
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox checked={remote} onCheckedChange={(v) => setRemote(v === true)} />
+                <Home className="size-4 text-primary" /> Télétravail
+              </label>
+            )}
           </div>
 
           <div className="grid gap-2">
