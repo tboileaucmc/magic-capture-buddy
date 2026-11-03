@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
-import { saveMeetingAssignment } from "./planning-recurrence";
+import { saveMeetingAssignment, deleteMeetingAssignment } from "./planning-recurrence";
 import {
   DEFAULT_CATEGORIES,
   DEFAULT_TECHNICIANS,
@@ -119,8 +119,8 @@ export function usePlanning() {
     }));
   }, []);
 
-  const deleteAssignment = useCallback((id: string) => {
-    setData((d) => ({ ...d, assignments: d.assignments.filter((a) => a.id !== id && a.seriesId !== id) }));
+  const deleteAssignment = useCallback((target: Assignment) => {
+    setData((d) => ({ ...d, assignments: deleteMeetingAssignment(d.assignments, target) }));
   }, []);
 
   const addTechnician = useCallback((t: Technician) => {

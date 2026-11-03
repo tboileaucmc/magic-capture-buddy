@@ -1,5 +1,7 @@
-import { RRule } from "rrule";
+import rrule from "rrule";
 import { assignmentSlots, type Assignment, type HalfDay } from "./planning-types";
+
+const { RRule } = rrule;
 
 const WEEKDAYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
@@ -51,4 +53,13 @@ export function saveMeetingAssignment(assignments: Assignment[], edited: Assignm
       ? { ...a, excludedDates: [...new Set([...(a.excludedDates ?? []), edited.originalDateISO])] }
       : a,
   ), edited];
+}
+
+/** Cancelling an exception must not make the original weekly meeting reappear. */
+export function deleteMeetingAssignment(assignments: Assignment[], target: Assignment): Assignment[] {
+  return assignments.filter((a) => a.id !== target.id && a.seriesId !== target.id).map((a) =>
+    a.id === target.seriesId && target.originalDateISO
+      ? { ...a, excludedDates: [...new Set([...(a.excludedDates ?? []), target.originalDateISO])] }
+      : a,
+  );
 }

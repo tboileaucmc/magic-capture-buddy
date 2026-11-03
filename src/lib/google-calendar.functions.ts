@@ -3,6 +3,11 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_calendar/calendar/v3";
+const occurrenceSchema = z.object({
+  seriesId: z.string().min(1).max(200),
+  dateISO: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/),
+});
 
 const schema = z.object({
   id: z.string().min(1).max(200),
@@ -12,11 +17,7 @@ const schema = z.object({
   start: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   end: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   attendees: z.array(z.string().email()).max(50),
-  occurrence: z.object({
-    seriesId: z.string().min(1).max(200),
-    dateISO: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    startTime: z.string().regex(/^\d{2}:\d{2}$/),
-  }).optional(),
+  occurrence: occurrenceSchema.optional(),
   recurrence: z.array(z.string().regex(/^RRULE:FREQ=WEEKLY;BYDAY=(SU|MO|TU|WE|TH|FR|SA)$/)).max(1).default([]),
   meet: z.boolean().default(false),
   reminder15: z.boolean().default(false),
@@ -68,15 +69,21 @@ export async function uploadToDrive(f: { name: string; type: string; dataUrl: st
 /** Identifiant Google stable dérivé de l'id de mission (caractères 0-9a-f autorisés). */
 export const cancelMissionInCalendar = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().min(1).max(200) }).parse(d))
+  .inputValidator((d: unknown) => z.object({ id: z.string().min(1).max(200), occurrence: occurrenceSchema.optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const { assertCanEditMission } = await import("./roles.server");
     await assertCanEditMission(context.supabase, context.userId, { missionId: data.id });
+    if (data.occurrence) {
+      const { assertCalendarOccurrence } = await import("./calendar-occurrence-validation.server");
+      await assertCalendarOccurrence(context.supabase, context.userId, data.id, data.occurrence);
+    }
     const lovableKey = process.env.LOVABLE_API_KEY;
     const calendarKey = process.env.GOOGLE_CALENDAR_API_KEY;
     if (!lovableKey || !calendarKey) throw new Error("Agenda Google non connecté : la mission est conservée");
     const { cancelCalendarMission } = await import("./calendar-cancellation.server");
-    await cancelCalendarMission(data.id, lovableKey, calendarKey);
+    const { calendarOccurrenceId } = await import("./calendar-occurrence.server");
+    const instanceId = data.occurrence ? await calendarOccurrenceId(data.occurrence, { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": calendarKey }) : undefined;
+    await cancelCalendarMission(data.id, lovableKey, calendarKey, fetch, instanceId);
     return { ok: true };
   });
 
@@ -88,17 +95,8 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
     const { assertCanEditMission } = await import("./roles.server");
     await assertCanEditMission(context.supabase, context.userId, { attendees: data.attendees, missionId: data.id });
     if (data.occurrence) {
-      await assertCanEditMission(context.supabase, context.userId, { missionId: data.occurrence.seriesId });
-      const { data: row, error } = await context.supabase.from("planning_state").select("data").eq("id", "main").maybeSingle();
-      if (error) throw new Error(error.message);
-      const planning = row?.data as unknown as { assignments?: import("./planning-types").Assignment[] };
-      const series = planning?.assignments?.find((a) => a.id === data.occurrence?.seriesId);
-      const { assignmentOccursOn } = await import("./planning-recurrence");
-      const storedException = planning?.assignments?.find((a) => a.id === data.id && a.seriesId === series?.id && a.originalDateISO === data.occurrence?.dateISO && a.originalStartTime === data.occurrence?.startTime);
-      if (!series || series.recurrence !== "weekly" || data.id !== `${series.id}--${data.occurrence.dateISO}` ||
-        (!storedException && (data.occurrence.startTime !== series.startTime || !assignmentOccursOn(series, data.occurrence.dateISO, series.half)))) {
-        throw new Error("Cette réunion ne correspond pas à la série sélectionnée");
-      }
+      const { assertCalendarOccurrence } = await import("./calendar-occurrence-validation.server");
+      await assertCalendarOccurrence(context.supabase, context.userId, data.id, data.occurrence);
     }
     const lovableKey = process.env.LOVABLE_API_KEY;
     const calKey = process.env.GOOGLE_CALENDAR_API_KEY;

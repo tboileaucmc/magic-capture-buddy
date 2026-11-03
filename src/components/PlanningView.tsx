@@ -546,9 +546,9 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             upsertAssignment(a);
             setEditing(null);
           }}
-          onDelete={async (id) => {
-            await cancelMission({ data: { id } });
-            deleteAssignment(id);
+          onDelete={async (target) => {
+            await cancelMission({ data: { id: target.id, occurrence: googlePayload(target, []).occurrence } });
+            deleteAssignment(target);
             setEditing(null);
             toast.success("Mission supprimée et annulation envoyée aux techniciens");
           }}
@@ -615,7 +615,7 @@ function AssignmentDialog({
   half: HalfDay;
   existing?: Assignment;
   onSave: (a: Assignment) => void;
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (target: Assignment) => Promise<void>;
 }) {
   const defaultStart = half === "AM" ? "08:00" : "13:30";
   const defaultEnd = half === "AM" ? "12:00" : "17:30";
@@ -1019,19 +1019,19 @@ function AssignmentDialog({
 
         <DialogFooter className="shrink-0 flex-wrap gap-3 border-t bg-background px-6 py-4 sm:justify-between sm:space-x-0">
           <div className="flex flex-wrap gap-2">
-            {existing && !existing.seriesId && (
-              <Button variant="destructive" disabled={deleting} onClick={async () => {
-                if (!confirm(existing.recurrence ? "Supprimer toute la série hebdomadaire et annuler ses invitations pour tous les techniciens assignés ?" : "Supprimer cette mission et annuler son invitation pour tous les techniciens assignés ?")) return;
+            {existing && (
+              <Button variant="destructive" disabled={deleting || saving} onClick={async () => {
+                if (!confirm(existing.seriesId ? "Supprimer cette réunion uniquement et annuler son invitation ? Les autres semaines sont conservées." : existing.recurrence ? "Supprimer toute la série hebdomadaire et annuler ses invitations pour tous les techniciens assignés ?" : "Supprimer cette mission et annuler son invitation pour tous les techniciens assignés ?")) return;
                 setDeleting(true);
                 try {
-                  await onDelete(existing.id);
+                  await onDelete(existing);
                 } catch (error) {
                   toast.error(`Mission conservée : ${error instanceof Error ? error.message : "annulation impossible"}`);
                 } finally {
                   setDeleting(false);
                 }
               }}>
-                <Trash2 /> {deleting ? "Annulation…" : "Supprimer"}
+                <Trash2 /> {deleting ? "Annulation…" : existing.seriesId ? "Supprimer cette réunion" : "Supprimer"}
               </Button>
             )}
             {(existing?.toConfirm || toConfirm) && (
