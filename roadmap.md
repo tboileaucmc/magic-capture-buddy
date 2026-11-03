@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Modifier une réunion isolée ou toute sa série, avec mise à jour des invitations et vérification.
+- [x] Modifier une réunion isolée ou toute sa série : 25 tests réussis et deux choix vérifiés sur la réunion existante en connexion réelle ; enregistrement avec envoi d’invitation non testé pour ne pas notifier les techniciens.
 - [x] Protéger formations et cartes GR/BTP : accès serveur lecture seule/admin testés sur données existantes, exports PDF/invitations testés ; contrôle visuel connecté indisponible sans session.
 - [x] Corriger le lien Waze des invitations Android via une ouverture dédiée ; lancement réel sur téléphone à vérifier.
 - [x] Réorganiser la fiche de mission par rubriques et reprendre le thème actif du planning.
