@@ -42,9 +42,8 @@ describe("Liens de réunion Teams", () => {
     assert.ok(!googlePayload(provisional, []).description.includes(teamsUrl));
   });
 });
-import { buildHtmlDescription as _html, googlePayload as _gp } from "./calendar-export";
-test("télétravail visible dans la notification", () => {
+it("télétravail visible dans la notification", () => {
   const a = { id: "r", technicianIds: [], dateISO: "2026-11-02", half: "AM", categoryId: "n", title: "SUPPORT", address: "", startTime: "08:00", endTime: "17:00", remote: true } as never;
-  expect(_gp(a, []).title).toContain("Télétravail");
-  expect(_html(a)).toContain("Télétravail");
+  assert.match(googlePayload(a, []).title, /Télétravail/);
+  assert.match(buildHtmlDescription(a), /Télétravail/);
 });
