@@ -32,3 +32,17 @@ test("Admin support cannot manage unassigned or non-support missions", () => {
   assert.equal(isSupportOnly(["a"], support), false);
   assert.equal(isSupportOnly(["unknown"], support), false);
 });
+
+import { defaultSupportCategoryId } from "./planning-support";
+describe("NOC par défaut du support", () => {
+  const cats = [{ id: "a", label: "Affaires" }, { id: "n", label: "NOC" }];
+  const support = new Set(["s1"]);
+  it("affiche NOC en semaine pour le support", () => {
+    expect(defaultSupportCategoryId(cats, "s1", support, "weekday")).toBe("n");
+  });
+  it("rien le week-end, les jours fériés ni hors support", () => {
+    expect(defaultSupportCategoryId(cats, "s1", support, "weekend")).toBeUndefined();
+    expect(defaultSupportCategoryId(cats, "s1", support, "holiday")).toBeUndefined();
+    expect(defaultSupportCategoryId(cats, "x", support, "weekday")).toBeUndefined();
+  });
+});
