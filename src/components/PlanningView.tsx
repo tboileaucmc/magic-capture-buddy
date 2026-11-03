@@ -10,7 +10,7 @@ import { useRole } from "@/lib/use-role";
 import { SupportHistoryDialog } from "@/components/SupportHistoryDialog";
 import { WeekNumberInput } from "@/components/WeekNumberInput";
 import { TechnicianProfileDialog } from "@/components/TechnicianProfileDialog";
-import { supportTechnicianIds, isSupportOnly, defaultSupportCategoryId } from "@/lib/planning-support";
+import { supportTechnicianIds, isSupportOnly } from "@/lib/planning-support";
 import { CinemaAddressSuggestions } from "@/components/CinemaAddressSuggestions";
 import { PlanningDateInput } from "@/components/PlanningDateInput";
 import { frenchHolidayName, planningDayKind } from "@/lib/planning-day";
@@ -414,9 +414,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                     return (merged ? (["AM"] as HalfDay[]) : HALVES).map((h) => {
                       const list = h === "AM" ? amList : pmList;
                       const single = list.length === 1 ? list[0] : null;
-                      const nocId = list.length === 0 ? defaultSupportCategoryId(data.categories, t.id, supportIds, planningDayKind(d)) : undefined;
-                      const nocCat = nocId ? categoryById(nocId) : null;
-                      const singleCat = single ? categoryById(single.categoryId) : nocCat;
+                      const singleCat = single ? categoryById(single.categoryId) : null;
                       return (
                         <td
                           key={`${dateISO}-${h}`}
@@ -480,12 +478,6 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                                   <Plus className="size-3" />
                                 </div>
                               )}
-                            </div>
-                          ) : nocCat ? (
-                            <div className="flex min-h-[61px] items-start p-0.5">
-                              <span className="inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold text-white" style={{ backgroundColor: nocCat.color }}>
-                                {nocCat.label}
-                              </span>
                             </div>
                           ) : (
                             <div className="flex min-h-[61px] items-center justify-center text-muted-foreground/40">
