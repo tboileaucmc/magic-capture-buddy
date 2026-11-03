@@ -8,3 +8,14 @@ export function supportTechnicianIds(techs: Array<{ id: string; name: string }>)
 export function isSupportOnly(technicianIds: string[], support: Set<string>): boolean {
   return technicianIds.length > 0 && technicianIds.every((id) => support.has(id));
 }
+
+/** Support technicians show the NOC category on free weekday slots; display-only, never stored or notified. */
+export function defaultSupportCategoryId(
+  categories: Array<{ id: string; label: string }>,
+  techId: string,
+  support: Set<string>,
+  dayKind: "holiday" | "weekend" | "weekday",
+): string | undefined {
+  if (!support.has(techId) || dayKind !== "weekday") return undefined;
+  return categories.find((c) => c.label.trim().toUpperCase() === "NOC")?.id;
+}
