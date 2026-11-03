@@ -34,15 +34,13 @@ test("Admin support cannot manage unassigned or non-support missions", () => {
 });
 
 import { defaultSupportCategoryId } from "./planning-support";
-describe("NOC par défaut du support", () => {
-  const cats = [{ id: "a", label: "Affaires" }, { id: "n", label: "NOC" }];
-  const support = new Set(["s1"]);
-  it("affiche NOC en semaine pour le support", () => {
-    expect(defaultSupportCategoryId(cats, "s1", support, "weekday")).toBe("n");
-  });
-  it("rien le week-end, les jours fériés ni hors support", () => {
-    expect(defaultSupportCategoryId(cats, "s1", support, "weekend")).toBeUndefined();
-    expect(defaultSupportCategoryId(cats, "s1", support, "holiday")).toBeUndefined();
-    expect(defaultSupportCategoryId(cats, "x", support, "weekday")).toBeUndefined();
-  });
+const cats = [{ id: "a", label: "Affaires" }, { id: "n", label: "NOC" }];
+const sup = new Set(["s1"]);
+test("NOC par défaut en semaine pour le support", () => {
+  assert.equal(defaultSupportCategoryId(cats, "s1", sup, "weekday"), "n");
+});
+test("pas de NOC le week-end, les jours fériés ni hors support", () => {
+  assert.equal(defaultSupportCategoryId(cats, "s1", sup, "weekend"), undefined);
+  assert.equal(defaultSupportCategoryId(cats, "s1", sup, "holiday"), undefined);
+  assert.equal(defaultSupportCategoryId(cats, "x", sup, "weekday"), undefined);
 });
