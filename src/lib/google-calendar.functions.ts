@@ -94,8 +94,9 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
       const planning = row?.data as unknown as { assignments?: import("./planning-types").Assignment[] };
       const series = planning?.assignments?.find((a) => a.id === data.occurrence?.seriesId);
       const { assignmentOccursOn } = await import("./planning-recurrence");
+      const storedException = planning?.assignments?.find((a) => a.id === data.id && a.seriesId === series?.id && a.originalDateISO === data.occurrence?.dateISO && a.originalStartTime === data.occurrence?.startTime);
       if (!series || series.recurrence !== "weekly" || data.id !== `${series.id}--${data.occurrence.dateISO}` ||
-        (!assignmentOccursOn({ ...series, excludedDates: [] }, data.occurrence.dateISO, series.half) && !planning?.assignments?.some((a) => a.id === data.id && a.seriesId === series.id && a.originalDateISO === data.occurrence?.dateISO && a.originalStartTime === data.occurrence?.startTime))) {
+        (!storedException && (data.occurrence.startTime !== series.startTime || !assignmentOccursOn(series, data.occurrence.dateISO, series.half)))) {
         throw new Error("Cette réunion ne correspond pas à la série sélectionnée");
       }
     }

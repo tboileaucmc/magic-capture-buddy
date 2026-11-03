@@ -103,6 +103,7 @@ export function buildICS(input: Assignment, techs: Technician[]): string {
     `DTEND${a.recurrence || a.seriesId ? ";TZID=Europe/Paris" : ""}:${fmtICS(end)}`,
     ...(a.seriesId && a.originalDateISO && a.originalStartTime ? [`RECURRENCE-ID;TZID=Europe/Paris:${a.originalDateISO.replace(/-/g, "")}T${a.originalStartTime.replace(":", "")}00`] : []),
     ...(weeklyRule(a) ? [weeklyRule(a)] : []),
+    ...(a.recurrence && a.excludedDates?.length ? [`EXDATE;TZID=Europe/Paris:${a.excludedDates.map((d) => `${d.replace(/-/g, "")}T${a.startTime.replace(":", "")}00`).join(",")}`] : []),
     ...(a.categoryId === "astreinte" ? ["TRANSP:TRANSPARENT"] : []),
     `SUMMARY:${a.title}`,
     `LOCATION:${a.address}`,

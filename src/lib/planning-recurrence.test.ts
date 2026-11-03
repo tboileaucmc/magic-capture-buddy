@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { assignmentOccursOn, nextWeeklyDate, weeklyRule } from "./planning-recurrence";
+import { assignmentOccursOn, nextWeeklyDate, weeklyRule, meetingOccurrence, saveMeetingAssignment } from "./planning-recurrence";
 import { buildICS, googlePayload } from "./calendar-export";
 import type { Assignment } from "./planning-types";
 
@@ -44,5 +44,38 @@ describe("Réunions hebdomadaires", () => {
     assert.equal(assignmentOccursOn(ordinary, "2026-11-02", "PM"), false);
     assert.equal(assignmentOccursOn(ordinary, "2026-11-06", "PM"), false);
     assert.deepEqual(googlePayload(ordinary, []).recurrence, []);
+  });
+  it("modifie uniquement le vendredi sélectionné et garde les autres vendredis à 15h30", () => {
+    const edited = { ...meetingOccurrence(meeting, "2026-11-06"), startTime: "16:00", endTime: "16:30" };
+    const [series, exception] = saveMeetingAssignment([meeting], edited);
+    assert.equal(assignmentOccursOn(series, "2026-11-06", "PM"), false);
+    assert.equal(assignmentOccursOn(exception, "2026-11-06", "PM"), true);
+    assert.equal(exception.startTime, "16:00");
+    assert.equal(series.startTime, "15:30");
+    assert.equal(assignmentOccursOn(series, "2026-11-13", "PM"), true);
+    assert.deepEqual(googlePayload(exception, []).occurrence, { seriesId: "weekly-test", dateISO: "2026-11-06", startTime: "15:30" });
+    const ics = buildICS(exception, []);
+    assert.ok(ics.includes("UID:weekly-test@planning.local"));
+    assert.ok(ics.includes("RECURRENCE-ID;TZID=Europe/Paris:20261106T153000"));
+    assert.ok(!ics.includes("RRULE:FREQ=WEEKLY"));
+  });
+  it("déplace une seule réunion et conserve son identité lors des modifications suivantes", () => {
+    const moved = { ...meetingOccurrence(meeting, "2026-11-06"), dateISO: "2026-11-09" };
+    const first = saveMeetingAssignment([meeting], moved);
+    const second = saveMeetingAssignment(first, { ...moved, title: "Réunion déplacée" });
+    assert.equal(second.length, 2);
+    assert.deepEqual(second[0].excludedDates, ["2026-11-06"]);
+    assert.equal(assignmentOccursOn(second[1], "2026-11-09", "PM"), true);
+    assert.equal(second[1].originalDateISO, "2026-11-06");
+  });
+  it("modifie la récurrence de toute la série sans écraser la réunion isolée", () => {
+    const first = saveMeetingAssignment([meeting], meetingOccurrence(meeting, "2026-11-06"));
+    const changed = saveMeetingAssignment(first, { ...first[0], startTime: "17:00" });
+    const series = changed.find((a) => a.id === meeting.id);
+    assert.ok(series);
+    assert.equal(series.startTime, "17:00");
+    assert.equal(assignmentOccursOn(series, "2026-11-13", "PM"), true);
+    assert.equal(assignmentOccursOn(series, "2026-11-06", "PM"), false);
+    assert.equal(changed.find((a) => a.seriesId)?.startTime, "15:30");
   });
 });

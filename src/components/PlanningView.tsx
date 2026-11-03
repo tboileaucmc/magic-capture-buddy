@@ -1036,7 +1036,7 @@ function AssignmentDialog({
             )}
             {(existing?.toConfirm || toConfirm) && (
               <Button
-                disabled={deleting}
+                disabled={deleting || saving}
                 onClick={() => {
                   if (!validateWeekly()) return;
                   if (teamsUrl.trim() && !normalizeTeamsUrl(teamsUrl)) {
