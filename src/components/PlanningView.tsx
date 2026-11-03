@@ -20,7 +20,7 @@ import logoAsset from "@/assets/logo-cmc.png.asset.json";
 
 import { usePlanning } from "@/lib/planning-store";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
-import { assignmentOccursOn, nextWeeklyDate } from "@/lib/planning-recurrence";
+import { assignmentOccursOn, nextWeeklyDate, meetingOccurrence } from "@/lib/planning-recurrence";
 import { downloadICS, googleCalendarUrl, googlePayload, mailtoUrl, outlookCalendarUrl, normalizeTeamsUrl } from "@/lib/calendar-export";
 import { sendMissionToCalendar, cancelMissionInCalendar } from "@/lib/google-calendar.functions";
 import type { Technician as Tech } from "@/lib/planning-types";
@@ -103,6 +103,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
     existing?: Assignment;
   } | null>(null);
   const [techDialog, setTechDialog] = useState(false);
+  const [recurringEdit, setRecurringEdit] = useState<{ technicianId: string; dateISO: string; half: HalfDay; existing: Assignment } | null>(null);
   const [editingTech, setEditingTech] = useState<Tech | null>(null);
   const [catDialog, setCatDialog] = useState(false);
   const [adminDialog, setAdminDialog] = useState<"broadcast" | "users" | "history" | null>(null);
@@ -438,7 +439,9 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       if (!canEditMission(a)) return;
-                                      setEditing({ technicianId: t.id, dateISO, half: h, existing: a });
+                                      const selected = { technicianId: t.id, dateISO, half: h, existing: a };
+                                      if (a.recurrence || a.seriesId) setRecurringEdit(selected);
+                                      else setEditing(selected);
                                     }}
                                   >
                                     <div className="mb-0.5 flex items-center gap-1">
@@ -504,6 +507,29 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           </span>
         </p>
       </div>
+
+      <Dialog open={!!recurringEdit} onOpenChange={(open) => !open && setRecurringEdit(null)}>
+        <DialogContent className={light ? "cmc-theme-light" : "cmc-theme"}>
+          <DialogHeader>
+            <DialogTitle>Modifier la réunion récurrente</DialogTitle>
+            <DialogDescription>{recurringEdit?.existing.title} · {recurringEdit?.dateISO && new Date(`${recurringEdit.dateISO}T12:00:00`).toLocaleDateString("fr-FR")}</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <Button variant="outline" onClick={() => {
+              if (!recurringEdit) return;
+              setEditing({ ...recurringEdit, existing: recurringEdit.existing.recurrence ? meetingOccurrence(recurringEdit.existing, recurringEdit.dateISO) : recurringEdit.existing });
+              setRecurringEdit(null);
+            }}><CalIcon /> Cette réunion uniquement</Button>
+            <Button onClick={() => {
+              if (!recurringEdit) return;
+              const series = recurringEdit.existing.seriesId ? data.assignments.find((a) => a.id === recurringEdit.existing.seriesId) : recurringEdit.existing;
+              if (!series || !canEditMission(series)) return;
+              setEditing({ ...recurringEdit, existing: series });
+              setRecurringEdit(null);
+            }}><Repeat /> Toute la série</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {editing && (
         <AssignmentDialog
@@ -625,6 +651,24 @@ function AssignmentDialog({
   });
   const [attachments, setAttachments] = useState(existing?.attachments ?? []);
   const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const sendCalendar = useServerFn(sendMissionToCalendar);
+
+  const persist = async (a: Assignment, message: string) => {
+    if (!a.seriesId) {
+      onSave(a);
+      pushToCalendar(a, selectedTechs, message, (meetUrl) => onSave({ ...a, meetUrl }));
+      return;
+    }
+    setSaving(true);
+    try {
+      const result = await sendCalendar({ data: googlePayload(a, selectedTechs) });
+      onSave({ ...a, meetUrl: result.meetUrl ?? a.meetUrl });
+      toast.success(message);
+    } catch (error) {
+      toast.error(`Réunion conservée : ${error instanceof Error ? error.message : error}`);
+    } finally { setSaving(false); }
+  };
 
   const [anchorISO, setAnchorISO] = useState(existing?.dateISO ?? dateISO);
   const isFullWeek = fullWeek && !weekly;
@@ -632,11 +676,11 @@ function AssignmentDialog({
   const startISO = weekly ? nextWeeklyDate(anchorISO, Number(repeatDay)) : isFullWeek ? weekMondayISO : anchorISO;
   const isFullDay = (fullDay || isFullWeek) && !weekly;
   const missionEndTime = isFullDay ? "18:00" : endTime;
-  const startHalfVal: HalfDay = weekly ? (startTime < "12:00" ? "AM" : "PM") : isFullDay ? "AM" : existing?.half ?? half;
+  const startHalfVal: HalfDay = weekly || existing?.seriesId ? (startTime < "12:00" ? "AM" : "PM") : isFullDay ? "AM" : existing?.half ?? half;
   const missionEndISO = weekly ? startISO : isFullWeek ? shiftISO(weekMondayISO, 4) : isFullDay ? startISO : endDateISO;
-  const missionEndHalf: HalfDay = weekly ? (endTime <= "12:00" ? "AM" : "PM") : isFullDay ? "PM" : endHalf;
+  const missionEndHalf: HalfDay = weekly || existing?.seriesId ? (endTime <= "12:00" ? "AM" : "PM") : isFullDay ? "PM" : endHalf;
   const validateWeekly = () => {
-    if (weekly && (!startTime || !endTime || endTime <= startTime)) {
+    if ((weekly || existing?.seriesId) && (!startTime || !endTime || endTime <= startTime || missionEndISO !== startISO)) {
       toast.error("La fin de la réunion doit être après son début, le même jour");
       return false;
     }
@@ -686,6 +730,10 @@ function AssignmentDialog({
     }
     const a: Assignment = {
       id: existing?.id ?? uid(),
+      seriesId: existing?.seriesId,
+      originalDateISO: existing?.originalDateISO,
+      originalStartTime: existing?.originalStartTime,
+      excludedDates: weekly ? existing?.excludedDates : undefined,
       technicianIds,
       dateISO: startISO,
       half: startHalfVal,
@@ -707,13 +755,15 @@ function AssignmentDialog({
       sequence: existing ? (existing.sequence ?? 0) + 1 : 0,
       attachments,
     };
-    onSave(a);
-    toast.success("Mission enregistrée");
-    pushToCalendar(a, selectedTechs, "Ordre de mission envoyé dans l'agenda des techniciens", (meetUrl) => onSave({ ...a, meetUrl }));
+    void persist(a, "Ordre de mission envoyé dans l'agenda des techniciens");
   };
 
   const currentAssignment: Assignment = {
     id: existing?.id ?? "preview",
+    seriesId: existing?.seriesId,
+    originalDateISO: existing?.originalDateISO,
+    originalStartTime: existing?.originalStartTime,
+    excludedDates: weekly ? existing?.excludedDates : undefined,
     technicianIds,
     dateISO: startISO,
     half: startHalfVal,
@@ -734,12 +784,12 @@ function AssignmentDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!deleting) onOpenChange(o); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!deleting && !saving) onOpenChange(o); }}>
       <DialogContent className={cn("mission-sheet flex max-h-[92dvh] w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden rounded-lg p-0 sm:max-w-3xl", light ? "cmc-theme-light" : "cmc-theme")}>
         <DialogHeader className="shrink-0 border-b px-6 py-5 pr-12 text-left">
           <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase text-primary"><FileText className="size-4" /> Ordre de mission</div>
           <DialogTitle className="leading-snug">
-            {existing?.recurrence ? "Modifier la série hebdomadaire" : existing ? "Modifier la mission" : "Nouvelle mission"}
+            {existing?.seriesId ? "Modifier cette réunion uniquement" : existing?.recurrence ? "Modifier la série hebdomadaire" : existing ? "Modifier la mission" : "Nouvelle mission"}
           </DialogTitle>
           <DialogDescription>
             {new Date(dateISO).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long" })}
@@ -890,7 +940,7 @@ function AssignmentDialog({
             </div>
           </div>
 
-          <div className="grid gap-3 border-t pt-4">
+          {!existing?.seriesId && <div className="grid gap-3 border-t pt-4">
             <div className="mt-2 flex items-center justify-between gap-3">
               <Label htmlFor="mission-weekly" className="flex items-center gap-2"><Repeat className="size-4" /> Répéter chaque semaine</Label>
               <Switch id="mission-weekly" checked={weekly} onCheckedChange={setWeekly} />
@@ -909,7 +959,7 @@ function AssignmentDialog({
                 <span className="text-sm text-muted-foreground">Chaque { ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"][Number(repeatDay)] } à {startTime.replace(":", "h")} (heure de Paris) · Sans date de fin</span>
               </div>
             )}
-          </div>
+          </div>}
 
 
             </TabsContent>
@@ -969,7 +1019,7 @@ function AssignmentDialog({
 
         <DialogFooter className="shrink-0 flex-wrap gap-3 border-t bg-background px-6 py-4 sm:justify-between sm:space-x-0">
           <div className="flex flex-wrap gap-2">
-            {existing && (
+            {existing && !existing.seriesId && (
               <Button variant="destructive" disabled={deleting} onClick={async () => {
                 if (!confirm(existing.recurrence ? "Supprimer toute la série hebdomadaire et annuler ses invitations pour tous les techniciens assignés ?" : "Supprimer cette mission et annuler son invitation pour tous les techniciens assignés ?")) return;
                 setDeleting(true);
@@ -1005,9 +1055,8 @@ function AssignmentDialog({
                     confirmed: true,
                     sequence: (existing?.sequence ?? 0) + 1,
                   };
-                  onSave(confirmed);
                   setToConfirm(false);
-                  pushToCalendar(confirmed, selectedTechs, "RDV confirmé : détails envoyés dans l'agenda des techniciens", (meetUrl) => onSave({ ...confirmed, meetUrl }));
+                  void persist(confirmed, "RDV confirmé : détails envoyés dans l'agenda des techniciens");
                 }}
               >
                 Confirmer le RDV
@@ -1057,7 +1106,7 @@ function AssignmentDialog({
                 <Mail /> Email
               </a>
             </Button>
-            <Button onClick={save} disabled={deleting}>Valider</Button>
+            <Button onClick={save} disabled={deleting || saving}>{saving ? "Enregistrement…" : "Valider"}</Button>
           </div>
         </DialogFooter>
       </DialogContent>
