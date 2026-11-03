@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { saveMeetingAssignment } from "./planning-recurrence";
 import {
   DEFAULT_CATEGORIES,
   DEFAULT_TECHNICIANS,
@@ -114,12 +115,12 @@ export function usePlanning() {
     // on ne remplace que la mission de même identifiant.
     setData((d) => ({
       ...d,
-      assignments: [...d.assignments.filter((x) => x.id !== a.id), a],
+      assignments: saveMeetingAssignment(d.assignments, a),
     }));
   }, []);
 
   const deleteAssignment = useCallback((id: string) => {
-    setData((d) => ({ ...d, assignments: d.assignments.filter((a) => a.id !== id) }));
+    setData((d) => ({ ...d, assignments: d.assignments.filter((a) => a.id !== id && a.seriesId !== id) }));
   }, []);
 
   const addTechnician = useCallback((t: Technician) => {
