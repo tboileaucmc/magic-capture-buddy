@@ -22,3 +22,7 @@
 - Technician extension buttons use the browser-safe 3CX URL helper to open the web dialer in a separate tab; call confirmation stays in 3CX and ordinary phone numbers retain native telephone links.
 - Administration dialogs support controlled opening from the planning menu and remain mounted outside the dropdown so closing the menu does not discard the dialog.
 - The support-only user-facing role reuses support_editor to preserve existing assignments and database enforcement.
+<!-- LOVABLE:BEGIN -->
+- Resolve category-specific hours through planning-hours for consistent form, saved mission and exports.
+- Split finite multi-day missions into ordinary assignments per selected technician/date; retain the original event ID once, await Calendar updates and replace planning in one mutation to avoid overlapping days.
+<!-- LOVABLE:END -->
