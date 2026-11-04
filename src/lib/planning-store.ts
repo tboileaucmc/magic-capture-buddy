@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { saveMeetingAssignment, deleteMeetingAssignment } from "./planning-recurrence";
+import { replaceSplitMission } from "./planning-week-edit";
 import {
   DEFAULT_CATEGORIES,
   DEFAULT_TECHNICIANS,
@@ -162,5 +163,10 @@ export function usePlanning() {
     setData((d) => ({ ...d, assignments: [...d.assignments, ...list] }));
   }, []);
 
-  return { data, hydrated, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory, updateCategoryColor, addAssignments };
+  const replaceAssignmentDays = useCallback((original: Assignment, replacements: Assignment[]) => {
+    const assignments = replaceSplitMission(data.assignments, original, replacements);
+    setData((current) => ({ ...current, assignments }));
+  }, [data.assignments]);
+
+  return { data, hydrated, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory, updateCategoryColor, addAssignments, replaceAssignmentDays };
 }
