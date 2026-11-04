@@ -3,6 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, ChevronDown, Shield, Tags, History, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock, Home } from "lucide-react";
 import { duplicateWeek } from "@/lib/planning-duplicate";
 import { missionHours } from "@/lib/planning-hours";
+import { missionDates, splitMissionDays } from "@/lib/planning-week-edit";
+import { MissionDaysDialog } from "@/components/MissionDaysDialog";
 import { openWaze } from "@/lib/waze";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
@@ -91,7 +93,7 @@ const VIEW_DAYS: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 const VIEW_STEP: Record<ViewMode, number> = { "1w": 7, "2w": 14, "1m": 28 };
 
 export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggleTheme: () => void }) {
-  const { data, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory, updateCategoryColor, addAssignments } = usePlanning();
+  const { data, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory, updateCategoryColor, addAssignments, replaceAssignmentDays } = usePlanning();
   const { role, canEdit, isSupportEditor, isAdmin } = useRole();
   const supportIds = useMemo(() => supportTechnicianIds(data.technicians), [data.technicians]);
   const canEditTech = (id: string) => canEdit || (isSupportEditor && supportIds.has(id));
@@ -103,9 +105,11 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
     dateISO: string;
     half: HalfDay;
     existing?: Assignment;
+    dayEdit?: { original: Assignment; dates: string[] };
   } | null>(null);
   const [techDialog, setTechDialog] = useState(false);
   const [recurringEdit, setRecurringEdit] = useState<{ technicianId: string; dateISO: string; half: HalfDay; existing: Assignment } | null>(null);
+  const [daysEdit, setDaysEdit] = useState<{ technicianId: string; dateISO: string; half: HalfDay; existing: Assignment } | null>(null);
   const [editingTech, setEditingTech] = useState<Tech | null>(null);
   const [catDialog, setCatDialog] = useState(false);
   const [adminDialog, setAdminDialog] = useState<"broadcast" | "users" | "history" | "usage" | null>(null);
@@ -134,6 +138,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
     toast.success(`${copies.length} mission(s) dupliquée(s) — invitations non envoyées`);
   };
   const cancelMission = useServerFn(cancelMissionInCalendar);
+  const sendSplitMission = useServerFn(sendMissionToCalendar);
 
   const dayCount = VIEW_DAYS[viewMode];
 
@@ -445,6 +450,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                                       if (!canEditMission(a)) return;
                                       const selected = { technicianId: t.id, dateISO, half: h, existing: a };
                                       if (a.recurrence || a.seriesId) setRecurringEdit(selected);
+                                      else if (missionDates(a).length > 1) setDaysEdit(selected);
                                       else setEditing(selected);
                                     }}
                                   >
@@ -538,6 +544,24 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
         </DialogContent>
       </Dialog>
 
+      {daysEdit && <MissionDaysDialog
+        light={light} mission={daysEdit.existing} dateISO={daysEdit.dateISO}
+        technicianName={data.technicians.find((t) => t.id === daysEdit.technicianId)?.name ?? ""}
+        onClose={() => setDaysEdit(null)}
+        onEntire={() => { setEditing(daysEdit); setDaysEdit(null); }}
+        onDays={(dates) => {
+          const date = [...dates].sort()[0];
+          if (!date) return;
+          const original = daysEdit.existing;
+          setEditing({ ...daysEdit, dateISO: date, dayEdit: { original, dates }, existing: {
+            ...original, technicianIds: [daysEdit.technicianId], dateISO: date, endDateISO: date,
+            half: date === original.dateISO ? original.half : "AM",
+            endHalf: date === (original.endDateISO ?? original.dateISO) ? original.endHalf ?? original.half : "PM",
+          } });
+          setDaysEdit(null);
+        }}
+      />}
+
       {editing && (
         <AssignmentDialog
           light={light}
@@ -549,6 +573,20 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           dateISO={editing.dateISO}
           half={editing.half}
           existing={editing.existing}
+          dayEditDates={editing.dayEdit?.dates}
+          onSaveDays={editing.dayEdit ? async (edited) => {
+            const context = editing.dayEdit;
+            if (!context || !canEditMission(context.original)) throw new Error("Modification non autorisée");
+            const current = data.assignments.find((a) => a.id === context.original.id);
+            if (JSON.stringify(current) !== JSON.stringify(context.original)) throw new Error("Cette mission a changé : rouvrez-la");
+            const replacements = splitMissionDays(context.original, editing.technicianId, context.dates, edited, uid);
+            for (const mission of replacements) {
+              const result = await sendSplitMission({ data: googlePayload(mission, data.technicians.filter((t) => mission.technicianIds.includes(t.id))) });
+              if (result.meetUrl) mission.meetUrl = result.meetUrl;
+            }
+            replaceAssignmentDays(context.original, replacements);
+            setEditing(null);
+          } : undefined}
           onSave={(a) => {
             upsertAssignment(a);
             setEditing(null);
@@ -611,6 +649,8 @@ function AssignmentDialog({
   existing,
   onSave,
   onDelete,
+  dayEditDates,
+  onSaveDays,
 }: {
   light: boolean;
   open: boolean;
@@ -623,6 +663,8 @@ function AssignmentDialog({
   existing?: Assignment;
   onSave: (a: Assignment) => void;
   onDelete: (target: Assignment) => Promise<void>;
+  dayEditDates?: string[];
+  onSaveDays?: (a: Assignment) => Promise<void>;
 }) {
   const defaultStart = half === "AM" ? "08:00" : "13:30";
   const defaultEnd = half === "AM" ? "12:00" : "17:30";
@@ -664,6 +706,16 @@ function AssignmentDialog({
   const sendCalendar = useServerFn(sendMissionToCalendar);
 
   const persist = async (a: Assignment, message: string) => {
+    if (onSaveDays) {
+      setSaving(true);
+      try {
+        await onSaveDays(a);
+        toast.success("Journées modifiées et invitations mises à jour");
+      } catch (error) {
+        toast.error(`Planning conservé ; certaines invitations ont pu être mises à jour. Réessayez : ${error instanceof Error ? error.message : error}`);
+      } finally { setSaving(false); }
+      return;
+    }
     if (!a.seriesId) {
       onSave(a);
       pushToCalendar(a, selectedTechs, message, (meetUrl) => onSave({ ...a, meetUrl }));
@@ -802,10 +854,10 @@ function AssignmentDialog({
         <DialogHeader className="shrink-0 border-b px-6 py-5 pr-12 text-left">
           <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase text-primary"><FileText className="size-4" /> Ordre de mission</div>
           <DialogTitle className="leading-snug">
-            {existing?.seriesId ? "Modifier cette réunion uniquement" : existing?.recurrence ? "Modifier la série hebdomadaire" : existing ? "Modifier la mission" : "Nouvelle mission"}
+            {dayEditDates ? "Modifier les journées sélectionnées" : existing?.seriesId ? "Modifier cette réunion uniquement" : existing?.recurrence ? "Modifier la série hebdomadaire" : existing ? "Modifier la mission" : "Nouvelle mission"}
           </DialogTitle>
           <DialogDescription>
-            {new Date(dateISO).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long" })}
+            {dayEditDates ? dayEditDates.map((date) => new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short" })).join(" · ") : new Date(dateISO).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long" })}
             {" • "}{half === "AM" ? "Matin" : "Après-midi"}
           </DialogDescription>
         </DialogHeader>
@@ -872,11 +924,12 @@ function AssignmentDialog({
               {allTechnicians.length === 0 && (
                 <span className="text-xs text-muted-foreground">Aucun technicien disponible.</span>
               )}
-              {allTechnicians.map((t) => {
+              {allTechnicians.filter((t) => !dayEditDates || technicianIds.includes(t.id)).map((t) => {
                 const checked = technicianIds.includes(t.id);
                 return (
                   <Button
                     type="button"
+                    disabled={!!dayEditDates}
                     key={t.id}
                     onClick={() => toggleTech(t.id)}
                     variant={checked ? "default" : "outline"}
@@ -906,7 +959,7 @@ function AssignmentDialog({
                   Journée entière
                 </label>
               )}
-              {!weekly && (
+              {!weekly && !dayEditDates && (
                 <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
                   <Checkbox checked={fullWeek} onCheckedChange={(v) => { setFullWeek(v === true); if (v === true) { setFullDay(false); setEndTime("18:00"); } }} />
                   Semaine entière (lun.–ven.)
@@ -916,7 +969,7 @@ function AssignmentDialog({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr_auto]">
               <div className="grid gap-1">
                 <Label className="text-xs">Du</Label>
-                <Input type="date" value={startISO} disabled={weekly} onChange={(e) => { const v = e.target.value; if (!v) return; const delta = Math.round((Date.parse(`${v}T00:00:00Z`) - Date.parse(`${anchorISO}T00:00:00Z`)) / 86400000); setAnchorISO(v); setEndDateISO((d) => { const n = shiftISO(d, delta); return n < v ? v : n; }); }} />
+                <Input type="date" value={startISO} disabled={weekly || !!dayEditDates} onChange={(e) => { const v = e.target.value; if (!v) return; const delta = Math.round((Date.parse(`${v}T00:00:00Z`) - Date.parse(`${anchorISO}T00:00:00Z`)) / 86400000); setAnchorISO(v); setEndDateISO((d) => { const n = shiftISO(d, delta); return n < v ? v : n; }); }} />
               </div>
               <div className="grid gap-1">
                 <Label className="text-xs">&nbsp;</Label>
@@ -929,7 +982,7 @@ function AssignmentDialog({
                 <Input
                   type="date"
                   value={missionEndISO}
-                  disabled={weekly || isFullDay}
+                  disabled={weekly || isFullDay || !!dayEditDates}
                   min={startISO}
                   onChange={(e) => setEndDateISO(e.target.value || startISO)}
                 />
@@ -959,7 +1012,7 @@ function AssignmentDialog({
             </div>
           </div>
 
-          {!existing?.seriesId && <div className="grid gap-3 border-t pt-4">
+          {!existing?.seriesId && !dayEditDates && <div className="grid gap-3 border-t pt-4">
             <div className="mt-2 flex items-center justify-between gap-3">
               <Label htmlFor="mission-weekly" className="flex items-center gap-2"><Repeat className="size-4" /> Répéter chaque semaine</Label>
               <Switch id="mission-weekly" checked={weekly} onCheckedChange={setWeekly} />
@@ -1038,7 +1091,7 @@ function AssignmentDialog({
 
         <DialogFooter className="shrink-0 flex-wrap gap-3 border-t bg-background px-6 py-4 sm:justify-between sm:space-x-0">
           <div className="flex flex-wrap gap-2">
-            {existing && (
+            {existing && !dayEditDates && (
               <Button variant="destructive" disabled={deleting || saving} onClick={async () => {
                 if (!confirm(existing.seriesId ? "Supprimer cette réunion uniquement et annuler son invitation ? Les autres semaines sont conservées." : existing.recurrence ? "Supprimer toute la série hebdomadaire et annuler ses invitations pour tous les techniciens assignés ?" : "Supprimer cette mission et annuler son invitation pour tous les techniciens assignés ?")) return;
                 setDeleting(true);
