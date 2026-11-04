@@ -2,6 +2,7 @@ import { Fragment, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, ChevronDown, Shield, Tags, History, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock, Home } from "lucide-react";
 import { duplicateWeek } from "@/lib/planning-duplicate";
+import { missionHours } from "@/lib/planning-hours";
 import { openWaze } from "@/lib/waze";
 import { toast } from "sonner";
 import { BroadcastDialog } from "@/components/BroadcastDialog";
@@ -683,7 +684,10 @@ function AssignmentDialog({
   const weekMondayISO = shiftISO(anchorISO, -((new Date(`${anchorISO}T00:00:00Z`).getUTCDay() + 6) % 7));
   const startISO = weekly ? nextWeeklyDate(anchorISO, Number(repeatDay)) : isFullWeek ? weekMondayISO : anchorISO;
   const isFullDay = (fullDay || isFullWeek) && !weekly;
-  const missionEndTime = isFullDay ? "18:00" : endTime;
+  const { startTime: missionStartTime, endTime: missionEndTime, onCallFullDay } = missionHours({
+    categoryId, categoryLabel: categories.find((c) => c.id === categoryId)?.label,
+    fullDay, fullWeek, weekly, startTime, endTime,
+  });
   const startHalfVal: HalfDay = weekly || existing?.seriesId ? (startTime < "12:00" ? "AM" : "PM") : isFullDay ? "AM" : existing?.half ?? half;
   const missionEndISO = weekly ? startISO : isFullWeek ? shiftISO(weekMondayISO, 4) : isFullDay ? startISO : endDateISO;
   const missionEndHalf: HalfDay = weekly || existing?.seriesId ? (endTime <= "12:00" ? "AM" : "PM") : isFullDay ? "PM" : endHalf;
@@ -751,7 +755,7 @@ function AssignmentDialog({
       categoryId,
       title: title.trim(),
       address: address.trim(),
-      startTime,
+      startTime: missionStartTime,
       endTime: missionEndTime,
       notes: notes.trim() || undefined,
       link: link.trim() || undefined,
@@ -782,7 +786,7 @@ function AssignmentDialog({
     categoryId,
     title: title || "Mission",
     address,
-    startTime,
+    startTime: missionStartTime,
     endTime: missionEndTime,
     notes,
     link,
@@ -947,11 +951,11 @@ function AssignmentDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
               <Label htmlFor="mission-start">Début</Label>
-              <Input id="mission-start" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              <Input id="mission-start" type="time" value={missionStartTime} disabled={onCallFullDay} onChange={(e) => setStartTime(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="mission-end">Fin</Label>
-              <Input id="mission-end" type="time" value={isFullDay ? "18:00" : endTime} disabled={isFullDay} onChange={(e) => setEndTime(e.target.value)} />
+              <Input id="mission-end" type="time" value={missionEndTime} disabled={isFullDay} onChange={(e) => setEndTime(e.target.value)} />
             </div>
           </div>
 
