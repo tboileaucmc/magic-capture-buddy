@@ -77,6 +77,42 @@ export type Database = {
         }
         Relationships: []
       }
+      planning_usage_daily: {
+        Row: {
+          database_bytes: number
+          day: string
+          exception_count: number
+          history_table_bytes: number
+          measured_at: string
+          mission_count: number
+          planning_json_bytes: number
+          planning_table_bytes: number
+          recurring_count: number
+        }
+        Insert: {
+          database_bytes: number
+          day: string
+          exception_count: number
+          history_table_bytes: number
+          measured_at?: string
+          mission_count: number
+          planning_json_bytes: number
+          planning_table_bytes: number
+          recurring_count: number
+        }
+        Update: {
+          database_bytes?: number
+          day?: string
+          exception_count?: number
+          history_table_bytes?: number
+          measured_at?: string
+          mission_count?: number
+          planning_json_bytes?: number
+          planning_table_bytes?: number
+          recurring_count?: number
+        }
+        Relationships: []
+      }
       technician_profiles: {
         Row: {
           btp_card: string | null
@@ -151,6 +187,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_planning_usage: { Args: never; Returns: Json }
       admin_set_editor: {
         Args: { _can_edit: boolean; _target: string }
         Returns: undefined
@@ -160,6 +197,7 @@ export type Database = {
         Returns: undefined
       }
       can_edit: { Args: { _user_id: string }; Returns: boolean }
+      capture_planning_usage: { Args: never; Returns: undefined }
       get_technician_profile: {
         Args: { _technician_id: string }
         Returns: Json

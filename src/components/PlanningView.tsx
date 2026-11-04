@@ -8,6 +8,7 @@ import { BroadcastDialog } from "@/components/BroadcastDialog";
 import { UsersDialog } from "@/components/UsersDialog";
 import { useRole } from "@/lib/use-role";
 import { SupportHistoryDialog } from "@/components/SupportHistoryDialog";
+import { PlanningUsageDialog } from "@/components/PlanningUsageDialog";
 import { WeekNumberInput } from "@/components/WeekNumberInput";
 import { TechnicianProfileDialog } from "@/components/TechnicianProfileDialog";
 import { supportTechnicianIds, isSupportOnly } from "@/lib/planning-support";
@@ -106,7 +107,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
   const [recurringEdit, setRecurringEdit] = useState<{ technicianId: string; dateISO: string; half: HalfDay; existing: Assignment } | null>(null);
   const [editingTech, setEditingTech] = useState<Tech | null>(null);
   const [catDialog, setCatDialog] = useState(false);
-  const [adminDialog, setAdminDialog] = useState<"broadcast" | "users" | "history" | null>(null);
+  const [adminDialog, setAdminDialog] = useState<"broadcast" | "users" | "history" | "usage" | null>(null);
   const [dupOpen, setDupOpen] = useState(false);
   const [dupTarget, setDupTarget] = useState("");
   const [dupTechs, setDupTechs] = useState<Set<string>>(new Set());
@@ -263,6 +264,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                   {isAdmin && <>
                     <DropdownMenuItem onSelect={() => setAdminDialog("users")}><Users /> Utilisateurs</DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => setAdminDialog("history")}><History /> Historique support</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setAdminDialog("usage")}><FileText /> Données et missions</DropdownMenuItem>
                   </>}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -270,6 +272,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             {canEdit && <BroadcastDialog open={adminDialog === "broadcast"} onOpenChange={(open) => setAdminDialog(open ? "broadcast" : null)} />}
             {isAdmin && <UsersDialog open={adminDialog === "users"} onOpenChange={(open) => setAdminDialog(open ? "users" : null)} />}
             {isAdmin && <SupportHistoryDialog open={adminDialog === "history"} onOpenChange={(open) => setAdminDialog(open ? "history" : null)} />}
+            {isAdmin && <PlanningUsageDialog light={light} open={adminDialog === "usage"} onOpenChange={(open) => setAdminDialog(open ? "usage" : null)} />}
             {isSupportEditor && (
               <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">Admin support</span>
             )}
