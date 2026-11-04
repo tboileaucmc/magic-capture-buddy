@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Modifier des jours sélectionnés d’une mission semaine entière pour un seul technicien, sans changer les autres jours/personnes ; vérifier les invitations et la sauvegarde.
 - [x] Suivi « Données et missions » réservé aux super utilisateurs : relevé quotidien lors des modifications/consultations, 90 derniers relevés affichés, contenu/table/historique/base distingués ; 2 tests de calcul et tests serveur admin/non-admin réussis, consultation/actualisation/rechargement vérifiés avec session réelle. Choix utilisateur : données et missions seulement, aucune fausse alerte de disque ; occupation physique non accessible automatiquement.
 - [x] Présenter le niveau d’écriture support comme « Admin support » : niveau existant réutilisé, 7 tests réussis, choix vérifié dans Utilisateurs avec une session réelle ; aucun droit de compte modifié.
 - [x] Avancer l’envoi hebdomadaire au mercredi 17 h (Paris) si le jeudi est férié, sans second envoi le jeudi : 10 tests réussis, horaires automatiques enregistrés et relus ; publication nécessaire pour appliquer la nouvelle règle au site en ligne, aucun e-mail réel de test envoyé.
