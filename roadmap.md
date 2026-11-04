@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Ajouter un suivi réservé aux super utilisateurs : évolution du nombre de missions et des volumes mesurables, disque serveur distinct et alerte avant saturation ; mode de collecte du disque à clarifier faute d’accès automatique documenté.
 - [x] Présenter le niveau d’écriture support comme « Admin support » : niveau existant réutilisé, 7 tests réussis, choix vérifié dans Utilisateurs avec une session réelle ; aucun droit de compte modifié.
 - [x] Avancer l’envoi hebdomadaire au mercredi 17 h (Paris) si le jeudi est férié, sans second envoi le jeudi : 10 tests réussis, horaires automatiques enregistrés et relus ; publication nécessaire pour appliquer la nouvelle règle au site en ligne, aucun e-mail réel de test envoyé.
 - [x] Corriger la validation d’une réunion isolée et permettre son annulation pour une seule semaine : 28 tests réussis ; enregistrement relu après rechargement, annulation Google et réunion de la semaine suivante vérifiés sur une série temporaire sans invités, puis nettoyée.
