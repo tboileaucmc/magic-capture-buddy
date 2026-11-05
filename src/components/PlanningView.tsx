@@ -331,11 +331,11 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           ))}
         </div>
 
-        <div className="planning-grid overflow-x-auto rounded-lg border bg-card">
+        <div className="planning-grid max-h-[calc(100dvh-7rem)] overflow-auto rounded-lg border bg-card">
           <table className="w-full border-collapse text-sm">
-            <thead>
+            <thead className="sticky top-0 z-20">
               <tr className="bg-muted/50">
-                <th className="sticky left-0 z-10 min-w-[160px] border-b border-r bg-muted/50 p-2 text-left">
+                <th className="sticky left-0 z-30 min-w-[160px] border-b border-r bg-muted/50 p-2 text-left">
                   Technicien
                 </th>
                 {days.map((d, i) => (
@@ -355,7 +355,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                 ))}
               </tr>
               <tr className="bg-muted/30">
-                <th className="sticky left-0 z-10 border-b border-r bg-muted/30 p-1" />
+                <th className="sticky left-0 z-30 border-b border-r bg-muted/30 p-1" />
                 {days.flatMap((d, i) => [
                   <th key={`${i}-am`} className={cn("border-b border-r p-1 text-xs font-normal text-muted-foreground", dayClass(d))}>Matin</th>,
                   <th key={`${i}-pm`} className={cn("border-b border-r p-1 text-xs font-normal text-muted-foreground", dayClass(d))}>Après-midi</th>,
