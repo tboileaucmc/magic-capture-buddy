@@ -16,7 +16,10 @@ const schema = z.object({
   description: z.string().max(8000),
   start: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   end: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
-  attendees: z.array(z.string().email()).max(50),
+  attendees: z.array(z.union([
+    z.string().email().transform((email) => ({ email })),
+    z.object({ email: z.string().email(), displayName: z.string().max(200) }),
+  ])).max(50),
   occurrence: occurrenceSchema.optional(),
   recurrence: z.array(z.string().regex(/^RRULE:FREQ=WEEKLY;BYDAY=(SU|MO|TU|WE|TH|FR|SA)$/)).max(1).default([]),
   meet: z.boolean().default(false),
@@ -96,7 +99,7 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => schema.parse(d))
   .handler(async ({ data, context }) => {
     const { assertCanEditMission } = await import("./roles.server");
-    await assertCanEditMission(context.supabase, context.userId, { attendees: data.attendees, missionId: data.id });
+    await assertCanEditMission(context.supabase, context.userId, { attendees: data.attendees.map((guest) => guest.email), missionId: data.id });
     if (data.occurrence) {
       const { assertCalendarOccurrence } = await import("./calendar-occurrence-validation.server");
       await assertCalendarOccurrence(context.supabase, context.userId, data.id, data.occurrence);
@@ -124,7 +127,7 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
       description: data.description,
       start: { dateTime: `${data.start}:00`, timeZone: "Europe/Paris" },
       end: { dateTime: `${data.end}:00`, timeZone: "Europe/Paris" },
-      attendees: data.attendees.map((email) => ({ email })),
+      attendees: data.attendees,
       ...(!data.occurrence ? { recurrence: data.recurrence } : {}),
       status: "confirmed",
       colorId: "7",
