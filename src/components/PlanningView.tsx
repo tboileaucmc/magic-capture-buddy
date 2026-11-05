@@ -370,16 +370,25 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                   </td>
                 </tr>
               )}
-              {data.technicians.map((t) => (
+              {data.technicians.map((t) => {
+                const normalizedName = t.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+                const sectionLabel = normalizedName.includes("GERNIGON") && normalizedName.includes("ERIC")
+                  ? "REGION OUEST"
+                  : normalizedName.includes("CUNHA") && normalizedName.includes("VICTOR")
+                    ? "REGION EST"
+                    : normalizedName.includes("DAVID") && (normalizedName.includes("MICHAEL") || normalizedName.includes("MICKAEL"))
+                      ? "REGION PARISIENNE"
+                      : normalizedName.includes("BRABANT") ? "Support" : null;
+                return (
                 <Fragment key={t.id}>
-                {t.name.toUpperCase().includes("BRABANT") && (
+                {sectionLabel && (
                   <tr aria-hidden="true">
                     <td className="sticky left-0 z-10 border-b border-r bg-muted/50 p-1.5">
-                      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Support</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">{sectionLabel}</div>
                     </td>
                     {days.map((d) =>
                       HALVES.map((h) => (
-                        <td key={`support-${fmtISO(d)}-${h}`} className="border-b border-r bg-muted/50 p-1" />
+                        <td key={`section-${fmtISO(d)}-${h}`} className="border-b border-r bg-muted/50 p-1" />
                       )),
                     )}
                   </tr>
@@ -503,7 +512,8 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                   })}
                 </tr>
                 </Fragment>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
