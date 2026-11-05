@@ -376,7 +376,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                   ? "REGION OUEST"
                   : normalizedName.includes("CUNHA") && normalizedName.includes("VICTOR")
                     ? "REGION EST"
-                    : normalizedName.includes("DAVID") && normalizedName.includes("MICHAEL")
+                    : normalizedName.includes("DAVID") && (normalizedName.includes("MICHAEL") || normalizedName.includes("MICKAEL"))
                       ? "REGION PARISIENNE"
                       : normalizedName.includes("BRABANT") ? "Support" : null;
                 return (
