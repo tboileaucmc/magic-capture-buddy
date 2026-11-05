@@ -184,6 +184,14 @@ export function outlookCalendarUrl(
 }
 
 /** Données à envoyer à Google Agenda (masquées si « à confirmer »). */
+export function invitationGuestName(name: string): string {
+  const words = name.trim().split(/\s+/);
+  const firstGivenName = words.findIndex((word) => word !== word.toLocaleUpperCase("fr-FR"));
+  return firstGivenName > 0
+    ? [...words.slice(firstGivenName), ...words.slice(0, firstGivenName)].join(" ")
+    : words.join(" ");
+}
+
 export function googlePayload(input: Assignment, techs: Technician[]) {
   const a = maskIfToConfirm(input);
   const recurrence = weeklyRule(a);
@@ -197,7 +205,7 @@ export function googlePayload(input: Assignment, techs: Technician[]) {
     description: buildHtmlDescription(input),
     start: `${a.dateISO}T${a.startTime || "08:00"}`,
     end: `${a.endDateISO ?? a.dateISO}T${a.endTime || "17:00"}`,
-    attendees: techs.map((t) => t.email).filter((e) => /.+@.+\..+/.test(e)),
+    attendees: techs.filter((t) => /.+@.+\..+/.test(t.email)).map((t) => ({ email: t.email, displayName: invitationGuestName(t.name) })),
     recurrence: recurrence ? [recurrence] : [],
     meet: Boolean(input.googleMeet && !input.toConfirm),
     reminder15: Boolean(a.teamsUrl && normalizeTeamsUrl(a.teamsUrl)),
@@ -217,7 +225,7 @@ export function buildHtmlDescription(input: Assignment): string {
     parts.push(`<br><br>⏳ <i>Ce rendez-vous est encore à confirmer. Gardez le créneau libre, les détails arrivent très vite !</i>`);
   }
   if (a.address) {
-    parts.push(`<br>📍 <b>Adresse :</b> ${esc(a.address)}`);
+    parts.push(`<br><br>📍 <b>Adresse :</b> ${esc(a.address)}`);
     parts.push(`<br>🚗 <a href="${wazeInvitationUrl(a.address)}">Itinéraire Waze</a>`);
   }
   if (a.notes && !input.toConfirm) parts.push(`<br><br>📝 <b>Notes :</b><br>${esc(a.notes).replace(/\n/g, "<br>")}`);

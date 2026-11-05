@@ -47,3 +47,15 @@ it("télétravail visible dans la notification", () => {
   assert.match(googlePayload(a, []).title, /Télétravail/);
   assert.match(buildHtmlDescription(a), /Télétravail/);
 });
+
+it("transmet les prénoms et noms aux invités sans changer leurs adresses", () => {
+  const techs = [
+    { id: "eric", name: "GERNIGON Eric", email: "eric@example.com" },
+    { id: "victor", name: "CUNHA Victor", email: "victor@example.com" },
+    { id: "invalid", name: "Sans email", email: "" },
+  ];
+  assert.deepEqual(googlePayload(mission, techs).attendees, [
+    { email: "eric@example.com", displayName: "Eric GERNIGON" },
+    { email: "victor@example.com", displayName: "Victor CUNHA" },
+  ]);
+});
