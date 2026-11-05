@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, ChevronDown, Shield, Tags, History, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock, Home } from "lucide-react";
 import { duplicateWeek } from "@/lib/planning-duplicate";
 import { missionHours } from "@/lib/planning-hours";
+import { PLANNING_GROUPS, filterPlanningTechnicians, technicianSection, type PlanningGroup } from "@/lib/planning-regions";
 import { missionDates, splitMissionDays } from "@/lib/planning-week-edit";
 import { MissionDaysDialog } from "@/components/MissionDaysDialog";
 import { openWaze } from "@/lib/waze";
@@ -100,6 +101,8 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
   const canEditMission = (a: Assignment) => canEdit || (isSupportEditor && isSupportOnly(a.technicianIds, supportIds));
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const [viewMode, setViewMode] = useState<ViewMode>("1w");
+  const [groupFilter, setGroupFilter] = useState<PlanningGroup>("all");
+  const visibleTechnicians = useMemo(() => filterPlanningTechnicians(data.technicians, groupFilter), [data.technicians, groupFilter]);
   const [editing, setEditing] = useState<{
     technicianId: string;
     dateISO: string;
@@ -179,6 +182,18 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Select value={groupFilter} onValueChange={(value) => {
+              if (value in PLANNING_GROUPS) setGroupFilter(value as PlanningGroup);
+            }}>
+              <SelectTrigger className="w-[190px]" aria-label="Filtrer par région ou support">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className={light ? "cmc-theme-light" : "cmc-theme"}>
+                {Object.entries(PLANNING_GROUPS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
               <SelectTrigger className="w-[160px]">
                 <SelectValue />
@@ -363,22 +378,16 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
               </tr>
             </thead>
             <tbody>
-              {data.technicians.length === 0 && (
+              {visibleTechnicians.length === 0 && (
                 <tr>
                   <td colSpan={1 + dayCount * 2} className="p-6 text-center text-muted-foreground">
-                    Aucun technicien. Cliquez sur "Technicien" pour en ajouter.
+                    {data.technicians.length === 0 ? 'Aucun technicien. Cliquez sur "Technicien" pour en ajouter.' : "Aucun technicien dans cette équipe."}
                   </td>
                 </tr>
               )}
-              {data.technicians.map((t) => {
-                const normalizedName = t.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-                const sectionLabel = normalizedName.includes("GERNIGON") && normalizedName.includes("ERIC")
-                  ? "REGION OUEST"
-                  : normalizedName.includes("CUNHA") && normalizedName.includes("VICTOR")
-                    ? "REGION EST"
-                    : normalizedName.includes("DAVID") && (normalizedName.includes("MICHAEL") || normalizedName.includes("MICKAEL"))
-                      ? "REGION PARISIENNE"
-                      : normalizedName.includes("BRABANT") ? "Support" : null;
+              {visibleTechnicians.map((t) => {
+                const section = technicianSection(t.name);
+                const sectionLabel = section ? (section === "support" ? "Support" : PLANNING_GROUPS[section].toUpperCase()) : null;
                 return (
                 <Fragment key={t.id}>
                 {sectionLabel && (
