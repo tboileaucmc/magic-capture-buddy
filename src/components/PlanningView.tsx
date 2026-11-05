@@ -512,7 +512,8 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                   })}
                 </tr>
                 </Fragment>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
