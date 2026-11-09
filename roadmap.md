@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Réserver les nouvelles inscriptions aux adresses @cinemeccanica.fr : contrôle du formulaire vérifié, protection de création relue et testée avec données temporaires ; comptes existants inchangés, aucun e-mail de confirmation de test envoyé.
 - [x] Filtres Région Ouest, Est, Parisienne et Support : 7 tests réussis, chaque groupe et retour à toutes les équipes vérifiés sur le planning connecté ; missions et invitations inchangées.
 - [x] Aérer Mission/Adresse et transmettre les prénoms/noms des invités : 15 tests réussis, aperçu contrôlé sans envoi réel ; le bloc « When » appartient à l’e-mail Google et reste inchangé, rendu final des invités à confirmer dans un prochain e-mail.
 - [x] Modifier des jours sélectionnés d’une mission semaine entière pour un seul technicien, sans changer les autres jours/personnes : 15 tests réussis et choix de lundi/mercredi vérifié sur une mission existante ; validation avec invitations réelles non testée pour ne pas notifier les techniciens.

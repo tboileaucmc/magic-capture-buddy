@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
 import logoAsset from "@/assets/logo-cmc.png.asset.json";
+import { isPlanningSignupEmail } from "@/lib/planning-signup";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -53,13 +54,17 @@ function AuthPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === "signup" && !isPlanningSignupEmail(email)) {
+      toast.error("Les inscriptions sont réservées aux adresses @cinemeccanica.fr.");
+      return;
+    }
     setBusy(true);
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
+        const { error } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: window.location.origin } });
         if (error) throw error;
         toast.success("Compte créé : cliquez sur le lien reçu par e-mail pour l'activer.");
         setMode("login");
@@ -94,7 +99,7 @@ function AuthPage() {
           </div>
           <div aria-hidden className="cmc-welcome-line mx-auto mt-3 h-px w-40 bg-primary" />
           <h1 className="text-2xl font-bold">Planning Techniciens</h1>
-          <p className="text-sm text-muted-foreground">{mode === "login" ? "Connectez-vous pour accéder au planning." : "Créez votre compte."}</p>
+          <p className="text-sm text-muted-foreground">{mode === "login" ? "Connectez-vous pour accéder au planning." : "Inscriptions réservées aux adresses @cinemeccanica.fr."}</p>
         </div>
         <form onSubmit={submit} className="space-y-3">
           <div className="space-y-1"><Label htmlFor="email">E-mail</Label>

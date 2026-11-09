@@ -209,6 +209,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_planning_signup_email: { Args: { _email: string }; Returns: boolean }
       is_support_editor: { Args: { _user_id: string }; Returns: boolean }
       support_technician_ids: { Args: { _data: Json }; Returns: Json }
     }
