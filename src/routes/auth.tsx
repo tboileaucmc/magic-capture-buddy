@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
 import logoAsset from "@/assets/logo-cmc.png.asset.json";
 import { isPlanningSignupEmail } from "@/lib/planning-signup";
+import { evaluatePlanningPassword, MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH, MIN_PASSWORD_ENTROPY } from "@/lib/planning-password";
+import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -30,6 +32,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [intro, setIntro] = useState(false);
+  const strength = useMemo(() => mode === "signup" ? evaluatePlanningPassword(password, email) : null, [mode, password, email]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -56,6 +59,10 @@ function AuthPage() {
     e.preventDefault();
     if (mode === "signup" && !isPlanningSignupEmail(email)) {
       toast.error("Les inscriptions sont réservées aux adresses @cinemeccanica.fr.");
+      return;
+    }
+    if (mode === "signup" && !evaluatePlanningPassword(password, email).accepted) {
+      toast.error("Choisissez un mot de passe d’au moins 12 caractères avec une sécurité forte (50 bits estimés minimum).");
       return;
     }
     setBusy(true);
@@ -105,13 +112,25 @@ function AuthPage() {
           <div className="space-y-1"><Label htmlFor="email">E-mail</Label>
             <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
           <div className="space-y-1"><Label htmlFor="pw">Mot de passe</Label>
-            <Input id="pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+            <Input id="pw" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} required minLength={mode === "signup" ? MIN_PASSWORD_LENGTH : 6} maxLength={mode === "signup" ? MAX_PASSWORD_LENGTH : undefined} aria-describedby={mode === "signup" ? "password-strength" : undefined} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+          {strength && (
+            <div id="password-strength" className="space-y-2 py-1 text-xs" aria-live="polite">
+              <div className="flex flex-wrap justify-between gap-1">
+                <span className={password && !strength.accepted ? "text-destructive" : "text-muted-foreground"}>
+                  Sécurité : {!password ? "à évaluer" : strength.accepted ? "forte" : strength.score >= 3 ? "à renforcer" : "faible"}
+                </span>
+                <span className="text-muted-foreground">Entropie estimée : {Math.floor(strength.entropyBits)} bits</span>
+              </div>
+              <Progress aria-label="Robustesse du mot de passe" value={password ? Math.min(100, strength.entropyBits / MIN_PASSWORD_ENTROPY * 100) : 0} />
+              <p className="text-muted-foreground">12 à 128 caractères et au moins 50 bits estimés. Une longue phrase de mots sans lien est acceptée.</p>
+            </div>
+          )}
           {mode === "login" && (
             <button type="button" className="text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline" onClick={forgot} disabled={busy}>
               Mot de passe oublié ?
             </button>
           )}
-          <Button type="submit" className="w-full" disabled={busy}>{mode === "login" ? "Se connecter" : "Créer le compte"}</Button>
+          <Button type="submit" className="w-full" disabled={busy || (mode === "signup" && !strength?.accepted)}>{mode === "login" ? "Se connecter" : "Créer le compte"}</Button>
         </form>
         <Button type="button" variant="link" className="h-auto w-full whitespace-normal text-center text-sm text-muted-foreground"
           onClick={() => setMode(mode === "login" ? "signup" : "login")}>

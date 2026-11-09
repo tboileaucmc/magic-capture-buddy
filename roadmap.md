@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Indicateur d’entropie à l’inscription : 12–128 caractères, score maximal et 50 bits estimés minimum ; 9 tests réussis, refus/acceptation vérifiés sur ordinateur et téléphone sans créer de compte ni envoyer de mot de passe ; connexion existante inchangée.
+- [ ] Protection serveur des nouveaux mots de passe : bloquée par les réglages Auth réservés au propriétaire (More → Users → Auth settings → Email, minimum 12 caractères et Password HIBP Check). Le contrôle d’entropie local ne protège pas un appel direct à Auth.
 - [x] Réserver les nouvelles inscriptions aux adresses @cinemeccanica.fr : contrôle du formulaire vérifié, protection de création relue et testée avec données temporaires ; comptes existants inchangés, aucun e-mail de confirmation de test envoyé.
 - [x] Filtres Région Ouest, Est, Parisienne et Support : 7 tests réussis, chaque groupe et retour à toutes les équipes vérifiés sur le planning connecté ; missions et invitations inchangées.
 - [x] Aérer Mission/Adresse et transmettre les prénoms/noms des invités : 15 tests réussis, aperçu contrôlé sans envoi réel ; le bloc « When » appartient à l’e-mail Google et reste inchangé, rendu final des invités à confirmer dans un prochain e-mail.
