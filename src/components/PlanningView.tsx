@@ -182,12 +182,12 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             </p>
             </div>
           </div>
-          <div className="grid min-w-0 gap-2">
-            <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+          <div className="planning-toolbar grid min-w-0 gap-2 lg:flex lg:items-center lg:gap-1.5 lg:overflow-x-auto lg:pb-1 lg:[&>button]:shrink-0 lg:[&>button]:px-2">
+            <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center lg:contents">
             <Select value={groupFilter} onValueChange={(value) => {
               if (value in PLANNING_GROUPS) setGroupFilter(value as PlanningGroup);
             }}>
-              <SelectTrigger className="min-w-0 w-full sm:w-[190px]" aria-label="Filtrer par région ou support">
+              <SelectTrigger className="min-w-0 w-full sm:w-[190px] lg:w-[160px] lg:shrink-0" aria-label="Filtrer par région ou support">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className={light ? "cmc-theme-light" : "cmc-theme"}>
@@ -197,7 +197,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
               </SelectContent>
             </Select>
             <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-              <SelectTrigger className="min-w-0 w-full sm:w-[160px]" aria-label="Période affichée">
+              <SelectTrigger className="min-w-0 w-full sm:w-[160px] lg:w-[120px] lg:shrink-0" aria-label="Période affichée">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -207,7 +207,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
               </SelectContent>
             </Select>
             </div>
-            <div className="planning-navigation grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:flex-wrap">
+            <div className="planning-navigation grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:flex-wrap lg:contents">
             <Button variant="outline" size="icon" className="shrink-0" aria-label="Période précédente" onClick={() => {
               const d = new Date(weekStart); d.setDate(d.getDate() - stepDays); setWeekStart(d);
             }}>
@@ -229,7 +229,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
               <ChevronRight />
             </Button>
             </div>
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:flex-wrap">
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:flex-wrap lg:contents">
             {(canEdit || isSupportEditor) && (
               <Button
                 variant="secondary"
