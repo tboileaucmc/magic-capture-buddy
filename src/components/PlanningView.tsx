@@ -169,7 +169,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
 
   return (
     <div className="planning-surface min-h-dvh min-w-0 bg-background p-2 sm:p-4 md:p-6">
-      <div className="mx-auto min-w-0 max-w-[1400px]">
+      <div className="min-w-0 w-full">
         <header className="planning-header mb-3 grid min-w-0 gap-3 sm:mb-4">
           <div className="grid min-w-0 items-center gap-2 sm:flex sm:gap-5">
             <img src={logoAsset.url} alt="Cinemeccanica France" width={1010} height={320} className="h-auto w-[160px] max-w-full shrink-0 object-contain sm:w-[220px]" />
