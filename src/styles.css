@@ -237,18 +237,16 @@
 :is(.cmc-theme, .cmc-theme-light) .planning-grid tbody td:first-child { background: var(--cmc-header); }
 :is(.cmc-theme, .cmc-theme-light) .planning-grid tbody td:hover { outline: 1px solid var(--primary); outline-offset: -1px; }
 
-/* Téléphone tenu en portrait : on affiche le planning en paysage */
-@media (orientation: portrait) and (max-width: 767px) {
-  .force-landscape {
-    position: fixed;
-    top: 0;
-    left: 100vw;
-    width: 100vh;
-    height: 100vw;
-    transform: rotate(90deg);
-    transform-origin: top left;
-    overflow: auto;
+/* Keep the calendar scroll local; portrait and landscape use the same controls. */
+@media (max-width: 639px) {
+  .planning-grid tr > :first-child {
+    min-width: 144px;
+    width: 144px;
+    max-width: 144px;
   }
+  .planning-technician { width: 127px; }
+  .planning-technician button { min-height: 36px; }
+  .mission-sheet > header, .mission-sheet > footer { padding-inline: 12px; }
 }
 
 /* Logo intro shown between sign-in and the planning */

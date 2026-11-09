@@ -22,7 +22,7 @@ function PlanningPage() {
   const [light, setLight] = useState(false);
   return (
     <>
-      <div className={`force-landscape ${light ? "cmc-theme-light" : "cmc-theme"}`}>
+      <div className={`min-w-0 ${light ? "cmc-theme-light" : "cmc-theme"}`}>
         <PlanningView light={light} onToggleTheme={() => setLight((v) => !v)} />
         <img
           src={logoAsset.url}

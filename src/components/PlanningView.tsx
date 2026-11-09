@@ -168,13 +168,13 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
 
 
   return (
-    <div className="planning-surface min-h-screen bg-background p-4 md:p-6">
-      <div className="mx-auto max-w-[1400px]">
-        <header className="planning-header mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex max-w-full flex-wrap items-center gap-5">
-            <img src={logoAsset.url} alt="Cinemeccanica France" width={1010} height={320} className="h-auto w-[220px] max-w-full shrink-0 object-contain" />
-            <div>
-            <h1 className="text-2xl font-bold">Planning Techniciens</h1>
+    <div className="planning-surface min-h-dvh min-w-0 bg-background p-2 sm:p-4 md:p-6">
+      <div className="mx-auto min-w-0 max-w-[1400px]">
+        <header className="planning-header mb-3 grid min-w-0 gap-3 sm:mb-4">
+          <div className="grid min-w-0 items-center gap-2 sm:flex sm:gap-5">
+            <img src={logoAsset.url} alt="Cinemeccanica France" width={1010} height={320} className="h-auto w-[160px] max-w-full shrink-0 object-contain sm:w-[220px]" />
+            <div className="min-w-0">
+            <h1 className="text-xl font-bold sm:text-2xl">Planning Techniciens</h1>
             <p className="text-sm text-muted-foreground">
               Du {days[0]?.toLocaleDateString("fr-FR", { day: "2-digit", month: "long" })}
               {" au "}
@@ -182,11 +182,12 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid min-w-0 gap-2">
+            <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
             <Select value={groupFilter} onValueChange={(value) => {
               if (value in PLANNING_GROUPS) setGroupFilter(value as PlanningGroup);
             }}>
-              <SelectTrigger className="w-[190px]" aria-label="Filtrer par région ou support">
+              <SelectTrigger className="min-w-0 w-full sm:w-[190px]" aria-label="Filtrer par région ou support">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className={light ? "cmc-theme-light" : "cmc-theme"}>
@@ -196,7 +197,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
               </SelectContent>
             </Select>
             <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="min-w-0 w-full sm:w-[160px]" aria-label="Période affichée">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -205,28 +206,35 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                 <SelectItem value="1m">1 mois</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="icon" onClick={() => {
+            </div>
+            <div className="planning-navigation grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:flex-wrap">
+            <Button variant="outline" size="icon" className="shrink-0" aria-label="Période précédente" onClick={() => {
               const d = new Date(weekStart); d.setDate(d.getDate() - stepDays); setWeekStart(d);
             }}>
               <ChevronLeft />
             </Button>
-            <Button variant="outline" onClick={() => setWeekStart(startOfWeek(new Date()))}>
+            <Button variant="outline" className="min-w-0 sm:order-0" onClick={() => setWeekStart(startOfWeek(new Date()))}>
               Aujourd'hui
             </Button>
+            <div className="col-span-3 row-start-2 flex min-w-0 items-center gap-2 sm:contents">
             <WeekNumberInput weekStart={weekStart} onSelect={(d) => setWeekStart(startOfWeek(d))} />
             <PlanningDateInput
               value={fmtISO(weekStart)}
               onSelect={(date) => setWeekStart(startOfWeek(date))}
             />
-            <Button variant="outline" size="icon" onClick={() => {
+            </div>
+            <Button variant="outline" size="icon" className="col-start-3 row-start-1 shrink-0" aria-label="Période suivante" onClick={() => {
               const d = new Date(weekStart); d.setDate(d.getDate() + stepDays); setWeekStart(d);
             }}>
               <ChevronRight />
             </Button>
+            </div>
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:flex-wrap">
             {(canEdit || isSupportEditor) && (
               <Button
                 variant="secondary"
                 title="Copier les missions de la semaine affichée vers une autre semaine"
+                className="min-w-0"
                 onClick={openDuplicate}
               >
                 <Copy /> Dupliquer la semaine
@@ -315,12 +323,13 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             <Button variant="ghost" onClick={async () => { await supabase.auth.signOut(); window.location.replace("/auth"); }}>
               Déconnexion
             </Button>
+            </div>
           </div>
         </header>
 
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="planning-legend mb-3 flex gap-2 overflow-x-auto pb-1 sm:mb-4 sm:flex-wrap">
           {data.categories.map((c) => (
-            <span key={c.id} className="group inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
+            <span key={c.id} className="group inline-flex shrink-0 items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
               {canEdit ? (
                 <label className="relative size-4 cursor-pointer rounded-full ring-offset-1 hover:ring-2 hover:ring-primary" style={{ backgroundColor: c.color }} title="Changer la couleur">
                   <input
@@ -349,7 +358,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           ))}
         </div>
 
-        <div className="planning-grid max-h-[calc(100dvh-7rem)] overflow-auto rounded-lg border bg-card">
+        <div className="planning-grid max-h-[calc(100dvh-2rem)] min-w-0 overflow-auto overscroll-contain rounded-lg border bg-card" role="region" aria-label="Calendrier des techniciens" tabIndex={0}>
           <table className="w-full border-collapse text-sm">
             <thead className="sticky top-0 z-20">
               <tr className="bg-muted/50">
@@ -407,13 +416,13 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                 )}
                 <tr>
                   <td className="sticky left-0 z-10 border-b border-r bg-card p-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <div>
+                    <div className="planning-technician grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:justify-between">
+                      <div className="min-w-0 break-words">
                         <TechnicianProfileDialog technicianId={t.id} name={t.name} light={light} readOnly={!isAdmin} />
-                        {canEdit && <div className="text-xs text-muted-foreground">{t.email}</div>}
+                        {canEdit && <div className="hidden text-xs text-muted-foreground sm:block">{t.email}</div>}
                       </div>
                       {canEdit && (
-                        <div className="flex shrink-0 items-center">
+                        <div className="flex shrink-0 flex-col sm:flex-row">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -888,7 +897,7 @@ function AssignmentDialog({
             <TabsTrigger value="mission" className="gap-2 whitespace-normal px-1 py-2 data-[state=active]:text-primary"><Users className="hidden size-4 sm:block" />Mission et période</TabsTrigger>
             <TabsTrigger value="visio" className="gap-2 whitespace-normal px-1 py-2 data-[state=active]:text-primary"><Video className="hidden size-4 sm:block" />Visio et documents</TabsTrigger>
           </TabsList>
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+          <div className="min-h-0 min-w-0 flex-1 overflow-y-auto px-3 py-4 sm:px-6 sm:py-5">
             <TabsContent value="mission" className="mt-0 grid gap-5">
               <label className="flex items-start gap-3 border-b pb-4 text-sm">
                 <Checkbox checked={toConfirm} onCheckedChange={(v) => setToConfirm(v === true)} className="mt-0.5" />

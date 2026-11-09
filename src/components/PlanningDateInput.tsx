@@ -18,7 +18,7 @@ export function PlanningDateInput({ value, onSelect }: { value: string; onSelect
     <Input
       type="date"
       aria-label="Date du planning"
-      className="w-[160px]"
+      className="min-w-0 flex-1 sm:w-[160px] sm:flex-none"
       min="1000-01-01"
       max="9999-12-31"
       value={draft}
