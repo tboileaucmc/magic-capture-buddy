@@ -238,6 +238,19 @@
 :is(.cmc-theme, .cmc-theme-light) .planning-grid tbody td:hover { outline: 1px solid var(--primary); outline-offset: -1px; }
 
 /* Keep the calendar scroll local; portrait and landscape use the same controls. */
+@media (max-height: 600px) and (min-width: 640px) {
+  .planning-surface { padding: 8px; }
+  :is(.cmc-theme, .cmc-theme-light) .planning-header { padding-bottom: 8px; margin-bottom: 8px; gap: 8px; }
+  .planning-header > div:first-child img { width: 110px; }
+  .planning-header h1 { font-size: 18px; }
+  .planning-toolbar { display: flex; align-items: center; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+  .planning-toolbar > div { display: contents; }
+  .planning-toolbar > div > button { flex-shrink: 0; width: auto; }
+  .planning-navigation > div { display: contents; }
+  .planning-toolbar input { flex-shrink: 0; }
+  .planning-legend { flex-wrap: nowrap; margin-bottom: 8px; }
+  .planning-surface p:last-child { margin-top: 4px; }
+}
 @media (max-width: 639px) {
   .planning-grid tr > :first-child {
     min-width: 144px;

@@ -168,9 +168,9 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
 
 
   return (
-    <div className="planning-surface min-h-dvh min-w-0 bg-background p-2 sm:p-4 md:p-6">
-      <div className="min-w-0 w-full">
-        <header className="planning-header mb-3 grid min-w-0 gap-3 sm:mb-4">
+    <div className="planning-surface h-dvh min-w-0 overflow-hidden bg-background p-2 sm:p-4 md:p-6">
+      <div className="flex h-full min-h-0 min-w-0 w-full flex-col">
+        <header className="planning-header mb-3 grid min-w-0 shrink-0 gap-3 sm:mb-4">
           <div className="grid min-w-0 items-center gap-2 sm:flex sm:gap-5">
             <img src={logoAsset.url} alt="Cinemeccanica France" width={1010} height={320} className="h-auto w-[160px] max-w-full shrink-0 object-contain sm:w-[220px]" />
             <div className="min-w-0">
@@ -327,7 +327,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           </div>
         </header>
 
-        <div className="planning-legend mb-3 flex gap-2 overflow-x-auto pb-1 sm:mb-4 sm:flex-wrap">
+        <div className="planning-legend mb-3 flex shrink-0 gap-2 overflow-x-auto pb-1 sm:mb-4 sm:flex-wrap">
           {data.categories.map((c) => (
             <span key={c.id} className="group inline-flex shrink-0 items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
               {canEdit ? (
@@ -358,7 +358,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           ))}
         </div>
 
-        <div className="planning-grid max-h-[calc(100dvh-2rem)] min-w-0 overflow-auto overscroll-contain rounded-lg border bg-card" role="region" aria-label="Calendrier des techniciens" tabIndex={0}>
+        <div className="planning-grid min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain rounded-lg border bg-card" role="region" aria-label="Calendrier des techniciens" tabIndex={0}>
           <table className="w-full border-collapse text-sm">
             <thead className="sticky top-0 z-20">
               <tr className="bg-muted/50">
@@ -539,7 +539,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           </table>
         </div>
 
-        <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        <p className="mt-3 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <span>Cliquez sur une case pour planifier. Les données sont sauvegardées localement dans votre navigateur.</span>
           <span className="inline-flex items-center gap-1">
             <Star className="size-3 fill-amber-400 text-amber-500" />
