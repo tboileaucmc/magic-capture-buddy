@@ -399,7 +399,9 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
               )}
               {visibleTechnicians.map((t) => {
                 const section = technicianSection(t.name);
-                const sectionLabel = section ? (section === "support" ? "Support" : PLANNING_GROUPS[section].toUpperCase()) : null;
+                const normalizedName = t.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+                const isBureauStart = /\bBOILEAU\b/.test(normalizedName) && /\bTHOMAS\b/.test(normalizedName);
+                const sectionLabel = isBureauStart ? "BUREAU" : section ? (section === "support" ? "Support" : PLANNING_GROUPS[section].toUpperCase()) : null;
                 return (
                 <Fragment key={t.id}>
                 {sectionLabel && (
