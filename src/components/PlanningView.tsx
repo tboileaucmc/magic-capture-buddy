@@ -406,14 +406,9 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                 <Fragment key={t.id}>
                 {sectionLabel && (
                   <tr aria-hidden="true">
-                    <td className="sticky left-0 z-10 border-b border-r bg-muted/50 p-1.5">
-                      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">{sectionLabel}</div>
+                    <td colSpan={1 + dayCount * 2} className="border-b bg-muted p-1.5">
+                      <div className="sticky left-1.5 w-fit text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">{sectionLabel}</div>
                     </td>
-                    {days.map((d) =>
-                      HALVES.map((h) => (
-                        <td key={`section-${fmtISO(d)}-${h}`} className="border-b border-r bg-muted/50 p-1" />
-                      )),
-                    )}
                   </tr>
                 )}
                 <tr>
