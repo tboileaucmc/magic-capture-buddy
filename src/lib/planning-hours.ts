@@ -1,3 +1,10 @@
+import type { HalfDay } from "./planning-types";
+
+/** An edited end time after 13:00 extends the mission into the afternoon. */
+export function endHalfAfterTimeChange(endTime: string, current: HalfDay): HalfDay {
+  return /^\d{2}:\d{2}$/.test(endTime) && endTime > "13:00" && endTime <= "23:59" ? "PM" : current;
+}
+
 /** Resolve displayed and exported hours without changing the mission draft. */
 export function missionHours(options: {
   categoryId: string;

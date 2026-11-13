@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, ChevronDown, Shield, Tags, History, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock, Home } from "lucide-react";
 import { duplicateWeek } from "@/lib/planning-duplicate";
-import { missionHours } from "@/lib/planning-hours";
+import { missionHours, endHalfAfterTimeChange } from "@/lib/planning-hours";
 import { PLANNING_GROUPS, filterPlanningTechnicians, technicianSection, type PlanningGroup } from "@/lib/planning-regions";
 import { missionDates, splitMissionDays } from "@/lib/planning-week-edit";
 import { MissionDaysDialog } from "@/components/MissionDaysDialog";
@@ -1036,7 +1036,7 @@ function AssignmentDialog({
             </div>
             <div className="grid gap-2">
               <Label htmlFor="mission-end">Fin</Label>
-              <Input id="mission-end" type="time" value={missionEndTime} disabled={isFullDay} onChange={(e) => setEndTime(e.target.value)} />
+              <Input id="mission-end" type="time" value={missionEndTime} disabled={isFullDay} onChange={(e) => { const value = e.target.value; setEndTime(value); setEndHalf((current) => endHalfAfterTimeChange(value, current)); }} />
             </div>
           </div>
 
