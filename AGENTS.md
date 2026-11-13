@@ -8,6 +8,7 @@
 - Write access is role-based: user_roles (admin/editor) + can_edit() gate planning_state writes in RLS and in Google server functions; accounts without a role are read-only, and only admins manage roles via admin_* RPCs.
 - Drive attachments are tagged with appProperties.planningAttachment so the daily purge cron only trashes app-uploaded files older than its retention window, never other Drive files.
 - Validate attachment formats in the browser-safe planning-attachments helper and normalize email MIME types by extension because browsers often leave EML/MSG types empty.
+- Keep mission attachments in a shared list outside the tabs and block saving while files are being read, so reopening shows saved documents immediately and slow reads cannot lose uploads.
 - Scope Cinemeccanica brand tokens to `.cmc-theme` / `.cmc-theme-light`, with authentication-specific surfaces under `.cmc-auth`; mission-sheet portals explicitly receive the current planning theme, while other portals retain independent readable surfaces.
 - Mission-sheet tabs group identity, periods, video calls, and documents; field state stays in the dialog so tab navigation never discards drafts.
 - Waze invitation links use the public `/waze` launcher with an address-only query, requiring no session; a user-initiated Android package intent opens the app, while a separate HTTPS fallback remains available because mail clients may suppress native schemes.

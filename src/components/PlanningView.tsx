@@ -21,6 +21,7 @@ import { CinemaAddressSuggestions } from "@/components/CinemaAddressSuggestions"
 import { PlanningDateInput } from "@/components/PlanningDateInput";
 import { frenchHolidayName, planningDayKind } from "@/lib/planning-day";
 import { ATTACHMENT_ACCEPT, attachmentMimeType } from "@/lib/planning-attachments";
+import { MissionAttachments } from "@/components/MissionAttachments";
 import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo-cmc.png.asset.json";
 
@@ -729,6 +730,7 @@ function AssignmentDialog({
     return d.getUTCDay() === 1 && existing.endDateISO === shiftISO(existing.dateISO, 4);
   });
   const [attachments, setAttachments] = useState(existing?.attachments ?? []);
+  const [readingFiles, setReadingFiles] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
   const sendCalendar = useServerFn(sendMissionToCalendar);
@@ -784,6 +786,8 @@ function AssignmentDialog({
 
   const handleFiles = async (files: FileList | null) => {
     if (!files) return;
+    setReadingFiles(true);
+    try {
     const accepted = Array.from(files).flatMap((file) => {
       const type = attachmentMimeType(file);
       if (!type) {
@@ -796,17 +800,25 @@ function AssignmentDialog({
       accepted
         .map(
           ({ file: f, type }) =>
-            new Promise<{ name: string; type: string; dataUrl: string }>((resolve) => {
+            new Promise<{ name: string; type: string; dataUrl: string }>((resolve, reject) => {
               const r = new FileReader();
               r.onload = () => resolve({ name: f.name, type, dataUrl: r.result as string });
+              r.onerror = () => reject(new Error(`Lecture impossible : ${f.name}`));
+              r.onabort = () => reject(new Error(`Lecture interrompue : ${f.name}`));
               r.readAsDataURL(f);
             }),
         ),
     );
     setAttachments((prev) => [...prev, ...arr]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Lecture des pièces jointes impossible");
+    } finally {
+      setReadingFiles(false);
+    }
   };
 
   const save = () => {
+    if (readingFiles) return;
     if (!validateWeekly()) return;
     if (teamsUrl.trim() && !normalizeTeamsUrl(teamsUrl)) {
       toast.error("Saisissez un lien de réunion Microsoft Teams valide (https://…)");
@@ -877,7 +889,7 @@ function AssignmentDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!deleting && !saving) onOpenChange(o); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!deleting && !saving && !readingFiles) onOpenChange(o); }}>
       <DialogContent className={cn("mission-sheet flex max-h-[92dvh] w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden rounded-lg p-0 sm:max-w-3xl", light ? "cmc-theme-light" : "cmc-theme")}>
         <DialogHeader className="shrink-0 border-b px-6 py-5 pr-12 text-left">
           <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase text-primary"><FileText className="size-4" /> Ordre de mission</div>
@@ -889,6 +901,7 @@ function AssignmentDialog({
             {" • "}{half === "AM" ? "Matin" : "Après-midi"}
           </DialogDescription>
         </DialogHeader>
+        <MissionAttachments attachments={attachments} disabled={saving || deleting || readingFiles} onRemove={(index) => setAttachments((previous) => previous.filter((_, i) => i !== index))} />
         <Tabs defaultValue="mission" className="flex min-h-0 flex-1 flex-col">
           <TabsList className="grid h-auto shrink-0 grid-cols-2 rounded-none border-b bg-background p-2">
             <TabsTrigger value="mission" className="gap-2 whitespace-normal px-1 py-2 data-[state=active]:text-primary"><Users className="hidden size-4 sm:block" />Mission et période</TabsTrigger>
@@ -1088,19 +1101,8 @@ function AssignmentDialog({
           </div>
           <div className="grid gap-2 border-t pt-5">
             <Label htmlFor="mission-files" className="flex items-center gap-1"><Paperclip className="size-3.5" /> Pièces jointes (JPEG, PNG, PDF, EML, MSG — 20 Mo max)</Label>
-            <Input id="mission-files" type="file" accept={ATTACHMENT_ACCEPT} multiple onChange={(e) => handleFiles(e.target.files)} />
-            {attachments.length > 0 && (
-              <ul className="space-y-1 text-sm">
-                {attachments.map((f, i) => (
-                  <li key={i} className="flex items-center justify-between rounded border bg-muted/30 px-2 py-1">
-                    <a href={f.dataUrl} download={f.name} className="min-w-0 break-all underline">{f.name}</a>
-                    <Button variant="ghost" size="icon" aria-label={`Retirer ${f.name}`} className="shrink-0" onClick={() => setAttachments((p) => p.filter((_, j) => j !== i))}>
-                      <Trash2 className="size-3.5" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <Input id="mission-files" type="file" accept={ATTACHMENT_ACCEPT} multiple disabled={readingFiles || saving || deleting} onChange={(e) => { void handleFiles(e.target.files); e.target.value = ""; }} />
+            {readingFiles && <span role="status" className="text-xs text-muted-foreground">Lecture des pièces jointes…</span>}
           </div>
 
           <div className="grid gap-2">
@@ -1120,7 +1122,7 @@ function AssignmentDialog({
         <DialogFooter className="shrink-0 flex-wrap gap-3 border-t bg-background px-6 py-4 sm:justify-between sm:space-x-0">
           <div className="flex flex-wrap gap-2">
             {existing && !dayEditDates && (
-              <Button variant="destructive" disabled={deleting || saving} onClick={async () => {
+              <Button variant="destructive" disabled={deleting || saving || readingFiles} onClick={async () => {
                 if (!confirm(existing.seriesId ? "Supprimer cette réunion uniquement et annuler son invitation ? Les autres semaines sont conservées." : existing.recurrence ? "Supprimer toute la série hebdomadaire et annuler ses invitations pour tous les techniciens assignés ?" : "Supprimer cette mission et annuler son invitation pour tous les techniciens assignés ?")) return;
                 setDeleting(true);
                 try {
@@ -1136,7 +1138,7 @@ function AssignmentDialog({
             )}
             {(existing?.toConfirm || toConfirm) && (
               <Button
-                disabled={deleting || saving}
+                disabled={deleting || saving || readingFiles}
                 onClick={() => {
                   if (!validateWeekly()) return;
                   if (teamsUrl.trim() && !normalizeTeamsUrl(teamsUrl)) {
@@ -1206,7 +1208,7 @@ function AssignmentDialog({
                 <Mail /> Email
               </a>
             </Button>
-            <Button onClick={save} disabled={deleting || saving}>{saving ? "Enregistrement…" : "Valider"}</Button>
+            <Button onClick={save} disabled={deleting || saving || readingFiles}>{saving ? "Enregistrement…" : "Valider"}</Button>
           </div>
         </DialogFooter>
       </DialogContent>
