@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, ChevronDown, Shield, Tags, History, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock, Home } from "lucide-react";
+import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, ChevronDown, Shield, Tags, History, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock, Home, Hourglass } from "lucide-react";
 import { duplicateWeek } from "@/lib/planning-duplicate";
 import { missionHours, endHalfAfterTimeChange, startHalfFromTime } from "@/lib/planning-hours";
 import { PLANNING_GROUPS, filterPlanningTechnicians, technicianSection, type PlanningGroup } from "@/lib/planning-regions";
@@ -27,7 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo-cmc.png.asset.json";
 
 import { usePlanning } from "@/lib/planning-store";
-import { calendarNeedsPlanningWrite } from "@/lib/planning-calendar-save";
+import { acceptedCalendarResult, CalendarForbiddenError, saveCalendarMission } from "@/lib/planning-calendar-status";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
 import { assignmentOccursOn, nextWeeklyDate, meetingOccurrence } from "@/lib/planning-recurrence";
 import { downloadICS, googleCalendarUrl, googlePayload, mailtoUrl, outlookCalendarUrl, normalizeTeamsUrl } from "@/lib/calendar-export";
@@ -484,7 +484,9 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                                       >
                                         {cat?.label}
                                       </span>
-                                      {a.remote ? (
+                                      {a.calendarPending ? (
+                                        <Hourglass className="size-3.5 shrink-0 text-primary" aria-label="Invitation Google en attente" ><title>Google a refusé l’envoi (403) · à revalider</title></Hourglass>
+                                      ) : a.remote ? (
                                         <Home className="size-3.5 shrink-0 text-primary" strokeWidth={2.5} aria-label="Télétravail" />
                                       ) : a.toConfirm ? (
                                         <Star
@@ -602,9 +604,19 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             const current = data.assignments.find((a) => a.id === context.original.id);
             if (JSON.stringify(current) !== JSON.stringify(context.original)) throw new Error("Cette mission a changé : rouvrez-la");
             const replacements = splitMissionDays(context.original, editing.technicianId, context.dates, edited, uid);
-            for (const mission of replacements) {
-              const result = await sendSplitMission({ data: googlePayload(mission, data.technicians.filter((t) => mission.technicianIds.includes(t.id))) });
-              if (result.meetUrl) mission.meetUrl = result.meetUrl;
+            try {
+              for (const mission of replacements) {
+                const result = acceptedCalendarResult(await sendSplitMission({ data: googlePayload(mission, data.technicians.filter((t) => mission.technicianIds.includes(t.id))) }));
+                mission.calendarPending = undefined;
+                if (result.meetUrl) mission.meetUrl = result.meetUrl;
+              }
+            } catch (error) {
+              if (error instanceof CalendarForbiddenError) {
+                const pending = { ...context.original, calendarPending: true };
+                await upsertAssignment(pending);
+                context.original = pending;
+              }
+              throw error;
             }
             await replaceAssignmentDays(context.original, replacements);
             setEditing(null);
@@ -726,6 +738,8 @@ function AssignmentDialog({
   const [readingFiles, setReadingFiles] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [calendarPending, setCalendarPending] = useState(existing?.calendarPending ?? false);
+  const [missionId] = useState(existing?.id ?? uid());
   const sendCalendar = useServerFn(sendMissionToCalendar);
 
   const persist = async (a: Assignment, message: string) => {
@@ -740,27 +754,16 @@ function AssignmentDialog({
       return;
     }
     setSaving(true);
-    let saved = false;
-    let sent = false;
+    const outcome = { saved: false, sent: false };
     try {
-      // Ordinary missions are persisted before sending; Google failure must not erase an edit.
-      if (!a.seriesId) {
-        await onSave(a, false);
-        saved = true;
-      }
-      const result = await sendCalendar({ data: googlePayload(a, selectedTechs) });
-      sent = true;
-      if (calendarNeedsPlanningWrite(a, result.meetUrl)) {
-        await onSave({ ...a, meetUrl: result.meetUrl ?? a.meetUrl });
-      } else {
-        onOpenChange(false);
-      }
+      await saveCalendarMission(a, onSave, () => sendCalendar({ data: googlePayload(a, selectedTechs) }), () => onOpenChange(false), outcome);
       toast.success(message);
     } catch (error) {
+      if (error instanceof CalendarForbiddenError) setCalendarPending(true);
       const detail = error instanceof Error ? error.message : String(error);
-      toast.error(sent
+      toast.error(outcome.sent
         ? `Invitation envoyée, mais modification non enregistrée : ${detail}`
-        : saved ? `Planning enregistré, mais envoi agenda impossible : ${detail}`
+        : outcome.saved ? `Planning enregistré, mais envoi agenda impossible : ${detail}`
         : `Modification non enregistrée ; aucun envoi effectué : ${detail}`);
     } finally { setSaving(false); }
   };
@@ -837,7 +840,8 @@ function AssignmentDialog({
       return;
     }
     const a: Assignment = {
-      id: existing?.id ?? uid(),
+      id: missionId,
+      calendarPending: calendarPending || undefined,
       seriesId: existing?.seriesId,
       originalDateISO: existing?.originalDateISO,
       originalStartTime: existing?.originalStartTime,
@@ -905,6 +909,7 @@ function AssignmentDialog({
             {" • "}{half === "AM" ? "Matin" : "Après-midi"}
           </DialogDescription>
         </DialogHeader>
+        {calendarPending && <div role="status" className="flex items-center gap-2 border-b px-6 py-3 text-sm text-primary"><Hourglass className="size-4 shrink-0" />Invitation Google en attente (403)</div>}
         <MissionAttachments attachments={attachments} disabled={saving || deleting || readingFiles} onRemove={(index) => setAttachments((previous) => previous.filter((_, i) => i !== index))} />
         <Tabs defaultValue="mission" className="flex min-h-0 flex-1 flex-col">
           <TabsList className="grid h-auto shrink-0 grid-cols-2 rounded-none border-b bg-background p-2">
@@ -1155,7 +1160,8 @@ function AssignmentDialog({
                   }
                   const confirmed: Assignment = {
                     ...currentAssignment,
-                    id: existing?.id ?? uid(),
+                    id: missionId,
+                    calendarPending: calendarPending || undefined,
                     title: title.trim(),
                     toConfirm: undefined,
                     confirmed: true,
@@ -1212,7 +1218,7 @@ function AssignmentDialog({
                 <Mail /> Email
               </a>
             </Button>
-            <Button onClick={save} disabled={deleting || saving || readingFiles}>{saving ? "Enregistrement…" : "Valider"}</Button>
+            <Button onClick={save} disabled={deleting || saving || readingFiles}>{saving ? "Enregistrement…" : calendarPending ? "Revalider" : "Valider"}</Button>
           </div>
         </DialogFooter>
       </DialogContent>

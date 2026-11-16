@@ -157,9 +157,12 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
     providerAccepted = true;
     await finishInvitationAudit(auditId, "sent", id);
     const ev = (await res.json()) as { hangoutLink?: string };
-    return { ok: true, meetUrl: data.meet ? ev.hangoutLink : undefined };
+    return { ok: true as const, meetUrl: data.meet ? ev.hangoutLink : undefined };
     } catch (error) {
       if (!providerAccepted) await finishInvitationAudit(auditId, "failed", undefined, providerStatus ? `Google Calendar a refusé l’envoi (HTTP ${providerStatus}).` : "Envoi interrompu avant confirmation Google.");
+      if (!providerAccepted && (providerStatus === 403 || (error instanceof Error && /^Drive \[403\]:/.test(error.message)))) {
+        return { ok: false as const, status: 403 as const, error: error instanceof Error ? error.message : "Google a refusé l’envoi (403)" };
+      }
       throw error;
     }
   });

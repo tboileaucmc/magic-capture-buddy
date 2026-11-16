@@ -12,6 +12,9 @@ describe("Écriture après invitation", () => {
   it("enregistre un nouveau lien Meet", () => {
     assert.equal(calendarNeedsPlanningWrite(mission, "https://meet.google.com/abc"), true);
   });
+  it("réécrit une mission pour retirer le sablier après acceptation Google", () => {
+    assert.equal(calendarNeedsPlanningWrite({ ...mission, calendarPending: true }, undefined), true);
+  });
   it("enregistre toujours une exception de série envoyée avant sauvegarde", () => {
     assert.equal(calendarNeedsPlanningWrite({ ...mission, seriesId: "series" }, undefined), true);
   });

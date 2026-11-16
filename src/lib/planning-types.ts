@@ -55,6 +55,8 @@ export type Assignment = {
   confirmed?: boolean;
   /** Version de l'événement agenda (incrémentée pour remplacer l'événement existant). */
   sequence?: number;
+  /** Google refused the invitation with HTTP 403; retry manually from the mission sheet. */
+  calendarPending?: boolean;
   attachments?: Attachment[];
 };
 
