@@ -1,3 +1,5 @@
+import { endHalfAfterTimeChange, startHalfFromTime } from "./planning-hours";
+
 export type HalfDay = "AM" | "PM";
 
 export type Category = {
@@ -57,13 +59,15 @@ export type Assignment = {
 };
 
 /** Énumère les créneaux (jour + demi-journée) couverts par une mission, week-ends inclus. */
-export function assignmentSlots(a: Pick<Assignment, "dateISO" | "half" | "endDateISO" | "endHalf">): Array<{ dateISO: string; half: HalfDay }> {
+export function assignmentSlots(a: Pick<Assignment, "dateISO" | "half" | "endDateISO" | "endHalf"> & Partial<Pick<Assignment, "startTime" | "endTime">>): Array<{ dateISO: string; half: HalfDay }> {
   const endISO = a.endDateISO ?? a.dateISO;
-  const endHalf: HalfDay = a.endHalf ?? a.half;
+  // Existing missions may retain stale half-day flags; their actual boundary hours win.
+  const startHalf = a.startTime ? startHalfFromTime(a.startTime, a.half) : a.half;
+  const endHalf = a.endTime ? endHalfAfterTimeChange(a.endTime, a.endHalf ?? a.half) : a.endHalf ?? a.half;
   const out: Array<{ dateISO: string; half: HalfDay }> = [];
   const start = new Date(a.dateISO);
   const end = new Date(endISO);
-  if (end < start) return [{ dateISO: a.dateISO, half: a.half }];
+  if (end < start) return [{ dateISO: a.dateISO, half: startHalf }];
   const cursor = new Date(start);
   while (cursor <= end) {
     const p = (n: number) => String(n).padStart(2, "0");
@@ -72,11 +76,11 @@ export function assignmentSlots(a: Pick<Assignment, "dateISO" | "half" | "endDat
     const isLast = iso === endISO;
     const halves: HalfDay[] = [];
     if (isFirst && isLast) {
-      if (a.half === "AM") halves.push("AM");
+      if (startHalf === "AM") halves.push("AM");
       if (endHalf === "PM") halves.push("PM");
       if (halves.length === 0) halves.push("PM");
     } else if (isFirst) {
-      if (a.half === "AM") halves.push("AM", "PM");
+      if (startHalf === "AM") halves.push("AM", "PM");
       else halves.push("PM");
     } else if (isLast) {
       halves.push("AM");

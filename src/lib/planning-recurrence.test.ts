@@ -53,7 +53,7 @@ describe("Réunions hebdomadaires", () => {
     assert.equal(nextWeeklyDate("2026-10-31", 5), "2026-11-06");
   });
   it("ne répète pas les missions ordinaires et conserve leur période multi-jours", () => {
-    const ordinary = { ...meeting, recurrence: undefined, endDateISO: "2026-11-02", endHalf: "AM" as const };
+    const ordinary = { ...meeting, recurrence: undefined, endDateISO: "2026-11-02", endTime: "11:00", endHalf: "AM" as const };
     assert.equal(assignmentOccursOn(ordinary, "2026-10-31", "AM"), true);
     assert.equal(assignmentOccursOn(ordinary, "2026-11-02", "AM"), true);
     assert.equal(assignmentOccursOn(ordinary, "2026-11-02", "PM"), false);

@@ -28,6 +28,13 @@ test("7 December 13:00 to 8 December 12:00 covers only first afternoon and last 
   ]);
 });
 
+test("existing Saint-Aignan maintenance ending at 11:00 ignores its stale PM end flag", () => {
+  assert.deepEqual(assignmentSlots({ dateISO: "2026-12-07", endDateISO: "2026-12-08", startTime: "13:00", endTime: "11:00", half: "PM", endHalf: "PM" }), [
+    { dateISO: "2026-12-07", half: "PM" },
+    { dateISO: "2026-12-08", half: "AM" },
+  ]);
+});
+
 test("Astreinte in a full day uses 10:00–23:00 even from an afternoon slot", () => {
   assert.deepEqual(missionHours(draft), { startTime: "10:00", endTime: "23:00", onCallFullDay: true });
 });
