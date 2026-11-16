@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo-cmc.png.asset.json";
 
 import { usePlanning } from "@/lib/planning-store";
+import { calendarNeedsPlanningWrite } from "@/lib/planning-calendar-save";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
 import { assignmentOccursOn, nextWeeklyDate, meetingOccurrence } from "@/lib/planning-recurrence";
 import { downloadICS, googleCalendarUrl, googlePayload, mailtoUrl, outlookCalendarUrl, normalizeTeamsUrl } from "@/lib/calendar-export";
@@ -747,7 +748,11 @@ function AssignmentDialog({
       }
       const result = await sendCalendar({ data: googlePayload(a, selectedTechs) });
       sent = true;
-      await onSave({ ...a, meetUrl: result.meetUrl ?? a.meetUrl });
+      if (calendarNeedsPlanningWrite(a, result.meetUrl)) {
+        await onSave({ ...a, meetUrl: result.meetUrl ?? a.meetUrl });
+      } else {
+        onOpenChange(false);
+      }
       toast.success(message);
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);

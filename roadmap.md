@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Réduire les lenteurs de sauvegarde : éviter la double écriture inutile et alléger l’historique, puis vérifier une mission sans notification.
 - [x] Rétablir le chargement du planning après l’opération bloquée : service relancé, 83 missions conservées, affichage connecté puis actualisation vérifiés (9,38 s puis 5,94 s), aucune erreur navigateur.
 - [x] Attendre la sauvegarde confirmée avant les messages d’envoi, signaler les refus et préserver les modifications simultanées ; 17 tests réussis, compilation correcte.
 - [x] Nettoyage de la mission « Vérification sauvegarde temporaire 161126 » confirmé : aucune mission temporaire restante, aucune invitation de test envoyée.
