@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, ChevronDown, Shield, Tags, History, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock, Home } from "lucide-react";
 import { duplicateWeek } from "@/lib/planning-duplicate";
-import { missionHours, endHalfAfterTimeChange } from "@/lib/planning-hours";
+import { missionHours, endHalfAfterTimeChange, startHalfFromTime } from "@/lib/planning-hours";
 import { PLANNING_GROUPS, filterPlanningTechnicians, technicianSection, type PlanningGroup } from "@/lib/planning-regions";
 import { missionDates, splitMissionDays } from "@/lib/planning-week-edit";
 import { MissionDaysDialog } from "@/components/MissionDaysDialog";
@@ -772,9 +772,9 @@ function AssignmentDialog({
     categoryId, categoryLabel: categories.find((c) => c.id === categoryId)?.label,
     fullDay, fullWeek, weekly, startTime, endTime,
   });
-  const startHalfVal: HalfDay = weekly || existing?.seriesId ? (startTime < "12:00" ? "AM" : "PM") : isFullDay ? "AM" : existing?.half ?? half;
+  const startHalfVal: HalfDay = weekly || existing?.seriesId ? (startTime < "12:00" ? "AM" : "PM") : isFullDay ? "AM" : startHalfFromTime(startTime, existing?.half ?? half);
   const missionEndISO = weekly ? startISO : isFullWeek ? shiftISO(weekMondayISO, 4) : isFullDay ? startISO : endDateISO;
-  const missionEndHalf: HalfDay = weekly || existing?.seriesId ? (endTime <= "12:00" ? "AM" : "PM") : isFullDay ? "PM" : endHalf;
+  const missionEndHalf: HalfDay = weekly || existing?.seriesId ? (endTime <= "12:00" ? "AM" : "PM") : isFullDay ? "PM" : endHalfAfterTimeChange(endTime, endHalf);
   const validateWeekly = () => {
     if ((weekly || existing?.seriesId) && (!startTime || !endTime || endTime <= startTime || missionEndISO !== startISO)) {
       toast.error("La fin de la réunion doit être après son début, le même jour");
