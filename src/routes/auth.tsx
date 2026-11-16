@@ -10,6 +10,7 @@ import logoAsset from "@/assets/logo-cmc.png.asset.json";
 import { isPlanningSignupEmail } from "@/lib/planning-signup";
 import { evaluatePlanningPassword, MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH, MIN_PASSWORD_ENTROPY } from "@/lib/planning-password";
 import { Progress } from "@/components/ui/progress";
+import { checkSessionLifetime, registerSessionLifetime } from "@/lib/session-lifetime.browser";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -36,11 +37,13 @@ function AuthPage() {
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
-    supabase.auth.getSession().then(({ data }) => { if (data.session) navigate({ to: "/planning", replace: true }); });
+    checkSessionLifetime().then(({ allowed }) => { if (allowed) navigate({ to: "/planning", replace: true }); }).catch(() => {});
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session && !timer) {
         setIntro(true);
-        timer = setTimeout(() => navigate({ to: "/planning", replace: true }), 1800);
+        timer = setTimeout(() => {
+          void checkSessionLifetime().then(({ allowed }) => { if (allowed) navigate({ to: "/planning", replace: true }); }).catch(() => {});
+        }, 1800);
       }
     });
     return () => { data.subscription.unsubscribe(); if (timer) clearTimeout(timer); };
@@ -68,8 +71,9 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (data.session) registerSessionLifetime(data.session);
       } else {
         const { error } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: window.location.origin } });
         if (error) throw error;

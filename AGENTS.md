@@ -29,6 +29,7 @@
 - Administration dialogs support controlled opening from the planning menu and remain mounted outside the dropdown so closing the menu does not discard the dialog.
 - The support-only user-facing role reuses support_editor to preserve existing assignments and database enforcement.
 <!-- LOVABLE:BEGIN -->
+- Enforce browser session lifetime at protected navigation and in a root watcher; stable login identity and session cookies preserve deadlines across tabs without changing database permissions.
 - Resolve category-specific hours through planning-hours for consistent form, saved mission and exports.
 - Split finite multi-day missions into ordinary assignments per selected technician/date; retain the original event ID once, await Calendar updates and replace planning in one mutation to avoid overlapping days.
 <!-- LOVABLE:END -->
