@@ -38,20 +38,21 @@ function migrate(parsed: Data): Data {
 
 /** Reads never write fallback browser data over the team planning. */
 async function loadRemote(): Promise<PlanningSnapshot> {
-  const { data: row, error } = await supabase.from("planning_state").select("data, updated_at").eq("id", "main").single();
+  const { data: result, error } = await supabase.rpc("read_planning_snapshot");
   if (error) throw error;
+  const row = result as unknown as PlanningSnapshot | null;
+  if (!row) throw new Error("Planning partagé indisponible");
   const remote = row.data as Data | undefined;
   if (!remote || !Array.isArray(remote.assignments)) throw new Error("Planning partagé indisponible");
-  return { data: migrate(remote), updatedAt: row.updated_at };
+  return { data: migrate(remote), updatedAt: row.updatedAt };
 }
 
 async function writeRemote(data: Data, previousVersion: string, nextVersion: string): Promise<PlanningSnapshot | null> {
-  const { data: row, error } = await supabase.from("planning_state")
-    .update({ data: data as unknown as Json, updated_at: nextVersion })
-    .eq("id", "main").eq("updated_at", previousVersion)
-    .select("data, updated_at").maybeSingle();
+  const { data: updatedAt, error } = await supabase.rpc("write_planning_snapshot", {
+    _data: data as unknown as Json, _previous_version: previousVersion, _next_version: nextVersion,
+  });
   if (error) throw error;
-  return row ? { data: migrate(row.data as Data), updatedAt: row.updated_at } : null;
+  return updatedAt ? { data, updatedAt } : null;
 }
 
 export function usePlanning() {
