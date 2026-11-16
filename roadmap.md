@@ -1,5 +1,6 @@
 # Roadmap
-- [ ] Corriger les modifications perdues : attendre la sauvegarde confirmée, signaler les refus et préserver les changements simultanés ; vérifier la relecture après actualisation.
+- [x] Attendre la sauvegarde confirmée avant les messages d’envoi, signaler les refus et préserver les modifications simultanées ; 17 tests réussis, compilation correcte.
+- [ ] Vérification complète après actualisation et nettoyage de la mission « Vérification sauvegarde temporaire 161126 » : bloqués par les délais dépassés/indisponibilités du service de données ; aucune invitation de test envoyée, nettoyage demandé mais non confirmé.
 - [x] Adapter le planning aux téléphones portrait/paysage et tablettes : commandes regroupées, orientation naturelle, calendrier défilant avec jours et techniciens fixes, fiche de mission adaptée ; six tailles vérifiées avec session réelle, filtre Support et onglets testés sans envoi ni enregistrement, aucun débordement de page ni erreur, 8 tests réussis.
 - [x] Indicateur d’entropie à l’inscription : 12–128 caractères, score maximal et 50 bits estimés minimum ; 9 tests réussis, refus/acceptation vérifiés sur ordinateur et téléphone sans créer de compte ni envoyer de mot de passe ; connexion existante inchangée.
 - [ ] Protection serveur des nouveaux mots de passe : bloquée par les réglages Auth réservés au propriétaire (More → Users → Auth settings → Email, minimum 12 caractères et Password HIBP Check). Le contrôle d’entropie local ne protège pas un appel direct à Auth.
