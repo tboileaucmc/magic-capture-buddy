@@ -1,6 +1,6 @@
 import { it } from "node:test";
 import assert from "node:assert/strict";
-import { planningDelta } from "./planning-delta";
+import { planningDelta, planningValuesEqual } from "./planning-delta";
 import type { PlanningData } from "./planning-persistence";
 
 const before: PlanningData = { technicians: [], categories: [], assignments: [{ id: "a", title: "Avant", address: "", startTime: "08:00", endTime: "12:00", dateISO: "2026-11-16", half: "AM", categoryId: "noc", technicianIds: ["support"], attachments: [{ name: "ordre.pdf", type: "application/pdf", dataUrl: "data:application/pdf;base64," + "A".repeat(1000000) }] }] };
@@ -13,4 +13,13 @@ it("transmet les suppressions et nouveaux éléments sans toucher aux autres rub
   const patch = planningDelta(before, { ...before, assignments: [] });
   assert.deepEqual(patch.assignments?.remove, ["a"]);
   assert.equal(patch.technicians, undefined);
+});
+it("compare les pièces jointes copiées sans sérialiser leur contenu", () => {
+  const attachment = before.assignments[0]?.attachments?.[0];
+  assert.ok(attachment);
+  const copied = { ...attachment, toJSON() { throw new Error("Ne pas sérialiser la pièce jointe"); } };
+  assert.equal(planningValuesEqual([copied], [{ ...copied }]), true);
+  assert.equal(planningValuesEqual([copied], [{ ...copied, dataUrl: "différent" }]), false);
+  const patch = planningDelta(before, { ...before, assignments: before.assignments.map(a => ({ ...a, attachments: a.attachments?.map(file => ({ ...file })), title: "Copie" })) });
+  assert.deepEqual(patch.assignments?.update.a?.set, { title: "Copie" });
 });

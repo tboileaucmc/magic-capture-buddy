@@ -211,6 +211,13 @@ export type Database = {
       }
       is_planning_signup_email: { Args: { _email: string }; Returns: boolean }
       is_support_editor: { Args: { _user_id: string }; Returns: boolean }
+      planning_changed_missions: {
+        Args: { _new: Json; _old: Json }
+        Returns: {
+          after_mission: Json
+          before_mission: Json
+        }[]
+      }
       read_planning_snapshot: { Args: never; Returns: Json }
       read_planning_version: { Args: never; Returns: string }
       support_technician_ids: { Args: { _data: Json }; Returns: Json }

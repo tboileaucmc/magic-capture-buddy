@@ -2,6 +2,19 @@ import type { PlanningData } from "./planning-persistence";
 
 type Item = { id: string; [key: string]: unknown };
 type Changes = { add: Item[]; remove: string[]; update: Record<string, { set: Record<string, unknown>; unset: string[] }>; order?: string[] };
+// Compare large attachment strings directly, without allocating serialized copies.
+export function planningValuesEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a === null || b === null || typeof a !== "object" || typeof b !== "object") return false;
+  if (Array.isArray(a) || Array.isArray(b)) {
+    return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((value, i) => planningValuesEqual(value, b[i]));
+  }
+  const left = a as Record<string, unknown>;
+  const right = b as Record<string, unknown>;
+  const keys = Object.keys(left).filter(key => left[key] !== undefined);
+  return keys.length === Object.keys(right).filter(key => right[key] !== undefined).length
+    && keys.every(key => planningValuesEqual(left[key], right[key]));
+}
 export function planningDelta(before: PlanningData, after: PlanningData): Record<string, Changes> {
   const patch: Record<string, Changes> = {};
   for (const section of ["assignments", "technicians", "categories"] as const) {
@@ -18,7 +31,7 @@ export function planningDelta(before: PlanningData, after: PlanningData): Record
       const unset: string[] = [];
       for (const key of new Set([...Object.keys(previous), ...Object.keys(item)])) {
         if (key === "id" || previous[key] === item[key]) continue;
-        if (JSON.stringify(previous[key]) === JSON.stringify(item[key])) continue;
+        if (planningValuesEqual(previous[key], item[key])) continue;
         if (item[key] === undefined) unset.push(key);
         else set[key] = item[key];
       }
