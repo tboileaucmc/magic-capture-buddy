@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, ChevronDown, Shield, Tags, History, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock, Home } from "lucide-react";
 import { duplicateWeek } from "@/lib/planning-duplicate";
@@ -289,6 +290,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                     <DropdownMenuItem onSelect={() => setAdminDialog("history")}><History /> Historique support</DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => setAdminDialog("usage")}><FileText /> Données et missions</DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => setAdminDialog("anomalies")}><FileText /> Changements inhabituels</DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/invitations" search={{ page: 0, status: "all" }}><Mail /> Invitations envoyées</Link></DropdownMenuItem>
                   </>}
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as WazeRouteImport } from './routes/waze'
+import { Route as AuthenticatedInvitationsRouteImport } from './routes/_authenticated/invitations'
 import { Route as AuthenticatedPlanningRouteImport } from './routes/_authenticated/planning'
 import { Route as ApiPublicJobsPurgeAttachmentsRouteImport } from './routes/api/public/jobs/purge-attachments'
 import { Route as ApiPublicJobsWeeklyPlanningRouteImport } from './routes/api/public/jobs/weekly-planning'
@@ -42,6 +43,12 @@ const WazeRoute = WazeRouteImport.update({
   path: '/waze',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedInvitationsRoute =
+  AuthenticatedInvitationsRouteImport.update({
+    id: '/invitations',
+    path: '/invitations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPlanningRoute = AuthenticatedPlanningRouteImport.update({
   id: '/planning',
   path: '/planning',
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/waze': typeof WazeRoute
+  '/invitations': typeof AuthenticatedInvitationsRoute
   '/planning': typeof AuthenticatedPlanningRoute
   '/api/public/jobs/purge-attachments': typeof ApiPublicJobsPurgeAttachmentsRoute
   '/api/public/jobs/weekly-planning': typeof ApiPublicJobsWeeklyPlanningRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/waze': typeof WazeRoute
+  '/invitations': typeof AuthenticatedInvitationsRoute
   '/planning': typeof AuthenticatedPlanningRoute
   '/api/public/jobs/purge-attachments': typeof ApiPublicJobsPurgeAttachmentsRoute
   '/api/public/jobs/weekly-planning': typeof ApiPublicJobsWeeklyPlanningRoute
@@ -85,6 +94,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/waze': typeof WazeRoute
+  '/_authenticated/invitations': typeof AuthenticatedInvitationsRoute
   '/_authenticated/planning': typeof AuthenticatedPlanningRoute
   '/api/public/jobs/purge-attachments': typeof ApiPublicJobsPurgeAttachmentsRoute
   '/api/public/jobs/weekly-planning': typeof ApiPublicJobsWeeklyPlanningRoute
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/waze'
+    | '/invitations'
     | '/planning'
     | '/api/public/jobs/purge-attachments'
     | '/api/public/jobs/weekly-planning'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/waze'
+    | '/invitations'
     | '/planning'
     | '/api/public/jobs/purge-attachments'
     | '/api/public/jobs/weekly-planning'
@@ -115,6 +127,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/waze'
+    | '/_authenticated/invitations'
     | '/_authenticated/planning'
     | '/api/public/jobs/purge-attachments'
     | '/api/public/jobs/weekly-planning'
@@ -167,6 +180,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WazeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/invitations': {
+      id: '/_authenticated/invitations'
+      path: '/invitations'
+      fullPath: '/invitations'
+      preLoaderRoute: typeof AuthenticatedInvitationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/planning': {
       id: '/_authenticated/planning'
       path: '/planning'
@@ -192,10 +212,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedInvitationsRoute: typeof AuthenticatedInvitationsRoute
   AuthenticatedPlanningRoute: typeof AuthenticatedPlanningRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedInvitationsRoute: AuthenticatedInvitationsRoute,
   AuthenticatedPlanningRoute: AuthenticatedPlanningRoute,
 }
 

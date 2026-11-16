@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      invitation_sends: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          event_id: string | null
+          id: string
+          mission_end: string
+          mission_id: string
+          mission_start: string
+          mission_title: string
+          recipients: Json
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_id?: string | null
+          id?: string
+          mission_end: string
+          mission_id: string
+          mission_start: string
+          mission_title: string
+          recipients?: Json
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_id?: string | null
+          id?: string
+          mission_end?: string
+          mission_id?: string
+          mission_start?: string
+          mission_title?: string
+          recipients?: Json
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mission_history: {
         Row: {
           action: string

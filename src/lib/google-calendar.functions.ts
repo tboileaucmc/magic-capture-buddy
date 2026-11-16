@@ -106,6 +106,11 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
     }
     const lovableKey = process.env.LOVABLE_API_KEY;
     const calKey = process.env.GOOGLE_CALENDAR_API_KEY;
+    const { beginInvitationAudit, finishInvitationAudit } = await import("./invitation-audit.server");
+    const auditId = await beginInvitationAudit(context.userId, data);
+    let providerAccepted = false;
+    let providerStatus: number | undefined;
+    try {
     if (!lovableKey || !calKey) throw new Error("Agenda Google non connecté");
     const headers = {
       Authorization: `Bearer ${lovableKey}`,
@@ -144,10 +149,17 @@ export const sendMissionToCalendar = createServerFn({ method: "POST" })
       res = await fetch(`${base}?sendUpdates=all&supportsAttachments=true&conferenceDataVersion=1`, { method: "POST", headers, body: JSON.stringify(body) });
     }
     if (!res.ok) {
+      providerStatus = res.status;
       const t = await res.text();
       console.error(`Google Calendar [${res.status}]: ${t}`);
       throw new Error(`Envoi agenda échoué [${res.status}]: ${t.slice(0, 300)}`);
     }
+    providerAccepted = true;
+    await finishInvitationAudit(auditId, "sent", id);
     const ev = (await res.json()) as { hangoutLink?: string };
     return { ok: true, meetUrl: data.meet ? ev.hangoutLink : undefined };
+    } catch (error) {
+      if (!providerAccepted) await finishInvitationAudit(auditId, "failed", undefined, providerStatus ? `Google Calendar a refusé l’envoi (HTTP ${providerStatus}).` : "Envoi interrompu avant confirmation Google.");
+      throw error;
+    }
   });
