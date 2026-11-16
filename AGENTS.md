@@ -3,7 +3,8 @@
 - Confirm mission sends only after persistence succeeds; ordinary missions save before Calendar calls, and failures keep the dialog open with separate planning/send outcomes.
 - After Calendar succeeds, write an ordinary mission again only for a changed Meet URL; this avoids a duplicate whole-planning transfer while preserving series persistence.
 - Filter history joins to IDs touching support in either snapshot before comparing attachment-heavy missions; retain both sides for team changes.
-- Read/write planning snapshots through SECURITY INVOKER RPCs with scoped timeout/work-memory settings and timestamp-only write responses; preserve RLS while avoiding attachment-heavy query timeouts.
+- Use SECURITY INVOKER version/delta RPCs for mutations, keeping CAS and RLS; reuse a snapshot only at the confirmed version and omit unchanged attachment fields to avoid whole-planning transfers.
+- Authenticated statements have a 30-second role timeout; function-local settings alone do not extend the active request timeout.
 - Google Calendar/Drive/Gmail calls run server-side through connector gateway; mission invites and the weekly PDF are sent from the connected Google account.
 - Mission-sheet deletion clears Calendar reminders with sendUpdates=none, then awaits authenticated cancellation with the creation event ID and sendUpdates=all before removing the planning entry; either provider failure preserves the mission for retry.
 - The weekly PDF is drawn with jsPDF from data (no DOM capture) so the same code runs in the button and the Thursday cron route.

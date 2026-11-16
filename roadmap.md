@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Écriture des changements uniquement avec version vérifiée et droits conservés ; limite authenticated réellement constatée à 8 s portée à 30 s. Création relue dans l’interface, modification confirmée et relue en base (13,44 s et 19,32 s), sans invitation temporaire ; 6 tests réussis.
+- [ ] Stabilité et rapidité finales : nouveau OOM (2 depuis redémarrage), lecture après modification interrompue par 503 ; Mini non autorisé. Mission temporaire nettoyée ; la validation initiale d’une mission existante a renvoyé son invitation lors du contrôle (35,26 s).
 - [x] Expliquer les crédits de l’abonnement : Pro, 100 mensuels et 5 quotidiens ; aucun quota horaire, coût serveur distinct.
 - [x] Éviter la double écriture inutile après Calendar et filtrer l’historique sur les missions support avant comparaison ; 7 tests réussis, compilation correcte.
 - [ ] Valider la rapidité d’enregistrement : test réel encore bloqué par manque de mémoire (nouvel arrêt OOM et réponse 503). Passage Mini proposé mais non exécuté, décision utilisateur attendue ; mission de test nettoyée et chargement vérifié, aucune invitation de test envoyée.

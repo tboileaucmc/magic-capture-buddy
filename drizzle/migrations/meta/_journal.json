@@ -134,6 +134,27 @@
       "when": 1794829660929,
       "tag": "0018_planning_history_support_filtered",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794830664930,
+      "tag": "0019_planning_delta_write",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794830858024,
+      "tag": "0020_planning_delta_indexed",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794831017864,
+      "tag": "0021_planning_authenticated_timeout",
+      "breakpoints": true
     }
   ]
 }

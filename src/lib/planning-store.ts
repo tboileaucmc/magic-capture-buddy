@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { persistPlanningMutation, planningMutationQueue, type PlanningData, type PlanningSnapshot } from "./planning-persistence";
 import type { Json } from "@/integrations/supabase/types";
+import { planningDelta } from "./planning-delta";
 import { saveMeetingAssignment, deleteMeetingAssignment } from "./planning-recurrence";
 import { replaceSplitMission } from "./planning-week-edit";
 import {
@@ -15,6 +16,7 @@ import {
 
 type Data = PlanningData;
 const enqueueMutation = planningMutationQueue();
+let latestSnapshot: PlanningSnapshot | undefined;
 
 function migrate(parsed: Data): Data {
   try {
@@ -44,15 +46,27 @@ async function loadRemote(): Promise<PlanningSnapshot> {
   if (!row) throw new Error("Planning partagé indisponible");
   const remote = row.data as Data | undefined;
   if (!remote || !Array.isArray(remote.assignments)) throw new Error("Planning partagé indisponible");
-  return { data: migrate(remote), updatedAt: row.updatedAt };
+  latestSnapshot = { data: migrate(remote), updatedAt: row.updatedAt };
+  return latestSnapshot;
 }
 
 async function writeRemote(data: Data, previousVersion: string, nextVersion: string): Promise<PlanningSnapshot | null> {
-  const { data: updatedAt, error } = await supabase.rpc("write_planning_snapshot", {
-    _data: data as unknown as Json, _previous_version: previousVersion, _next_version: nextVersion,
+  const previous = latestSnapshot;
+  if (!previous || previous.updatedAt !== previousVersion) return null;
+  const patch = planningDelta(previous.data, data);
+  if (!Object.keys(patch).length) return { data, updatedAt: previousVersion };
+  const { data: updatedAt, error } = await supabase.rpc("write_planning_delta", {
+    _patch: patch as unknown as Json, _previous_version: previousVersion, _next_version: nextVersion,
   });
   if (error) throw error;
   return updatedAt ? { data, updatedAt } : null;
+}
+
+async function loadMutationSnapshot(): Promise<PlanningSnapshot> {
+  const { data: updatedAt, error } = await supabase.rpc("read_planning_version");
+  if (error) throw error;
+  if (latestSnapshot && updatedAt === latestSnapshot.updatedAt) return latestSnapshot;
+  return loadRemote();
 }
 
 export function usePlanning() {
@@ -63,6 +77,7 @@ export function usePlanning() {
     // Ignore late initial reads and delayed realtime echoes of older saves.
     if (version.current && Date.parse(snapshot.updatedAt) < Date.parse(version.current)) return;
     version.current = snapshot.updatedAt;
+    latestSnapshot = snapshot;
     setData(snapshot.data);
     setHydrated(true);
   }, []);
@@ -83,7 +98,7 @@ export function usePlanning() {
 
   const mutate = useCallback((change: (current: Data) => Data) => {
     const result = enqueueMutation(async () => {
-      const saved = await persistPlanningMutation({ read: loadRemote, write: writeRemote }, change);
+      const saved = await persistPlanningMutation({ read: loadMutationSnapshot, write: writeRemote }, change);
       apply(saved);
     });
     // Report failures even for controls that do not await their mutation.
