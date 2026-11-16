@@ -32,15 +32,6 @@ import { downloadICS, googleCalendarUrl, googlePayload, mailtoUrl, outlookCalend
 import { sendMissionToCalendar, cancelMissionInCalendar } from "@/lib/google-calendar.functions";
 import type { Technician as Tech } from "@/lib/planning-types";
 
-/** Envoie l'ordre de mission depuis planning.cinemeccanica@gmail.com vers l'agenda des techniciens. */
-function pushToCalendar(a: Assignment, techs: Tech[], okMsg: string, onMeet?: (url: string | undefined) => void) {
-  sendMissionToCalendar({ data: googlePayload(a, techs) })
-    .then((r) => {
-      toast.success(r.meetUrl ? `${okMsg} avec le lien Google Meet` : okMsg);
-      if (onMeet && r.meetUrl && r.meetUrl !== a.meetUrl) onMeet(r.meetUrl);
-    })
-    .catch((e) => toast.error(`Envoi agenda impossible : ${e instanceof Error ? e.message : e}`));
-}
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,7 +119,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
     setDupTechs(new Set(dupCandidates.map((t) => t.id)));
     setDupOpen(true);
   };
-  const runDuplicate = () => {
+  const runDuplicate = async () => {
     const [y, m, d] = dupTarget.split("-").map(Number);
     const target = y ? new Date(y, m - 1, d) : null;
     if (!target || isNaN(target.getTime())) { toast.error("Date invalide"); return; }
@@ -137,7 +128,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
     if (fmtISO(targetMonday) === fmtISO(weekStart)) { toast.error("Choisissez une autre semaine"); return; }
     const copies = duplicateWeek(data.assignments, fmtISO(weekStart), fmtISO(targetMonday), canEditMission, uid, dupTechs);
     if (copies.length === 0) { toast.info("Aucune mission à dupliquer pour ces techniciens"); return; }
-    addAssignments(copies);
+    try { await addAssignments(copies); } catch { return; }
     setDupOpen(false);
     setWeekStart(targetMonday);
     toast.success(`${copies.length} mission(s) dupliquée(s) — invitations non envoyées`);
@@ -336,7 +327,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                   <input
                     type="color"
                     value={c.color}
-                    onChange={(e) => updateCategoryColor(c.id, e.target.value)}
+                    onChange={(e) => { void updateCategoryColor(c.id, e.target.value).catch(() => undefined); }}
                     className="absolute inset-0 size-full cursor-pointer opacity-0"
                     aria-label={`Couleur de ${c.label}`}
                   />
@@ -349,7 +340,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                 type="button"
                 className="ml-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
                 onClick={() => {
-                  if (confirm(`Supprimer la catégorie "${c.label}" ? Les missions associées seront supprimées.`)) removeCategory(c.id);
+                  if (confirm(`Supprimer la catégorie "${c.label}" ? Les missions associées seront supprimées.`)) void removeCategory(c.id).catch(() => undefined);
                 }}
                 aria-label="Supprimer la catégorie"
               >
@@ -433,7 +424,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
                             variant="ghost"
                             size="icon"
                             onClick={() => {
-                              if (confirm(`Supprimer ${t.name} ?`)) removeTechnician(t.id);
+                              if (confirm(`Supprimer ${t.name} ?`)) void removeTechnician(t.id).catch(() => undefined);
                             }}
                             aria-label={`Supprimer ${t.name}`}
                           >
@@ -613,16 +604,16 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
               const result = await sendSplitMission({ data: googlePayload(mission, data.technicians.filter((t) => mission.technicianIds.includes(t.id))) });
               if (result.meetUrl) mission.meetUrl = result.meetUrl;
             }
-            replaceAssignmentDays(context.original, replacements);
+            await replaceAssignmentDays(context.original, replacements);
             setEditing(null);
           } : undefined}
-          onSave={(a) => {
-            upsertAssignment(a);
-            setEditing(null);
+          onSave={async (a, close = true) => {
+            await upsertAssignment(a);
+            if (close) setEditing(null);
           }}
           onDelete={async (target) => {
             await cancelMission({ data: { id: target.id, occurrence: googlePayload(target, []).occurrence } });
-            deleteAssignment(target);
+            await deleteAssignment(target);
             setEditing(null);
             toast.success("Mission supprimée et annulation envoyée aux techniciens");
           }}
@@ -632,8 +623,8 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
       <AddTechnicianDialog
         open={techDialog}
         onOpenChange={setTechDialog}
-        onAdd={(name, email) => {
-          addTechnician({ id: uid(), name, email });
+        onAdd={async (name, email) => {
+          try { await addTechnician({ id: uid(), name, email }); } catch { return; }
           setTechDialog(false);
           toast.success("Technicien ajouté");
         }}
@@ -645,8 +636,8 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           open
           technician={editingTech}
           onOpenChange={(o) => !o && setEditingTech(null)}
-          onSave={(name: string, email: string) => {
-            updateTechnician({ ...editingTech, name, email });
+          onSave={async (name: string, email: string) => {
+            try { await updateTechnician({ ...editingTech, name, email }); } catch { return; }
             setEditingTech(null);
             toast.success("Technicien mis à jour");
           }}
@@ -656,8 +647,8 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
       <AddCategoryDialog
         open={catDialog}
         onOpenChange={setCatDialog}
-        onAdd={(label, color) => {
-          addCategory({ id: uid(), label, color });
+        onAdd={async (label, color) => {
+          try { await addCategory({ id: uid(), label, color }); } catch { return; }
           setCatDialog(false);
           toast.success("Catégorie ajoutée");
         }}
@@ -690,7 +681,7 @@ function AssignmentDialog({
   dateISO: string;
   half: HalfDay;
   existing?: Assignment;
-  onSave: (a: Assignment) => void;
+  onSave: (a: Assignment, close?: boolean) => Promise<void>;
   onDelete: (target: Assignment) => Promise<void>;
   dayEditDates?: string[];
   onSaveDays?: (a: Assignment) => Promise<void>;
@@ -746,18 +737,25 @@ function AssignmentDialog({
       } finally { setSaving(false); }
       return;
     }
-    if (!a.seriesId) {
-      onSave(a);
-      pushToCalendar(a, selectedTechs, message, (meetUrl) => onSave({ ...a, meetUrl }));
-      return;
-    }
     setSaving(true);
+    let saved = false;
+    let sent = false;
     try {
+      // Ordinary missions are persisted before sending; Google failure must not erase an edit.
+      if (!a.seriesId) {
+        await onSave(a, false);
+        saved = true;
+      }
       const result = await sendCalendar({ data: googlePayload(a, selectedTechs) });
-      onSave({ ...a, meetUrl: result.meetUrl ?? a.meetUrl });
+      sent = true;
+      await onSave({ ...a, meetUrl: result.meetUrl ?? a.meetUrl });
       toast.success(message);
     } catch (error) {
-      toast.error(`Réunion conservée : ${error instanceof Error ? error.message : error}`);
+      const detail = error instanceof Error ? error.message : String(error);
+      toast.error(sent
+        ? `Invitation envoyée, mais modification non enregistrée : ${detail}`
+        : saved ? `Planning enregistré, mais envoi agenda impossible : ${detail}`
+        : `Modification non enregistrée ; aucun envoi effectué : ${detail}`);
     } finally { setSaving(false); }
   };
 

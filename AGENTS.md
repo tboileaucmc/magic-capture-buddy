@@ -1,5 +1,6 @@
 - Planning data is a single shared row `planning_state` (id 'main', jsonb data + broadcast_list) readable by any signed-in user, writable only by admin/editor roles — the team shares one planning.
-- `planning_state` is in the `supabase_realtime` publication and the store subscribes to its UPDATE events (unique channel name, skipNext guard against re-saving echoes) so every connected screen reflects changes without reload.
+- Persist planning mutations through a serialized, awaited compare-and-swap on updated_at, replaying focused changes against the latest shared row; realtime updates only apply newer snapshots and never trigger writes, preventing lost edits and echo races.
+- Confirm mission sends only after persistence succeeds; ordinary missions save before Calendar calls, and failures keep the dialog open with separate planning/send outcomes.
 - Google Calendar/Drive/Gmail calls run server-side through connector gateway; mission invites and the weekly PDF are sent from the connected Google account.
 - Mission-sheet deletion clears Calendar reminders with sendUpdates=none, then awaits authenticated cancellation with the creation event ID and sendUpdates=all before removing the planning entry; either provider failure preserves the mission for retry.
 - The weekly PDF is drawn with jsPDF from data (no DOM capture) so the same code runs in the button and the Thursday cron route.

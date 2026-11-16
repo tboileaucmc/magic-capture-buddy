@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { persistPlanningMutation, planningMutationQueue, type PlanningData, type PlanningSnapshot } from "./planning-persistence";
 import type { Json } from "@/integrations/supabase/types";
 import { saveMeetingAssignment, deleteMeetingAssignment } from "./planning-recurrence";
 import { replaceSplitMission } from "./planning-week-edit";
@@ -11,13 +13,8 @@ import {
   type Technician,
 } from "./planning-types";
 
-const KEY = "planning-data-v1";
-
-type Data = {
-  technicians: Technician[];
-  categories: Category[];
-  assignments: Assignment[];
-};
+type Data = PlanningData;
+const enqueueMutation = planningMutationQueue();
 
 function migrate(parsed: Data): Data {
   try {
@@ -39,134 +36,73 @@ function migrate(parsed: Data): Data {
   }
 }
 
-/** Ancien stockage navigateur : sert uniquement à transférer les données au premier passage en ligne. */
-function loadLocal(): Data | null {
-  try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? migrate(JSON.parse(raw) as Data) : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Charge le planning partagé en ligne (ligne unique « main »). */
-async function loadRemote(): Promise<Data> {
-  const { data: row, error } = await supabase.from("planning_state").select("data").eq("id", "main").maybeSingle();
+/** Reads never write fallback browser data over the team planning. */
+async function loadRemote(): Promise<PlanningSnapshot> {
+  const { data: row, error } = await supabase.from("planning_state").select("data, updated_at").eq("id", "main").single();
   if (error) throw error;
-  const remote = row?.data as Data | undefined;
-  if (remote && Array.isArray(remote.assignments)) return migrate(remote);
-  const initial = loadLocal() ?? { technicians: DEFAULT_TECHNICIANS, categories: DEFAULT_CATEGORIES, assignments: [] };
-  await supabase.from("planning_state").upsert({ id: "main", data: initial as unknown as Json });
-  return initial;
+  const remote = row.data as Data | undefined;
+  if (!remote || !Array.isArray(remote.assignments)) throw new Error("Planning partagé indisponible");
+  return { data: migrate(remote), updatedAt: row.updated_at };
 }
 
-async function saveRemote(data: Data) {
-  const { error } = await supabase
-    .from("planning_state")
-    .update({ data: data as unknown as Json, updated_at: new Date().toISOString() })
-    .eq("id", "main");
-  if (error) console.error("Enregistrement en ligne échoué", error);
+async function writeRemote(data: Data, previousVersion: string, nextVersion: string): Promise<PlanningSnapshot | null> {
+  const { data: row, error } = await supabase.from("planning_state")
+    .update({ data: data as unknown as Json, updated_at: nextVersion })
+    .eq("id", "main").eq("updated_at", previousVersion)
+    .select("data, updated_at").maybeSingle();
+  if (error) throw error;
+  return row ? { data: migrate(row.data as Data), updatedAt: row.updated_at } : null;
 }
 
 export function usePlanning() {
-  const [data, setData] = useState<Data>({
-    technicians: DEFAULT_TECHNICIANS,
-    categories: DEFAULT_CATEGORIES,
-    assignments: [],
-  });
+  const [data, setData] = useState<Data>({ technicians: DEFAULT_TECHNICIANS, categories: DEFAULT_CATEGORIES, assignments: [] });
   const [hydrated, setHydrated] = useState(false);
-
-  const skipNext = useRef(true);
-
-  useEffect(() => {
-    loadRemote()
-      .then((d) => { skipNext.current = true; setData(d); setHydrated(true); })
-      .catch((e) => console.error("Chargement du planning échoué", e));
-  }, []);
-
-  // Mise à jour en direct : applique les changements faits par les autres utilisateurs.
-  useEffect(() => {
-    const channel = supabase
-      .channel(`planning-state-${Math.random().toString(36).slice(2)}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "planning_state" },
-        (payload) => {
-          const remote = (payload.new as { data?: Data } | null)?.data;
-          if (!remote || !Array.isArray(remote.assignments)) return;
-          skipNext.current = true;
-          setData(migrate(remote));
-        },
-      )
-      .subscribe();
-    return () => {
-      void supabase.removeChannel(channel);
-    };
+  const version = useRef("");
+  const apply = useCallback((snapshot: PlanningSnapshot) => {
+    // Ignore late initial reads and delayed realtime echoes of older saves.
+    if (version.current && Date.parse(snapshot.updatedAt) < Date.parse(version.current)) return;
+    version.current = snapshot.updatedAt;
+    setData(snapshot.data);
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
-    if (skipNext.current) { skipNext.current = false; return; }
-    const t = setTimeout(() => void saveRemote(data), 400);
-    return () => clearTimeout(t);
-  }, [data, hydrated]);
+    let active = true;
+    void loadRemote().then((snapshot) => { if (active) apply(snapshot); })
+      .catch(() => { if (active) toast.error("Chargement du planning impossible : actualisez la page."); });
+    const channel = supabase.channel(`planning-state-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "planning_state" }, (payload) => {
+        const row = payload.new as { data?: Data; updated_at?: string };
+        if (active && row.data && Array.isArray(row.data.assignments) && row.updated_at) {
+          apply({ data: migrate(row.data), updatedAt: row.updated_at });
+        }
+      }).subscribe();
+    return () => { active = false; void supabase.removeChannel(channel); };
+  }, [apply]);
 
-  const upsertAssignment = useCallback((a: Assignment) => {
-    // Plusieurs missions peuvent partager le même créneau (cas exceptionnel) :
-    // on ne remplace que la mission de même identifiant.
-    setData((d) => ({
-      ...d,
-      assignments: saveMeetingAssignment(d.assignments, a),
-    }));
-  }, []);
+  const mutate = useCallback((change: (current: Data) => Data) => {
+    const result = enqueueMutation(async () => {
+      const saved = await persistPlanningMutation({ read: loadRemote, write: writeRemote }, change);
+      apply(saved);
+    });
+    // Report failures even for controls that do not await their mutation.
+    void result.catch((error) => toast.error(`Modification non enregistrée : ${error instanceof Error ? error.message : "réessayez"}`));
+    return result;
+  }, [apply]);
 
-  const deleteAssignment = useCallback((target: Assignment) => {
-    setData((d) => ({ ...d, assignments: deleteMeetingAssignment(d.assignments, target) }));
-  }, []);
-
-  const addTechnician = useCallback((t: Technician) => {
-    setData((d) => ({ ...d, technicians: [...d.technicians, t] }));
-  }, []);
-
-  const updateTechnician = useCallback((t: Technician) => {
-    setData((d) => ({ ...d, technicians: d.technicians.map((x) => (x.id === t.id ? t : x)) }));
-  }, []);
-
-  const removeTechnician = useCallback((id: string) => {
-    setData((d) => ({
-      ...d,
-      technicians: d.technicians.filter((t) => t.id !== id),
-      assignments: d.assignments
-        .map((a) => ({ ...a, technicianIds: a.technicianIds.filter((t) => t !== id) }))
-        .filter((a) => a.technicianIds.length > 0),
-    }));
-  }, []);
-
-  const removeCategory = useCallback((id: string) => {
-    setData((d) => ({
-      ...d,
-      categories: d.categories.filter((c) => c.id !== id),
-      assignments: d.assignments.filter((a) => a.categoryId !== id),
-    }));
-  }, []);
-
-  const addCategory = useCallback((c: Category) => {
-    setData((d) => ({ ...d, categories: [...d.categories, c] }));
-  }, []);
-
-  const updateCategoryColor = useCallback((id: string, color: string) => {
-    setData((d) => ({ ...d, categories: d.categories.map((c) => (c.id === id ? { ...c, color } : c)) }));
-  }, []);
-
-  const addAssignments = useCallback((list: Assignment[]) => {
-    if (list.length === 0) return;
-    setData((d) => ({ ...d, assignments: [...d.assignments, ...list] }));
-  }, []);
-
-  const replaceAssignmentDays = useCallback((original: Assignment, replacements: Assignment[]) => {
-    const assignments = replaceSplitMission(data.assignments, original, replacements);
-    setData((current) => ({ ...current, assignments }));
-  }, [data.assignments]);
+  const upsertAssignment = useCallback((a: Assignment) => mutate((d) => ({ ...d, assignments: saveMeetingAssignment(d.assignments, a) })), [mutate]);
+  const deleteAssignment = useCallback((target: Assignment) => mutate((d) => ({ ...d, assignments: deleteMeetingAssignment(d.assignments, target) })), [mutate]);
+  const addTechnician = useCallback((t: Technician) => mutate((d) => ({ ...d, technicians: [...d.technicians, t] })), [mutate]);
+  const updateTechnician = useCallback((t: Technician) => mutate((d) => ({ ...d, technicians: d.technicians.map((x) => x.id === t.id ? t : x) })), [mutate]);
+  const removeTechnician = useCallback((id: string) => mutate((d) => ({ ...d,
+    technicians: d.technicians.filter((t) => t.id !== id),
+    assignments: d.assignments.map((a) => ({ ...a, technicianIds: a.technicianIds.filter((t) => t !== id) })).filter((a) => a.technicianIds.length > 0),
+  })), [mutate]);
+  const removeCategory = useCallback((id: string) => mutate((d) => ({ ...d, categories: d.categories.filter((c) => c.id !== id), assignments: d.assignments.filter((a) => a.categoryId !== id) })), [mutate]);
+  const addCategory = useCallback((c: Category) => mutate((d) => ({ ...d, categories: [...d.categories, c] })), [mutate]);
+  const updateCategoryColor = useCallback((id: string, color: string) => mutate((d) => ({ ...d, categories: d.categories.map((c) => c.id === id ? { ...c, color } : c) })), [mutate]);
+  const addAssignments = useCallback((list: Assignment[]) => mutate((d) => ({ ...d, assignments: [...d.assignments, ...list] })), [mutate]);
+  const replaceAssignmentDays = useCallback((original: Assignment, replacements: Assignment[]) => mutate((d) => ({ ...d, assignments: replaceSplitMission(d.assignments, original, replacements) })), [mutate]);
 
   return { data, hydrated, upsertAssignment, deleteAssignment, addTechnician, updateTechnician, removeTechnician, addCategory, removeCategory, updateCategoryColor, addAssignments, replaceAssignmentDays };
 }
