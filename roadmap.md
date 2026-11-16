@@ -1,5 +1,7 @@
 # Roadmap
-- [ ] Réduire les lenteurs de sauvegarde : éviter la double écriture inutile et alléger l’historique, puis vérifier une mission sans notification.
+- [x] Expliquer les crédits de l’abonnement : Pro, 100 mensuels et 5 quotidiens ; aucun quota horaire, coût serveur distinct.
+- [x] Éviter la double écriture inutile après Calendar et filtrer l’historique sur les missions support avant comparaison ; 7 tests réussis, compilation correcte.
+- [ ] Valider la rapidité d’enregistrement : test réel encore bloqué par manque de mémoire (nouvel arrêt OOM et réponse 503). Passage Mini proposé mais non exécuté, décision utilisateur attendue ; mission de test nettoyée et chargement vérifié, aucune invitation de test envoyée.
 - [x] Rétablir le chargement du planning après l’opération bloquée : service relancé, 83 missions conservées, affichage connecté puis actualisation vérifiés (9,38 s puis 5,94 s), aucune erreur navigateur.
 - [x] Attendre la sauvegarde confirmée avant les messages d’envoi, signaler les refus et préserver les modifications simultanées ; 17 tests réussis, compilation correcte.
 - [x] Nettoyage de la mission « Vérification sauvegarde temporaire 161126 » confirmé : aucune mission temporaire restante, aucune invitation de test envoyée.
