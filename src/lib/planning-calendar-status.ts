@@ -1,5 +1,10 @@
-import type { Assignment } from "./planning-types";
+import type { Assignment, Category } from "./planning-types";
 import { calendarNeedsPlanningWrite } from "./planning-calendar-save";
+
+/** Category IDs are editable/generated, so resolve the travel rule by its label. */
+export function missionNeedsCalendar(mission: Pick<Assignment, "categoryId">, categories: Pick<Category, "id" | "label">[]): boolean {
+  return categories.find((category) => category.id === mission.categoryId)?.label.trim().toLocaleLowerCase("fr-FR") !== "trajet";
+}
 
 /** Keep provider refusal distinct from planning/auth failures across server serialization. */
 export type CalendarSendResult = { ok: true; meetUrl?: string } | { ok: false; status: 403; error: string };
@@ -20,7 +25,14 @@ export async function saveCalendarMission(
   send: () => Promise<CalendarSendResult>,
   close: () => void,
   outcome: { saved: boolean; sent: boolean },
+  categories: Pick<Category, "id" | "label">[] = [],
 ) {
+  if (!missionNeedsCalendar(mission, categories)) {
+    await save({ ...mission, calendarPending: undefined }, false);
+    outcome.saved = true;
+    close();
+    return;
+  }
   if (!mission.seriesId) { await save(mission, false); outcome.saved = true; }
   let result: { ok: true; meetUrl?: string };
   try { result = acceptedCalendarResult(await send()); }

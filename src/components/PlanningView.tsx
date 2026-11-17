@@ -27,7 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo-cmc.png.asset.json";
 
 import { usePlanning } from "@/lib/planning-store";
-import { acceptedCalendarResult, CalendarForbiddenError, saveCalendarMission } from "@/lib/planning-calendar-status";
+import { acceptedCalendarResult, CalendarForbiddenError, missionNeedsCalendar, saveCalendarMission } from "@/lib/planning-calendar-status";
 import type { Assignment, HalfDay } from "@/lib/planning-types";
 import { assignmentOccursOn, nextWeeklyDate, meetingOccurrence } from "@/lib/planning-recurrence";
 import { downloadICS, googleCalendarUrl, googlePayload, mailtoUrl, outlookCalendarUrl, normalizeTeamsUrl } from "@/lib/calendar-export";
@@ -606,6 +606,10 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
             const replacements = splitMissionDays(context.original, editing.technicianId, context.dates, edited, uid);
             try {
               for (const mission of replacements) {
+                if (!missionNeedsCalendar(mission, data.categories)) {
+                  mission.calendarPending = undefined;
+                  continue;
+                }
                 const result = acceptedCalendarResult(await sendSplitMission({ data: googlePayload(mission, data.technicians.filter((t) => mission.technicianIds.includes(t.id))) }));
                 mission.calendarPending = undefined;
                 if (result.meetUrl) mission.meetUrl = result.meetUrl;
@@ -747,7 +751,7 @@ function AssignmentDialog({
       setSaving(true);
       try {
         await onSaveDays(a);
-        toast.success("Journées modifiées et invitations mises à jour");
+        toast.success(missionNeedsCalendar(a, categories) ? "Journées modifiées et invitations mises à jour" : "Journées Trajet enregistrées sans envoi d’agenda");
       } catch (error) {
         toast.error(`Planning conservé ; certaines invitations ont pu être mises à jour. Réessayez : ${error instanceof Error ? error.message : error}`);
       } finally { setSaving(false); }
@@ -756,8 +760,8 @@ function AssignmentDialog({
     setSaving(true);
     const outcome = { saved: false, sent: false };
     try {
-      await saveCalendarMission(a, onSave, () => sendCalendar({ data: googlePayload(a, selectedTechs) }), () => onOpenChange(false), outcome);
-      toast.success(message);
+      await saveCalendarMission(a, onSave, () => sendCalendar({ data: googlePayload(a, selectedTechs) }), () => onOpenChange(false), outcome, categories);
+      toast.success(outcome.sent ? message : "Trajet enregistré dans le planning, sans envoi d’agenda");
     } catch (error) {
       if (error instanceof CalendarForbiddenError) setCalendarPending(true);
       const detail = error instanceof Error ? error.message : String(error);
