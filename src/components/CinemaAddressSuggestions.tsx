@@ -14,16 +14,17 @@ export function CinemaAddressSuggestions({ title, active, onSelect }: {
   const [dismissed, setDismissed] = useState("");
   const search = useServerFn(searchCinemaAddresses);
   useEffect(() => {
-    const timer = setTimeout(() => setQuery(title.trim()), 900);
+    const timer = setTimeout(() => setQuery(title.trim()), 1_200);
     return () => clearTimeout(timer);
   }, [title]);
   const enabled = active && query.length >= 3 && query === title.trim() && dismissed !== query;
   const { data, isFetching, error } = useQuery({
-    queryKey: ["cinema-addresses", query],
+    queryKey: ["cinema-addresses", "photon", query],
     queryFn: () => search({ data: { query } }),
     enabled,
-    staleTime: 60_000,
-    gcTime: 60_000,
+    staleTime: 300_000,
+    gcTime: 300_000,
+    refetchOnWindowFocus: false,
     retry: false,
   });
   if (!enabled) return null;
@@ -44,14 +45,9 @@ export function CinemaAddressSuggestions({ title, active, onSelect }: {
             <MapPin className="size-4 shrink-0 text-muted-foreground" />
             <span className="min-w-0 break-words"><span className="block text-sm font-medium">{place.name}</span><span className="block text-xs text-muted-foreground">{place.address}</span></span>
           </Button>
-          {place.attributions.map((attribution, index) => (
-            <span key={index} className="px-1 text-xs text-muted-foreground">
-              {attribution.providerUri?.startsWith("https://") ? <a href={attribution.providerUri} target="_blank" rel="noopener noreferrer">{attribution.provider}</a> : attribution.provider}
-            </span>
-          ))}
         </div>
       ))}
-      <div className="px-1 pt-1 text-right text-xs text-muted-foreground">Google Maps</div>
+      <div className="px-1 pt-1 text-right text-xs text-muted-foreground"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>{" · "}<a href="https://photon.komoot.io" target="_blank" rel="noopener noreferrer">Photon</a></div>
     </div>
   );
 }
