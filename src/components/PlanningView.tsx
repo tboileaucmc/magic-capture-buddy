@@ -1000,7 +1000,7 @@ function AssignmentDialog({
 
           {address && (
             <div className="flex flex-wrap gap-2 border-t pt-3">
-              <Button variant="outline" size="sm" asChild><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`} target="_blank" rel="noreferrer"><MapPin /> Google Maps</a></Button>
+              <Button variant="outline" size="sm" asChild><a href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(address)}`} target="_blank" rel="noreferrer"><MapPin /> OpenStreetMap</a></Button>
               <Button variant="outline" size="sm" onClick={() => openWaze(address)}><MapPin /> Waze</Button>
             </div>
           )}
