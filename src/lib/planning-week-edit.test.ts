@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { missionDates, splitMissionDays, replaceSplitMission } from "./planning-week-edit";
+import { deleteMissionDays, missionDates, persistDeletedMissionDays, splitMissionDays, replaceSplitMission } from "./planning-week-edit";
 import { assignmentSlots, type Assignment } from "./planning-types";
 
 const week: Assignment = { id: "week", technicianIds: ["thomas", "hugo"], dateISO: "2026-11-02", endDateISO: "2026-11-06", half: "AM", endHalf: "PM", categoryId: "astreinte", title: "Astreinte", address: "", startTime: "10:00", endTime: "23:00" };
@@ -36,4 +36,60 @@ test("all selected days retain an original event ID and never affect unrelated t
 test("rejects stale missions and days outside the mission", () => {
   assert.throws(() => splitMissionDays(week, "thomas", ["2026-11-09"], week, uid));
   assert.throws(() => replaceSplitMission([{ ...week, title: "Changed" }], week, [week]));
+});
+
+test("deleting Wednesday only removes Thomas slots and keeps all Hugo slots", () => {
+  const result = deleteMissionDays(week, "thomas", ["2026-11-04"], uid);
+  for (const technician of ["thomas", "hugo"]) {
+    const actual = result.filter((a) => a.technicianIds.includes(technician)).flatMap(assignmentSlots);
+    const expected = assignmentSlots(week).filter((slot) => technician !== "thomas" || slot.dateISO !== "2026-11-04");
+    assert.deepEqual(actual, expected);
+  }
+  assert.equal(result.filter((a) => a.id === week.id).length, 1);
+});
+test("deleting several days including weekends preserves every remaining half-day", () => {
+  const period = { ...week, endDateISO: "2026-11-08", technicianIds: ["thomas"] };
+  const dates = ["2026-11-03", "2026-11-07", "2026-11-08"];
+  const result = deleteMissionDays(period, "thomas", dates, uid);
+  assert.deepEqual(result.flatMap(assignmentSlots), assignmentSlots(period).filter((slot) => !dates.includes(slot.dateISO)));
+  assert.equal(new Set(result.map((a) => a.id)).size, result.length);
+});
+test("deleting all Thomas days keeps Hugo, or empties a single-technician mission", () => {
+  const result = deleteMissionDays(week, "thomas", missionDates(week), uid);
+  assert.equal(result.length, 1);
+  assert.deepEqual(result[0]?.technicianIds, ["hugo"]);
+  assert.deepEqual(assignmentSlots(result[0] as Assignment), assignmentSlots(week));
+  assert.deepEqual(deleteMissionDays({ ...week, technicianIds: ["thomas"] }, "thomas", missionDates(week), uid), []);
+});
+test("a period ending in the morning keeps its exact remaining boundary slots", () => {
+  const period: Assignment = { ...week, dateISO: "2026-12-07", endDateISO: "2026-12-09", half: "PM", startTime: "13:00", endTime: "11:00" };
+  for (const date of missionDates(period)) {
+    const result = deleteMissionDays(period, "thomas", [date], uid).filter((a) => a.technicianIds.includes("thomas"));
+    assert.deepEqual(result.flatMap(assignmentSlots), assignmentSlots(period).filter((slot) => slot.dateISO !== date));
+  }
+});
+test("deletion rejects foreign technicians, invalid dates, empty selections and recurring missions", () => {
+  assert.throws(() => deleteMissionDays(week, "other", ["2026-11-04"], uid));
+  assert.throws(() => deleteMissionDays(week, "thomas", ["2026-11-09"], uid));
+  assert.throws(() => deleteMissionDays(week, "thomas", [], uid));
+  assert.throws(() => deleteMissionDays({ ...week, recurrence: "weekly" }, "thomas", ["2026-11-04"], uid));
+});
+test("agenda updates finish before one planning replacement; failures never remove the mission", async () => {
+  const replacements = deleteMissionDays(week, "thomas", ["2026-11-04"], uid);
+  const calls: string[] = [];
+  const operations = {
+    update: async (a: Assignment) => { calls.push(a.id); },
+    cancel: async () => { calls.push("cancel"); },
+    replace: async () => { calls.push("replace"); },
+  };
+  await persistDeletedMissionDays(week, replacements, operations);
+  assert.deepEqual(calls, [...replacements.map((a) => a.id), "replace"]);
+  calls.length = 0;
+  await persistDeletedMissionDays(week, [], operations);
+  assert.deepEqual(calls, ["cancel", "replace"]);
+  calls.length = 0;
+  await assert.rejects(persistDeletedMissionDays(week, replacements, { ...operations, update: async () => { throw new Error("403"); } }));
+  assert.deepEqual(calls, []);
+  await assert.rejects(persistDeletedMissionDays(week, [], { ...operations, cancel: async () => { throw new Error("403"); } }));
+  assert.deepEqual(calls, []);
 });

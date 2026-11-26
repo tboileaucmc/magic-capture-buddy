@@ -5,7 +5,8 @@ import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as Link
 import { duplicateWeek } from "@/lib/planning-duplicate";
 import { missionHours, endHalfAfterTimeChange, startHalfFromTime } from "@/lib/planning-hours";
 import { PLANNING_GROUPS, filterPlanningTechnicians, technicianSection, type PlanningGroup } from "@/lib/planning-regions";
-import { missionDates, splitMissionDays } from "@/lib/planning-week-edit";
+import { deleteMissionDays, missionDates, persistDeletedMissionDays, splitMissionDays } from "@/lib/planning-week-edit";
+import { planningValuesEqual } from "@/lib/planning-delta";
 import { MissionDaysDialog } from "@/components/MissionDaysDialog";
 import { openWaze } from "@/lib/waze";
 import { toast } from "sonner";
@@ -598,11 +599,30 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           half={editing.half}
           existing={editing.existing}
           dayEditDates={editing.dayEdit?.dates}
+          onDeleteDays={editing.dayEdit ? async () => {
+            const context = editing.dayEdit;
+            if (!context || !canEditMission(context.original)) throw new Error("Suppression non autorisée");
+            const current = data.assignments.find((a) => a.id === context.original.id);
+            if (!planningValuesEqual(current, context.original)) throw new Error("Cette mission a changé : rouvrez-la");
+            const replacements = deleteMissionDays(context.original, editing.technicianId, context.dates, uid);
+            await persistDeletedMissionDays(context.original, replacements, {
+              update: async (mission) => {
+                if (!missionNeedsCalendar(mission, data.categories)) return;
+                const result = acceptedCalendarResult(await sendSplitMission({ data: googlePayload(mission, data.technicians.filter((t) => mission.technicianIds.includes(t.id))) }));
+                mission.calendarPending = undefined;
+                if (result.meetUrl) mission.meetUrl = result.meetUrl;
+              },
+              cancel: async (mission) => { await cancelMission({ data: { id: mission.id } }); },
+              replace: replaceAssignmentDays,
+            });
+            setEditing(null);
+            toast.success("Journées supprimées pour le technicien sélectionné");
+          } : undefined}
           onSaveDays={editing.dayEdit ? async (edited) => {
             const context = editing.dayEdit;
             if (!context || !canEditMission(context.original)) throw new Error("Modification non autorisée");
             const current = data.assignments.find((a) => a.id === context.original.id);
-            if (JSON.stringify(current) !== JSON.stringify(context.original)) throw new Error("Cette mission a changé : rouvrez-la");
+            if (!planningValuesEqual(current, context.original)) throw new Error("Cette mission a changé : rouvrez-la");
             const replacements = splitMissionDays(context.original, editing.technicianId, context.dates, edited, uid);
             try {
               for (const mission of replacements) {
@@ -689,6 +709,7 @@ function AssignmentDialog({
   onDelete,
   dayEditDates,
   onSaveDays,
+  onDeleteDays,
 }: {
   light: boolean;
   open: boolean;
@@ -703,6 +724,7 @@ function AssignmentDialog({
   onDelete: (target: Assignment) => Promise<void>;
   dayEditDates?: string[];
   onSaveDays?: (a: Assignment) => Promise<void>;
+  onDeleteDays?: () => Promise<void>;
 }) {
   const defaultStart = half === "AM" ? "08:00" : "13:30";
   const defaultEnd = half === "AM" ? "12:00" : "17:30";
@@ -1134,19 +1156,22 @@ function AssignmentDialog({
 
         <DialogFooter className="shrink-0 flex-wrap gap-3 border-t bg-background px-6 py-4 sm:justify-between sm:space-x-0">
           <div className="flex flex-wrap gap-2">
-            {existing && !dayEditDates && (
+            {existing && (
               <Button variant="destructive" disabled={deleting || saving || readingFiles} onClick={async () => {
-                if (!confirm(existing.seriesId ? "Supprimer cette réunion uniquement et annuler son invitation ? Les autres semaines sont conservées." : existing.recurrence ? "Supprimer toute la série hebdomadaire et annuler ses invitations pour tous les techniciens assignés ?" : "Supprimer cette mission et annuler son invitation pour tous les techniciens assignés ?")) return;
+                if (!confirm(dayEditDates ? `Supprimer ${dayEditDates.length} journée(s) pour ${allTechnicians.find((t) => t.id === initialTechnicianId)?.name ?? "le technicien sélectionné"} uniquement ? Les autres jours et techniciens sont conservés.` : existing.seriesId ? "Supprimer cette réunion uniquement et annuler son invitation ? Les autres semaines sont conservées." : existing.recurrence ? "Supprimer toute la série hebdomadaire et annuler ses invitations pour tous les techniciens assignés ?" : "Supprimer cette mission et annuler son invitation pour tous les techniciens assignés ?")) return;
                 setDeleting(true);
                 try {
-                  await onDelete(existing);
+                  if (dayEditDates) {
+                    if (!onDeleteDays) throw new Error("Suppression des journées indisponible");
+                    await onDeleteDays();
+                  } else await onDelete(existing);
                 } catch (error) {
                   toast.error(`Mission conservée : ${error instanceof Error ? error.message : "annulation impossible"}`);
                 } finally {
                   setDeleting(false);
                 }
               }}>
-                <Trash2 /> {deleting ? "Annulation…" : existing.seriesId ? "Supprimer cette réunion" : "Supprimer"}
+                <Trash2 /> {deleting ? "Annulation…" : dayEditDates ? "Supprimer les jours sélectionnés" : existing.seriesId ? "Supprimer cette réunion" : "Supprimer"}
               </Button>
             )}
             {(existing?.toConfirm || toConfirm) && (
