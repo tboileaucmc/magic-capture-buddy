@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Calendar as CalIcon, Mail, Download, MapPin, Link as LinkIcon, Paperclip, ChevronLeft, ChevronRight, ChevronDown, Shield, Tags, History, Star, CheckCircle2, Sun, Moon, Pencil, Video, Repeat, Copy, FileText, Users, Clock, Home, Hourglass } from "lucide-react";
-import { duplicateWeek } from "@/lib/planning-duplicate";
+import { copyMission, duplicateWeek } from "@/lib/planning-duplicate";
 import { missionHours, endHalfAfterTimeChange, startHalfFromTime } from "@/lib/planning-hours";
 import { PLANNING_GROUPS, filterPlanningTechnicians, technicianSection, type PlanningGroup } from "@/lib/planning-regions";
 import { deleteMissionDays, missionDates, persistDeletedMissionDays, splitMissionDays } from "@/lib/planning-week-edit";
@@ -104,6 +104,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
     dateISO: string;
     half: HalfDay;
     existing?: Assignment;
+    isCopy?: boolean;
     dayEdit?: { original: Assignment; dates: string[] };
   } | null>(null);
   const [techDialog, setTechDialog] = useState(false);
@@ -589,6 +590,7 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
 
       {editing && (
         <AssignmentDialog
+          key={editing.existing?.id ?? "new"}
           light={light}
           open
           onOpenChange={(o) => !o && setEditing(null)}
@@ -598,6 +600,14 @@ export function PlanningView({ light, onToggleTheme }: { light: boolean; onToggl
           dateISO={editing.dateISO}
           half={editing.half}
           existing={editing.existing}
+          isCopy={editing.isCopy}
+          onCopy={(draft) => {
+            if (!canEditMission(draft)) return;
+            const copy = copyMission(draft, uid);
+            const technicianId = copy.technicianIds[0];
+            if (!technicianId) return;
+            setEditing({ technicianId, dateISO: copy.dateISO, half: copy.half, existing: copy, isCopy: true });
+          }}
           dayEditDates={editing.dayEdit?.dates}
           onDeleteDays={editing.dayEdit ? async () => {
             const context = editing.dayEdit;
@@ -705,6 +715,8 @@ function AssignmentDialog({
   dateISO,
   half,
   existing,
+  isCopy,
+  onCopy,
   onSave,
   onDelete,
   dayEditDates,
@@ -720,6 +732,8 @@ function AssignmentDialog({
   dateISO: string;
   half: HalfDay;
   existing?: Assignment;
+  isCopy?: boolean;
+  onCopy: (draft: Assignment) => void;
   onSave: (a: Assignment, close?: boolean) => Promise<void>;
   onDelete: (target: Assignment) => Promise<void>;
   dayEditDates?: string[];
@@ -891,7 +905,7 @@ function AssignmentDialog({
       toConfirm: toConfirm || undefined,
       remote: isNoc && remote ? true : undefined,
       confirmed: toConfirm ? undefined : true,
-      sequence: existing ? (existing.sequence ?? 0) + 1 : 0,
+      sequence: existing && !isCopy ? (existing.sequence ?? 0) + 1 : 0,
       attachments,
     };
     void persist(a, "Ordre de mission envoyé dans l'agenda des techniciens");
@@ -919,6 +933,7 @@ function AssignmentDialog({
     teamsUrl: normalizeTeamsUrl(teamsUrl),
     googleMeet,
     toConfirm,
+    remote: isNoc && remote ? true : undefined,
     attachments,
   };
 
@@ -928,7 +943,7 @@ function AssignmentDialog({
         <DialogHeader className="shrink-0 border-b px-6 py-5 pr-12 text-left">
           <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase text-primary"><FileText className="size-4" /> Ordre de mission</div>
           <DialogTitle className="leading-snug">
-            {dayEditDates ? "Modifier les journées sélectionnées" : existing?.seriesId ? "Modifier cette réunion uniquement" : existing?.recurrence ? "Modifier la série hebdomadaire" : existing ? "Modifier la mission" : "Nouvelle mission"}
+            {isCopy ? "Copie de la mission" : dayEditDates ? "Modifier les journées sélectionnées" : existing?.seriesId ? "Modifier cette réunion uniquement" : existing?.recurrence ? "Modifier la série hebdomadaire" : existing ? "Modifier la mission" : "Nouvelle mission"}
           </DialogTitle>
           <DialogDescription>
             {dayEditDates ? dayEditDates.map((date) => new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short" })).join(" · ") : new Date(dateISO).toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "long" })}
@@ -1156,7 +1171,7 @@ function AssignmentDialog({
 
         <DialogFooter className="shrink-0 flex-wrap gap-3 border-t bg-background px-6 py-4 sm:justify-between sm:space-x-0">
           <div className="flex flex-wrap gap-2">
-            {existing && (
+            {existing && !isCopy && (
               <Button variant="destructive" disabled={deleting || saving || readingFiles} onClick={async () => {
                 if (!confirm(dayEditDates ? `Supprimer ${dayEditDates.length} journée(s) pour ${allTechnicians.find((t) => t.id === initialTechnicianId)?.name ?? "le technicien sélectionné"} uniquement ? Les autres jours et techniciens sont conservés.` : existing.seriesId ? "Supprimer cette réunion uniquement et annuler son invitation ? Les autres semaines sont conservées." : existing.recurrence ? "Supprimer toute la série hebdomadaire et annuler ses invitations pour tous les techniciens assignés ?" : "Supprimer cette mission et annuler son invitation pour tous les techniciens assignés ?")) return;
                 setDeleting(true);
@@ -1174,6 +1189,7 @@ function AssignmentDialog({
                 <Trash2 /> {deleting ? "Annulation…" : dayEditDates ? "Supprimer les jours sélectionnés" : existing.seriesId ? "Supprimer cette réunion" : "Supprimer"}
               </Button>
             )}
+            {existing && !isCopy && <Button variant="outline" disabled={deleting || saving || readingFiles} onClick={() => onCopy(currentAssignment)}><Copy /> Copier</Button>}
             {(existing?.toConfirm || toConfirm) && (
               <Button
                 disabled={deleting || saving || readingFiles}

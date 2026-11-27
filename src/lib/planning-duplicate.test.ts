@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { duplicateWeek } from "./planning-duplicate.ts";
+import { copyMission, duplicateWeek } from "./planning-duplicate.ts";
 import type { Assignment } from "./planning-types.ts";
 
 const base = (o: Partial<Assignment>): Assignment => ({
@@ -37,4 +37,25 @@ test("copies only missions of the chosen technicians, keeping only them", () => 
   assert.deepEqual(out.map((a) => a.technicianIds), [["t1", "t2"], ["t2"]]);
   const one = duplicateWeek([base({ technicianIds: ["t1", "t2"] })], "2026-11-02", "2026-11-09", () => true, () => "n", new Set(["t2"]));
   assert.deepEqual(one[0].technicianIds, ["t2"]);
+});
+
+test("copying a mission keeps its content but gets a new, independent identity", () => {
+  const original = base({
+    id: "orig", title: "Maintenance Pathé", categoryId: "maintenance", address: "Rue X", notes: "N",
+    technicianIds: ["t1"], sequence: 4, meetUrl: "https://meet", calendarPending: true,
+    seriesId: "s", originalDateISO: "2026-11-02", originalStartTime: "08:00",
+    attachments: [{ name: "a.pdf", type: "application/pdf", dataUrl: "data:," }],
+  });
+  const copy = copyMission(original, () => "copy1");
+  assert.equal(copy.id, "copy1");
+  assert.equal(copy.title, "Maintenance Pathé");
+  assert.equal(copy.categoryId, "maintenance");
+  assert.equal(copy.address, "Rue X");
+  assert.equal(copy.attachments?.length, 1);
+  assert.equal(copy.sequence, undefined);
+  assert.equal(copy.meetUrl, undefined);
+  assert.equal(copy.calendarPending, undefined);
+  assert.equal(copy.seriesId, undefined);
+  copy.technicianIds.push("t2");
+  assert.deepEqual(original.technicianIds, ["t1"]);
 });

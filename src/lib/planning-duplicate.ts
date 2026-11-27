@@ -45,3 +45,24 @@ export function duplicateWeek(
       return copy;
     });
 }
+
+/**
+ * Prepares an editable copy of one mission: same content, new identity, and no
+ * Calendar/series links, so saving it creates a separate mission and invitation.
+ */
+export function copyMission(a: Assignment, newId: () => string): Assignment {
+  return {
+    ...a,
+    id: newId(),
+    recurrence: undefined,
+    sequence: undefined,
+    meetUrl: undefined,
+    calendarPending: undefined,
+    seriesId: undefined,
+    originalDateISO: undefined,
+    originalStartTime: undefined,
+    excludedDates: undefined,
+    attachments: a.attachments ? [...a.attachments] : undefined,
+    technicianIds: [...a.technicianIds],
+  };
+}
